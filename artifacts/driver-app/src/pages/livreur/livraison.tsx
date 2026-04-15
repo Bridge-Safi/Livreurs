@@ -3,7 +3,7 @@ import { LivreurLayout } from "@/components/layout/LivreurLayout";
 import { useGetDelivery, getGetDeliveryQueryKey, useUpdateDelivery, useConfirmDelivered, getListDeliveriesQueryKey, getGetDeliveryStatsQueryKey } from "@workspace/api-client-react";
 import { 
   Package, MapPin, User, Phone, FileText, Clock, 
-  ArrowLeft, CheckCircle2, XCircle, ChevronRight, Navigation
+  ArrowLeft, CheckCircle2, XCircle, Navigation
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,17 +13,21 @@ import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Separator } from "@/components/ui/separator";
+import { useI18n } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth";
 
 export default function LivreurLivraisonDetail() {
   const params = useParams();
   const id = parseInt(params.id || "0", 10);
   const queryClient = useQueryClient();
+  const { t } = useI18n();
+  const { livreur } = useAuth();
+  const LIVREUR_ID = livreur?.id ?? 0;
 
   const { data: delivery, isLoading } = useGetDelivery(id, {
     query: { enabled: !!id, queryKey: getGetDeliveryQueryKey(id) }
   });
 
-  const LIVREUR_ID = 1;
   const updateDelivery = useUpdateDelivery();
   const confirmDelivered = useConfirmDelivered();
 
@@ -49,10 +53,10 @@ export default function LivreurLivraisonDetail() {
 
   const getStatusBadge = (status?: string) => {
     switch(status) {
-      case "pending": return <Badge className="bg-zinc-800 text-zinc-300 hover:bg-zinc-700 px-3 py-1 text-sm"><Clock className="mr-1.5 h-4 w-4" /> En attente</Badge>;
-      case "in_progress": return <Badge className="bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 border-cyan-500/50 px-3 py-1 text-sm border"><Package className="mr-1.5 h-4 w-4" /> En cours</Badge>;
-      case "delivered": return <Badge className="bg-green-500/20 text-green-400 hover:bg-green-500/30 border-green-500/50 px-3 py-1 text-sm border"><CheckCircle2 className="mr-1.5 h-4 w-4" /> Livré</Badge>;
-      case "cancelled": return <Badge className="bg-red-500/20 text-red-400 hover:bg-red-500/30 border-red-500/50 px-3 py-1 text-sm border"><XCircle className="mr-1.5 h-4 w-4" /> Annulé</Badge>;
+      case "pending": return <Badge className="bg-zinc-800 text-zinc-300 hover:bg-zinc-700 px-3 py-1 text-sm"><Clock className="mr-1.5 h-4 w-4" /> {t("status_pending")}</Badge>;
+      case "in_progress": return <Badge className="bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 border-cyan-500/50 px-3 py-1 text-sm border"><Package className="mr-1.5 h-4 w-4" /> {t("status_in_progress")}</Badge>;
+      case "delivered": return <Badge className="bg-green-500/20 text-green-400 hover:bg-green-500/30 border-green-500/50 px-3 py-1 text-sm border"><CheckCircle2 className="mr-1.5 h-4 w-4" /> {t("status_delivered")}</Badge>;
+      case "cancelled": return <Badge className="bg-red-500/20 text-red-400 hover:bg-red-500/30 border-red-500/50 px-3 py-1 text-sm border"><XCircle className="mr-1.5 h-4 w-4" /> {t("status_cancelled")}</Badge>;
       default: return null;
     }
   };
@@ -77,10 +81,10 @@ export default function LivreurLivraisonDetail() {
       <LivreurLayout>
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
           <Package className="h-16 w-16 text-zinc-800 mb-4" />
-          <h2 className="text-2xl font-bold text-zinc-200">Livraison introuvable</h2>
-          <p className="text-zinc-500 mt-2 mb-6">Cette livraison n'existe pas ou a été supprimée.</p>
+          <h2 className="text-2xl font-bold text-zinc-200">{t("delivery_not_found")}</h2>
+          <p className="text-zinc-500 mt-2 mb-6">{t("delivery_not_found_sub")}</p>
           <Link href="/livreur/livraisons">
-            <Button className="bg-cyan-600 hover:bg-cyan-500 text-white">Retour aux livraisons</Button>
+            <Button className="bg-cyan-600 hover:bg-cyan-500 text-white">{t("back_to_deliveries")}</Button>
           </Link>
         </div>
       </LivreurLayout>
@@ -98,7 +102,7 @@ export default function LivreurLivraisonDetail() {
               </Button>
             </Link>
             <div className="flex flex-col">
-              <span className="text-xs text-zinc-500 font-medium tracking-wider uppercase">Livraison</span>
+              <span className="text-xs text-zinc-500 font-medium tracking-wider uppercase">{t("nav_deliveries")}</span>
               <span className="font-mono font-bold text-zinc-200">{delivery.trackingNumber}</span>
             </div>
           </div>
@@ -113,8 +117,8 @@ export default function LivreurLivraisonDetail() {
               <CardContent className="p-4 flex flex-col sm:flex-row items-center gap-4 justify-between">
                 <div className="text-sm text-zinc-300 text-center sm:text-left">
                   {delivery.status === "pending" 
-                    ? "Cette livraison est en attente. Acceptez-la pour commencer." 
-                    : "Cette livraison est en cours. Marquez-la comme terminée une fois le colis remis."}
+                    ? t("delivery_pending_msg")
+                    : t("delivery_going_msg")}
                 </div>
                 <div className="flex gap-3 w-full sm:w-auto">
                   {delivery.status === "pending" ? (
@@ -123,7 +127,7 @@ export default function LivreurLivraisonDetail() {
                       disabled={isPending}
                       className="w-full sm:w-auto bg-cyan-600 hover:bg-cyan-500 text-white font-semibold"
                     >
-                      Démarrer la course
+                      {t("start_ride")}
                     </Button>
                   ) : (
                     <Button 
@@ -132,7 +136,7 @@ export default function LivreurLivraisonDetail() {
                       className="w-full sm:w-auto bg-green-600 hover:bg-green-500 text-white font-semibold"
                     >
                       <CheckCircle2 className="mr-2 h-4 w-4" />
-                      Marquer comme Livré
+                      {t("mark_as_delivered")}
                     </Button>
                   )}
                 </div>
@@ -144,7 +148,7 @@ export default function LivreurLivraisonDetail() {
           <Card className="bg-zinc-950 border-zinc-800">
             <CardHeader className="pb-4">
               <CardTitle className="text-lg flex items-center gap-2 text-zinc-100">
-                <MapPin className="h-5 w-5 text-cyan-500" /> Itinéraire
+                <MapPin className="h-5 w-5 text-cyan-500" /> {t("route")}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -152,19 +156,19 @@ export default function LivreurLivraisonDetail() {
                 
                 <div className="relative">
                   <div className="absolute -left-6 top-1 h-3 w-3 rounded-full bg-zinc-950 border-2 border-zinc-500 z-10" />
-                  <h4 className="text-sm font-medium text-zinc-400 mb-1">Point de collecte</h4>
+                  <h4 className="text-sm font-medium text-zinc-400 mb-1">{t("pickup_point")}</h4>
                   <p className="text-lg font-medium text-zinc-100">{delivery.pickupAddress}</p>
                   <Button variant="outline" size="sm" className="mt-3 bg-zinc-900 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white h-8 text-xs">
-                    <Navigation className="mr-2 h-3 w-3" /> Naviguer
+                    <Navigation className="mr-2 h-3 w-3" /> {t("navigate")}
                   </Button>
                 </div>
 
                 <div className="relative">
                   <div className="absolute -left-6 top-1 h-3 w-3 rounded-full bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.8)] z-10" />
-                  <h4 className="text-sm font-medium text-cyan-400 mb-1">Destination</h4>
+                  <h4 className="text-sm font-medium text-cyan-400 mb-1">{t("destination")}</h4>
                   <p className="text-lg font-medium text-zinc-100">{delivery.deliveryAddress}</p>
                   <Button variant="outline" size="sm" className="mt-3 bg-cyan-950/30 border-cyan-900/50 text-cyan-400 hover:bg-cyan-900/50 hover:text-cyan-300 h-8 text-xs">
-                    <Navigation className="mr-2 h-3 w-3" /> Naviguer
+                    <Navigation className="mr-2 h-3 w-3" /> {t("navigate")}
                   </Button>
                 </div>
 
@@ -177,18 +181,18 @@ export default function LivreurLivraisonDetail() {
             <Card className="bg-zinc-950 border-zinc-800">
               <CardHeader className="pb-4 border-b border-zinc-800/50">
                 <CardTitle className="text-lg flex items-center gap-2 text-zinc-100">
-                  <User className="h-5 w-5 text-zinc-400" /> Client
+                  <User className="h-5 w-5 text-zinc-400" /> {t("customer")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-4 space-y-4">
                 <div>
-                  <p className="text-sm text-zinc-500 mb-1">Nom</p>
+                  <p className="text-sm text-zinc-500 mb-1">{t("name_label")}</p>
                   <p className="text-base font-medium text-zinc-200">{delivery.customerName}</p>
                 </div>
                 
                 {delivery.customerPhone && (
                   <div>
-                    <p className="text-sm text-zinc-500 mb-1">Téléphone</p>
+                    <p className="text-sm text-zinc-500 mb-1">{t("phone")}</p>
                     <div className="flex items-center justify-between bg-zinc-900 p-3 rounded-lg border border-zinc-800">
                       <p className="text-base font-medium text-zinc-200 font-mono">{delivery.customerPhone}</p>
                       <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full bg-zinc-800 hover:bg-cyan-600 hover:text-white text-zinc-300">
@@ -204,19 +208,19 @@ export default function LivreurLivraisonDetail() {
             <Card className="bg-zinc-950 border-zinc-800">
               <CardHeader className="pb-4 border-b border-zinc-800/50">
                 <CardTitle className="text-lg flex items-center gap-2 text-zinc-100">
-                  <Package className="h-5 w-5 text-zinc-400" /> Détails du colis
+                  <Package className="h-5 w-5 text-zinc-400" /> {t("package_details")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-4 space-y-4">
                 <div className="flex justify-between items-center">
                   <div>
-                    <p className="text-sm text-zinc-500 mb-1">Priorité</p>
+                    <p className="text-sm text-zinc-500 mb-1">{t("priority")}</p>
                     <p className="text-base font-medium capitalize text-zinc-200">{delivery.priority}</p>
                   </div>
                   {delivery.weight && (
                     <div className="text-right">
-                      <p className="text-sm text-zinc-500 mb-1">Poids</p>
-                      <p className="text-base font-medium text-zinc-200">{delivery.weight} kg</p>
+                      <p className="text-sm text-zinc-500 mb-1">{t("weight")}</p>
+                      <p className="text-base font-medium text-zinc-200">{delivery.weight} {t("kg")}</p>
                     </div>
                   )}
                 </div>
@@ -225,20 +229,20 @@ export default function LivreurLivraisonDetail() {
                 
                 <div>
                   <p className="text-sm text-zinc-500 mb-2 flex items-center gap-1.5">
-                    <FileText className="h-4 w-4" /> Notes de livraison
+                    <FileText className="h-4 w-4" /> {t("delivery_notes")}
                   </p>
                   {delivery.notes ? (
                     <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-3">
                       <p className="text-sm text-zinc-300 whitespace-pre-wrap">{delivery.notes}</p>
                     </div>
                   ) : (
-                    <p className="text-sm text-zinc-600 italic">Aucune instruction particulière.</p>
+                    <p className="text-sm text-zinc-600 italic">{t("no_instructions")}</p>
                   )}
                 </div>
                 
                 {delivery.estimatedDeliveryTime && (
                   <div className="pt-2">
-                    <p className="text-sm text-zinc-500 mb-1">Créneau estimé</p>
+                    <p className="text-sm text-zinc-500 mb-1">{t("estimated_slot")}</p>
                     <p className="text-sm font-medium text-zinc-300">
                       {(() => { try { const d = new Date(delivery.estimatedDeliveryTime!); return isNaN(d.getTime()) ? delivery.estimatedDeliveryTime : format(d, "dd MMMM yyyy à HH'h'mm", { locale: fr }); } catch { return delivery.estimatedDeliveryTime; } })()}
                     </p>

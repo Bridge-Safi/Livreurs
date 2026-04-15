@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { ChauffeurLayout } from "@/components/layout/ChauffeurLayout";
 import { useListTrips, getListTripsQueryKey, useUpdateTrip } from "@workspace/api-client-react";
-import { MapPin, Search, Filter, CheckCircle2, Clock, XCircle, ArrowRight, DollarSign } from "lucide-react";
+import { MapPin, Search, Filter, CheckCircle2, Clock, XCircle, ArrowRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -18,11 +18,14 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-
-const DRIVER_ID = 1;
+import { useI18n } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth";
 
 export default function ChauffeurTrajets() {
   const queryClient = useQueryClient();
+  const { t } = useI18n();
+  const { chauffeur } = useAuth();
+  const DRIVER_ID = chauffeur?.id ?? 0;
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -43,18 +46,18 @@ export default function ChauffeurTrajets() {
     });
   };
 
-  const filteredTrips = trips?.filter(t => 
-    t.passengerName.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    t.pickupAddress.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.dropoffAddress.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredTrips = trips?.filter(trip => 
+    trip.passengerName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    trip.pickupAddress.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    trip.dropoffAddress.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const getStatusBadge = (status: string) => {
     switch(status) {
-      case "scheduled": return <Badge variant="outline" className="bg-purple-500/10 text-purple-400 border-purple-500/20"><Clock className="mr-1 h-3 w-3" /> Programmé</Badge>;
-      case "in_progress": return <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/20"><MapPin className="mr-1 h-3 w-3" /> En cours</Badge>;
-      case "completed": return <Badge variant="outline" className="bg-green-500/10 text-green-400 border-green-500/20"><CheckCircle2 className="mr-1 h-3 w-3" /> Terminé</Badge>;
-      case "cancelled": return <Badge variant="outline" className="bg-red-500/10 text-red-400 border-red-500/20"><XCircle className="mr-1 h-3 w-3" /> Annulé</Badge>;
+      case "scheduled": return <Badge variant="outline" className="bg-purple-500/10 text-purple-400 border-purple-500/20"><Clock className="mr-1 h-3 w-3" /> {t("trip_scheduled")}</Badge>;
+      case "in_progress": return <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/20"><MapPin className="mr-1 h-3 w-3" /> {t("trip_in_progress_label")}</Badge>;
+      case "completed": return <Badge variant="outline" className="bg-green-500/10 text-green-400 border-green-500/20"><CheckCircle2 className="mr-1 h-3 w-3" /> {t("trip_completed")}</Badge>;
+      case "cancelled": return <Badge variant="outline" className="bg-red-500/10 text-red-400 border-red-500/20"><XCircle className="mr-1 h-3 w-3" /> {t("trip_cancelled")}</Badge>;
       default: return null;
     }
   };
@@ -65,8 +68,8 @@ export default function ChauffeurTrajets() {
         
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-zinc-100">Historique des trajets</h1>
-            <p className="text-zinc-400 mt-1">Consultez vos courses passées et à venir.</p>
+            <h1 className="text-3xl font-bold tracking-tight text-zinc-100">{t("nav_trips")}</h1>
+            <p className="text-zinc-400 mt-1">{t("trips_subtitle")}</p>
           </div>
         </div>
 
@@ -74,7 +77,7 @@ export default function ChauffeurTrajets() {
           <div className="relative w-full md:w-96">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
             <Input 
-              placeholder="Rechercher par passager, adresse..." 
+              placeholder={t("search_trips")}
               className="pl-10 bg-zinc-900 border-zinc-800 focus-visible:ring-orange-500"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -84,14 +87,14 @@ export default function ChauffeurTrajets() {
             <Filter className="h-4 w-4 text-zinc-500 shrink-0" />
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-[180px] bg-zinc-900 border-zinc-800 focus:ring-orange-500">
-                <SelectValue placeholder="Statut" />
+                <SelectValue placeholder={t("filter_all")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tous les statuts</SelectItem>
-                <SelectItem value="scheduled">Programmés</SelectItem>
-                <SelectItem value="in_progress">En cours</SelectItem>
-                <SelectItem value="completed">Terminés</SelectItem>
-                <SelectItem value="cancelled">Annulés</SelectItem>
+                <SelectItem value="all">{t("filter_all")}</SelectItem>
+                <SelectItem value="scheduled">{t("trip_scheduled_plural")}</SelectItem>
+                <SelectItem value="in_progress">{t("trip_in_progress_label")}</SelectItem>
+                <SelectItem value="completed">{t("trip_completed_plural")}</SelectItem>
+                <SelectItem value="cancelled">{t("trip_cancelled_plural")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -153,7 +156,7 @@ export default function ChauffeurTrajets() {
                           disabled={updateTrip.isPending}
                           className="w-full bg-blue-600 hover:bg-blue-500 text-white"
                         >
-                          Démarrer
+                          {t("start")}
                         </Button>
                       )}
                       
@@ -163,13 +166,13 @@ export default function ChauffeurTrajets() {
                           disabled={updateTrip.isPending}
                           className="w-full bg-green-600 hover:bg-green-500 text-white"
                         >
-                          Terminer
+                          {t("finish")}
                         </Button>
                       )}
                       
                       <Link href={`/chauffeur/trajet/${trip.id}`} className="w-full">
                         <Button variant="outline" className="w-full bg-transparent border-zinc-700 hover:bg-zinc-800 text-zinc-300">
-                          Détails
+                          {t("details")}
                         </Button>
                       </Link>
                     </div>
@@ -180,8 +183,8 @@ export default function ChauffeurTrajets() {
           ) : (
             <div className="text-center py-16 rounded-2xl border border-zinc-800 bg-zinc-950/50 border-dashed">
               <MapPin className="mx-auto h-12 w-12 text-zinc-700 mb-4" />
-              <h3 className="text-lg font-medium text-zinc-300">Aucun trajet trouvé</h3>
-              <p className="text-zinc-500 text-sm mt-1">Modifiez vos filtres ou effectuez une nouvelle recherche.</p>
+              <h3 className="text-lg font-medium text-zinc-300">{t("no_trips")}</h3>
+              <p className="text-zinc-500 text-sm mt-1">{t("no_trips_sub")}</p>
             </div>
           )}
         </div>

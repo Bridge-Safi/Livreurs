@@ -7,11 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
 import { useI18n } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth";
 
-const LIVREUR_ID = 1;
 const TC = "#C14B2A";
 const GREEN = "#2A7A48";
 const GOLD = "#D4880C";
@@ -23,6 +21,8 @@ const BROWN_LIGHT = "#9B7060";
 export default function LivreurLivraisons() {
   const queryClient = useQueryClient();
   const { t } = useI18n();
+  const { livreur } = useAuth();
+  const LIVREUR_ID = livreur?.id ?? 0;
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -68,8 +68,8 @@ export default function LivreurLivraisons() {
 
   const priorityBadge = (priority: string) => {
     const map: Record<string, { label: string; color: string; bg: string }> = {
-      urgent: { label: t("priority_urgent"), color: TC,        bg: "#FDEEE9" },
-      normal: { label: t("priority_normal"), color: GOLD,      bg: "#FEF6E4" },
+      urgent: { label: t("priority_urgent"), color: TC,          bg: "#FDEEE9" },
+      normal: { label: t("priority_normal"), color: GOLD,        bg: "#FEF6E4" },
       low:    { label: t("priority_low"),    color: BROWN_LIGHT, bg: "#F5EFE4" },
     };
     const p = map[priority] ?? map.normal;
@@ -87,7 +87,7 @@ export default function LivreurLivraisons() {
         {/* Header */}
         <div>
           <h1 className="text-2xl font-bold tracking-tight" style={{ color: BROWN }}>{t("nav_deliveries")}</h1>
-          <p className="mt-1 text-sm" style={{ color: BROWN_LIGHT }}>Gérez l'ensemble de vos missions et colis.</p>
+          <p className="mt-1 text-sm" style={{ color: BROWN_LIGHT }}>{t("deliveries_subtitle")}</p>
         </div>
 
         {/* Filters */}
@@ -98,7 +98,7 @@ export default function LivreurLivraisons() {
           <div className="relative w-full md:w-96">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: BROWN_LIGHT }} />
             <Input
-              placeholder="Rechercher par n° de suivi, client, adresse..."
+              placeholder={t("search_deliveries")}
               className="pl-10"
               style={{ background: "#FAF6EF", border: `1px solid ${BORDER}`, color: BROWN }}
               value={searchQuery}
@@ -109,10 +109,10 @@ export default function LivreurLivraisons() {
             <Filter className="h-4 w-4 flex-shrink-0" style={{ color: BROWN_LIGHT }} />
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-[180px]" style={{ background: "#FAF6EF", border: `1px solid ${BORDER}`, color: BROWN }}>
-                <SelectValue placeholder="Statut" />
+                <SelectValue placeholder={t("filter_all")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tous les statuts</SelectItem>
+                <SelectItem value="all">{t("filter_all")}</SelectItem>
                 <SelectItem value="pending">{t("status_pending")}</SelectItem>
                 <SelectItem value="in_progress">{t("status_in_progress")}</SelectItem>
                 <SelectItem value="delivered">{t("status_delivered")}</SelectItem>
@@ -135,7 +135,6 @@ export default function LivreurLivraisons() {
                 className="rounded-2xl border overflow-hidden flex flex-col md:flex-row"
                 style={{ background: "white", borderColor: BORDER, boxShadow: "0 1px 6px rgba(44,24,16,0.04)" }}
               >
-                {/* Color stripe by priority */}
                 <div
                   className="w-full md:w-1 h-1 md:h-auto flex-shrink-0"
                   style={{
@@ -198,7 +197,7 @@ export default function LivreurLivraisons() {
                       className="w-full py-2 rounded-xl border text-sm font-medium transition-all"
                       style={{ borderColor: BORDER, color: BROWN_MID, background: "white" }}
                     >
-                      Détails
+                      {t("details")}
                     </button>
                   </Link>
                 </div>

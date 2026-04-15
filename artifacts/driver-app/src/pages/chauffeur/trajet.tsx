@@ -12,11 +12,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { useI18n } from "@/lib/i18n";
 
 export default function ChauffeurTrajetDetail() {
   const params = useParams();
   const id = parseInt(params.id || "0", 10);
   const queryClient = useQueryClient();
+  const { t } = useI18n();
 
   const { data: trip, isLoading } = useGetTrip(id, {
     query: { enabled: !!id, queryKey: getGetTripQueryKey(id) }
@@ -34,10 +36,10 @@ export default function ChauffeurTrajetDetail() {
 
   const getStatusBadge = (status?: string) => {
     switch(status) {
-      case "scheduled": return <Badge className="bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 border-purple-500/50 px-3 py-1 text-sm border"><Clock className="mr-1.5 h-4 w-4" /> Programmé</Badge>;
-      case "in_progress": return <Badge className="bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 border-blue-500/50 px-3 py-1 text-sm border"><MapPin className="mr-1.5 h-4 w-4" /> En cours</Badge>;
-      case "completed": return <Badge className="bg-green-500/20 text-green-400 hover:bg-green-500/30 border-green-500/50 px-3 py-1 text-sm border"><CheckCircle2 className="mr-1.5 h-4 w-4" /> Terminé</Badge>;
-      case "cancelled": return <Badge className="bg-red-500/20 text-red-400 hover:bg-red-500/30 border-red-500/50 px-3 py-1 text-sm border"><XCircle className="mr-1.5 h-4 w-4" /> Annulé</Badge>;
+      case "scheduled": return <Badge className="bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 border-purple-500/50 px-3 py-1 text-sm border"><Clock className="mr-1.5 h-4 w-4" /> {t("trip_scheduled")}</Badge>;
+      case "in_progress": return <Badge className="bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 border-blue-500/50 px-3 py-1 text-sm border"><MapPin className="mr-1.5 h-4 w-4" /> {t("trip_in_progress_label")}</Badge>;
+      case "completed": return <Badge className="bg-green-500/20 text-green-400 hover:bg-green-500/30 border-green-500/50 px-3 py-1 text-sm border"><CheckCircle2 className="mr-1.5 h-4 w-4" /> {t("trip_completed")}</Badge>;
+      case "cancelled": return <Badge className="bg-red-500/20 text-red-400 hover:bg-red-500/30 border-red-500/50 px-3 py-1 text-sm border"><XCircle className="mr-1.5 h-4 w-4" /> {t("trip_cancelled")}</Badge>;
       default: return null;
     }
   };
@@ -62,10 +64,10 @@ export default function ChauffeurTrajetDetail() {
       <ChauffeurLayout>
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
           <MapIcon className="h-16 w-16 text-zinc-800 mb-4" />
-          <h2 className="text-2xl font-bold text-zinc-200">Trajet introuvable</h2>
-          <p className="text-zinc-500 mt-2 mb-6">Cette course n'existe pas ou a été supprimée.</p>
+          <h2 className="text-2xl font-bold text-zinc-200">{t("trip_not_found")}</h2>
+          <p className="text-zinc-500 mt-2 mb-6">{t("trip_not_found_sub")}</p>
           <Link href="/chauffeur/trajets">
-            <Button className="bg-orange-600 hover:bg-orange-500 text-white">Retour aux trajets</Button>
+            <Button className="bg-orange-600 hover:bg-orange-500 text-white">{t("back_to_trips")}</Button>
           </Link>
         </div>
       </ChauffeurLayout>
@@ -83,7 +85,7 @@ export default function ChauffeurTrajetDetail() {
               </Button>
             </Link>
             <div className="flex flex-col">
-              <span className="text-xs text-zinc-500 font-medium tracking-wider uppercase">Course</span>
+              <span className="text-xs text-zinc-500 font-medium tracking-wider uppercase">{t("nav_trips")}</span>
               <span className="font-mono font-bold text-zinc-200">#{trip.id.toString().padStart(6, '0')}</span>
             </div>
           </div>
@@ -98,8 +100,8 @@ export default function ChauffeurTrajetDetail() {
               <CardContent className="p-4 flex flex-col sm:flex-row items-center gap-4 justify-between">
                 <div className="text-sm text-zinc-300 text-center sm:text-left">
                   {trip.status === "scheduled" 
-                    ? "Le passager vous attend. Démarrez la course une fois sur place." 
-                    : "Course en cours. Conduisez prudemment vers la destination."}
+                    ? t("trip_waiting_msg")
+                    : t("trip_going_msg")}
                 </div>
                 <div className="flex gap-3 w-full sm:w-auto">
                   {trip.status === "scheduled" ? (
@@ -108,7 +110,7 @@ export default function ChauffeurTrajetDetail() {
                       disabled={updateTrip.isPending}
                       className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-semibold"
                     >
-                      Prendre en charge
+                      {t("pickup_action")}
                     </Button>
                   ) : (
                     <Button 
@@ -117,7 +119,7 @@ export default function ChauffeurTrajetDetail() {
                       className="w-full sm:w-auto bg-green-600 hover:bg-green-500 text-white font-semibold"
                     >
                       <CheckCircle2 className="mr-2 h-4 w-4" />
-                      Course terminée
+                      {t("end_trip")}
                     </Button>
                   )}
                 </div>
@@ -127,7 +129,6 @@ export default function ChauffeurTrajetDetail() {
 
           {/* Route Card */}
           <Card className="bg-zinc-950 border-zinc-800 relative overflow-hidden">
-            {/* Minimalist map abstraction background */}
             <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-20 pointer-events-none mix-blend-screen">
               <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full text-orange-500 fill-none stroke-current stroke-[0.5]">
                 <path d="M10,90 Q30,80 40,50 T90,10" />
@@ -138,7 +139,7 @@ export default function ChauffeurTrajetDetail() {
 
             <CardHeader className="pb-4 relative z-10">
               <CardTitle className="text-lg flex items-center gap-2 text-zinc-100">
-                <MapIcon className="h-5 w-5 text-orange-500" /> Itinéraire
+                <MapIcon className="h-5 w-5 text-orange-500" /> {t("route")}
               </CardTitle>
             </CardHeader>
             <CardContent className="relative z-10">
@@ -146,7 +147,7 @@ export default function ChauffeurTrajetDetail() {
                 
                 <div className="relative">
                   <div className="absolute -left-6 top-1 h-3 w-3 rounded-full bg-zinc-950 border-2 border-zinc-500 z-10" />
-                  <h4 className="text-sm font-medium text-zinc-400 mb-1">Départ</h4>
+                  <h4 className="text-sm font-medium text-zinc-400 mb-1">{t("departure")}</h4>
                   <p className="text-lg font-medium text-zinc-100">{trip.pickupAddress}</p>
                   <Button variant="outline" size="sm" className="mt-3 bg-zinc-900 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white h-8 text-xs">
                     <Navigation className="mr-2 h-3 w-3" /> Waze
@@ -155,7 +156,7 @@ export default function ChauffeurTrajetDetail() {
 
                 <div className="relative">
                   <div className="absolute -left-6 top-1 h-3 w-3 rounded-full bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.8)] z-10" />
-                  <h4 className="text-sm font-medium text-orange-400 mb-1">Arrivée</h4>
+                  <h4 className="text-sm font-medium text-orange-400 mb-1">{t("arrival")}</h4>
                   <p className="text-lg font-medium text-zinc-100">{trip.dropoffAddress}</p>
                   <Button variant="outline" size="sm" className="mt-3 bg-orange-950/30 border-orange-900/50 text-orange-400 hover:bg-orange-900/50 hover:text-orange-300 h-8 text-xs">
                     <Navigation className="mr-2 h-3 w-3" /> Waze
@@ -171,7 +172,7 @@ export default function ChauffeurTrajetDetail() {
             <Card className="bg-zinc-950 border-zinc-800">
               <CardHeader className="pb-4 border-b border-zinc-800/50">
                 <CardTitle className="text-lg flex items-center gap-2 text-zinc-100">
-                  <User className="h-5 w-5 text-zinc-400" /> Passager
+                  <User className="h-5 w-5 text-zinc-400" /> {t("passenger")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-4 space-y-4">
@@ -204,7 +205,7 @@ export default function ChauffeurTrajetDetail() {
             <Card className="bg-zinc-950 border-zinc-800">
               <CardHeader className="pb-4 border-b border-zinc-800/50">
                 <CardTitle className="text-lg flex items-center gap-2 text-zinc-100">
-                  <Activity className="h-5 w-5 text-zinc-400" /> Facturation & Stats
+                  <Activity className="h-5 w-5 text-zinc-400" /> {t("billing")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-4 space-y-5">
@@ -214,23 +215,23 @@ export default function ChauffeurTrajetDetail() {
                       <CreditCard className="h-5 w-5 text-zinc-400" />
                     </div>
                     <div>
-                      <p className="text-sm text-zinc-500">Montant net</p>
+                      <p className="text-sm text-zinc-500">{t("amount_net")}</p>
                       <p className="text-xl font-bold text-zinc-100">{trip.fare.toFixed(2)} €</p>
                     </div>
                   </div>
-                  <Badge variant="outline" className="bg-green-500/10 text-green-400 border-green-500/20">Payé</Badge>
+                  <Badge variant="outline" className="bg-green-500/10 text-green-400 border-green-500/20">{t("paid")}</Badge>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
                   {trip.distance && (
                     <div>
-                      <p className="text-sm text-zinc-500 mb-1">Distance</p>
+                      <p className="text-sm text-zinc-500 mb-1">{t("distance")}</p>
                       <p className="text-base font-medium text-zinc-200">{trip.distance} km</p>
                     </div>
                   )}
                   {trip.duration && (
                     <div>
-                      <p className="text-sm text-zinc-500 mb-1">Durée</p>
+                      <p className="text-sm text-zinc-500 mb-1">{t("duration")}</p>
                       <p className="text-base font-medium text-zinc-200">{trip.duration} min</p>
                     </div>
                   )}
@@ -238,7 +239,7 @@ export default function ChauffeurTrajetDetail() {
                 
                 {trip.scheduledAt && (
                   <div className="pt-2 border-t border-zinc-800/50">
-                    <p className="text-sm text-zinc-500 mb-1">Prise en charge programmée</p>
+                    <p className="text-sm text-zinc-500 mb-1">{t("pickup_scheduled")}</p>
                     <p className="text-sm font-medium text-zinc-300">
                       {(() => { try { const d = new Date(trip.scheduledAt!); return isNaN(d.getTime()) ? String(trip.scheduledAt) : format(d, "dd MMMM yyyy à HH'h'mm", { locale: fr }); } catch { return String(trip.scheduledAt); } })()}
                     </p>

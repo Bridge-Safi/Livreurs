@@ -15,12 +15,15 @@ import {
 } from "@/components/ui/select";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-
-const LIVREUR_ID = 1;
+import { useI18n } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth";
 
 export default function LivreurProfil() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t } = useI18n();
+  const { livreur } = useAuth();
+  const LIVREUR_ID = livreur?.id ?? 0;
   const [isEditing, setIsEditing] = useState(false);
   const [editStatus, setEditStatus] = useState<string>("");
   
@@ -42,8 +45,8 @@ export default function LivreurProfil() {
         setIsEditing(false);
         queryClient.invalidateQueries({ queryKey: getGetDelivererQueryKey(LIVREUR_ID) });
         toast({
-          title: "Profil mis à jour",
-          description: "Vos paramètres ont été enregistrés.",
+          title: t("profile_updated_title"),
+          description: t("profile_updated_desc"),
         });
       }
     });
@@ -61,12 +64,18 @@ export default function LivreurProfil() {
 
   const getVehicleLabel = (type?: string) => {
     switch(type) {
-      case "bicycle": return "Vélo";
-      case "motorcycle": return "Scooter";
-      case "car": return "Voiture";
-      case "van": return "Utilitaire";
+      case "bicycle": return t("vehicle_bicycle");
+      case "motorcycle": return t("vehicle_motorcycle");
+      case "car": return t("vehicle_car");
+      case "van": return t("vehicle_van");
       default: return type;
     }
+  };
+
+  const statusLabel = (s: string) => {
+    if (s === "available") return t("status_available");
+    if (s === "busy") return t("status_busy");
+    return t("status_offline");
   };
 
   return (
@@ -75,8 +84,8 @@ export default function LivreurProfil() {
         
         <div className="flex items-end justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-zinc-100">Profil Livreur</h1>
-            <p className="text-zinc-400 mt-1">Vos informations et statistiques de performance.</p>
+            <h1 className="text-3xl font-bold tracking-tight text-zinc-100">{t("profil_livreur")}</h1>
+            <p className="text-zinc-400 mt-1">{t("profil_livreur_subtitle")}</p>
           </div>
           <Button 
             variant="outline" 
@@ -85,9 +94,9 @@ export default function LivreurProfil() {
             disabled={updateDeliverer.isPending}
           >
             {isEditing ? (
-              <>Enregistrer</>
+              <>{t("save")}</>
             ) : (
-              <><Settings className="mr-2 h-4 w-4" /> Paramètres</>
+              <><Settings className="mr-2 h-4 w-4" /> {t("settings")}</>
             )}
           </Button>
         </div>
@@ -134,12 +143,12 @@ export default function LivreurProfil() {
                         <div className="flex items-center gap-2 bg-zinc-900 p-1 rounded-lg border border-zinc-800">
                           <Select value={editStatus} onValueChange={setEditStatus}>
                             <SelectTrigger className="w-[180px] h-8 bg-transparent border-0 focus:ring-0 focus:ring-offset-0 text-sm">
-                              <SelectValue placeholder="Statut" />
+                              <SelectValue placeholder={t("status_available")} />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="available">Disponible</SelectItem>
-                              <SelectItem value="busy">Occupé</SelectItem>
-                              <SelectItem value="offline">Hors ligne</SelectItem>
+                              <SelectItem value="available">{t("status_available")}</SelectItem>
+                              <SelectItem value="busy">{t("status_busy")}</SelectItem>
+                              <SelectItem value="offline">{t("status_offline")}</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -153,13 +162,13 @@ export default function LivreurProfil() {
                           }`}
                         >
                           {profile.status === 'available' && <CheckCircle2 className="w-3 h-3 mr-1.5" />}
-                          {profile.status === 'available' ? 'Disponible' : profile.status === 'busy' ? 'En course' : 'Hors ligne'}
+                          {statusLabel(profile.status)}
                         </Badge>
                       )}
                       
                       <Badge variant="outline" className="bg-cyan-950/30 text-cyan-400 border-cyan-900/50 px-3 py-1 flex items-center gap-1.5">
                         <Map className="w-3 h-3" />
-                        Zone: {profile.zone || 'Non définie'}
+                        {t("zone")}: {profile.zone || t("zone_undefined")}
                       </Badge>
                     </div>
                   </div>
@@ -169,7 +178,7 @@ export default function LivreurProfil() {
                       <Star className="w-5 h-5 fill-current" />
                     </div>
                     <div className="text-2xl font-bold text-zinc-100">{profile.rating.toFixed(1)}</div>
-                    <div className="text-xs text-zinc-500 mt-1">Note globale</div>
+                    <div className="text-xs text-zinc-500 mt-1">{t("rating_global")}</div>
                   </div>
                 </div>
               </CardContent>
@@ -181,13 +190,13 @@ export default function LivreurProfil() {
               <Card className="bg-zinc-950 border-zinc-800">
                 <CardHeader>
                   <CardTitle className="text-lg text-zinc-100 flex items-center gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-cyan-500" /> Performance Globale
+                    <CheckCircle2 className="h-5 w-5 text-cyan-500" /> {t("performance_global")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div>
                     <div className="flex justify-between items-end mb-2">
-                      <span className="text-zinc-400">Total des livraisons</span>
+                      <span className="text-zinc-400">{t("total_deliveries")}</span>
                       <span className="text-3xl font-bold text-zinc-100">{profile.totalDeliveries}</span>
                     </div>
                     <div className="h-2 w-full bg-zinc-900 rounded-full overflow-hidden">
@@ -198,11 +207,11 @@ export default function LivreurProfil() {
                   <div className="grid grid-cols-2 gap-4 pt-4 border-t border-zinc-800/50">
                     <div className="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800/50 text-center">
                       <div className="text-2xl font-bold text-zinc-100 mb-1">98%</div>
-                      <div className="text-xs text-zinc-500 uppercase tracking-wider">Taux de succès</div>
+                      <div className="text-xs text-zinc-500 uppercase tracking-wider">{t("success_rate")}</div>
                     </div>
                     <div className="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800/50 text-center">
                       <div className="text-2xl font-bold text-zinc-100 mb-1">24m</div>
-                      <div className="text-xs text-zinc-500 uppercase tracking-wider">Temps moyen</div>
+                      <div className="text-xs text-zinc-500 uppercase tracking-wider">{t("avg_time")}</div>
                     </div>
                   </div>
                 </CardContent>
@@ -213,7 +222,7 @@ export default function LivreurProfil() {
                 <CardHeader>
                   <CardTitle className="text-lg text-zinc-100 flex items-center gap-2">
                     {getVehicleIcon(profile.vehicleType)}
-                    Véhicule
+                    {t("vehicle")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -226,13 +235,13 @@ export default function LivreurProfil() {
                         {getVehicleLabel(profile.vehicleType)}
                       </h3>
                       <p className="text-sm text-zinc-500">
-                        Véhicule principal enregistré
+                        {t("vehicle_primary")}
                       </p>
                     </div>
                   </div>
                   
                   <div className="mt-6 p-4 rounded-xl bg-cyan-500/5 border border-cyan-500/10 text-sm text-cyan-200">
-                    Votre type de véhicule détermine le type de courses qui vous sont assignées (encombrement, distance).
+                    {t("vehicle_info")}
                   </div>
                 </CardContent>
               </Card>

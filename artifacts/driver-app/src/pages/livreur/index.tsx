@@ -5,8 +5,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { useI18n } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth";
 
-const LIVREUR_ID = 1;
 const TC = "#C14B2A";
 const GREEN = "#2A7A48";
 const GOLD = "#D4880C";
@@ -18,6 +18,8 @@ const BROWN_LIGHT = "#9B7060";
 export default function LivreurDashboard() {
   const queryClient = useQueryClient();
   const { t } = useI18n();
+  const { livreur } = useAuth();
+  const LIVREUR_ID = livreur?.id ?? 0;
 
   const { data: stats, isLoading: statsLoading } = useGetDeliveryStats({ delivererId: LIVREUR_ID }, {
     query: { queryKey: getGetDeliveryStatsQueryKey({ delivererId: LIVREUR_ID }) }
@@ -81,7 +83,7 @@ export default function LivreurDashboard() {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold" style={{ color: BROWN }}>{t("active_deliveries")}</h2>
             <Link href="/livreur/livraisons">
-              <span className="text-sm font-semibold" style={{ color: TC }}>Voir tout →</span>
+              <span className="text-sm font-semibold" style={{ color: TC }}>{t("see_all")} →</span>
             </Link>
           </div>
 
@@ -98,7 +100,6 @@ export default function LivreurDashboard() {
                   className="rounded-2xl border overflow-hidden"
                   style={{ background: "white", borderColor: BORDER, boxShadow: "0 1px 8px rgba(44,24,16,0.05)" }}
                 >
-                  {/* Top accent */}
                   <div className="h-0.5 w-full" style={{ background: TC }} />
 
                   <div className="p-4">
@@ -133,7 +134,7 @@ export default function LivreurDashboard() {
                         className="w-full py-2 rounded-xl border text-sm font-semibold transition-all"
                         style={{ borderColor: BORDER, color: BROWN_MID, background: "#FAF6EF" }}
                       >
-                        Détails
+                        {t("details")}
                       </button>
                     </Link>
                     <button

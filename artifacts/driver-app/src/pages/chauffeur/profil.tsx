@@ -1,6 +1,6 @@
 import { ChauffeurLayout } from "@/components/layout/ChauffeurLayout";
 import { useGetDriver, getGetDriverQueryKey, useUpdateDriver } from "@workspace/api-client-react";
-import { User, Car, Star, Navigation, Settings, CheckCircle2, CreditCard } from "lucide-react";
+import { Car, Star, Navigation, Settings, CheckCircle2, CreditCard } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,12 +15,15 @@ import {
 } from "@/components/ui/select";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-
-const DRIVER_ID = 1;
+import { useI18n } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth";
 
 export default function ChauffeurProfil() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t } = useI18n();
+  const { chauffeur } = useAuth();
+  const DRIVER_ID = chauffeur?.id ?? 0;
   const [isEditing, setIsEditing] = useState(false);
   const [editStatus, setEditStatus] = useState<string>("");
   
@@ -42,11 +45,17 @@ export default function ChauffeurProfil() {
         setIsEditing(false);
         queryClient.invalidateQueries({ queryKey: getGetDriverQueryKey(DRIVER_ID) });
         toast({
-          title: "Profil mis à jour",
-          description: "Vos paramètres ont été enregistrés.",
+          title: t("profile_updated_title"),
+          description: t("profile_updated_desc"),
         });
       }
     });
+  };
+
+  const statusLabel = (s: string) => {
+    if (s === "available") return t("status_online");
+    if (s === "busy") return t("status_busy_trip");
+    return t("status_offline");
   };
 
   return (
@@ -55,8 +64,8 @@ export default function ChauffeurProfil() {
         
         <div className="flex items-end justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-zinc-100">Profil Chauffeur</h1>
-            <p className="text-zinc-400 mt-1">Vos informations VTC et statistiques.</p>
+            <h1 className="text-3xl font-bold tracking-tight text-zinc-100">{t("profil_chauffeur")}</h1>
+            <p className="text-zinc-400 mt-1">{t("profil_chauffeur_subtitle")}</p>
           </div>
           <Button 
             variant="outline" 
@@ -65,9 +74,9 @@ export default function ChauffeurProfil() {
             disabled={updateDriver.isPending}
           >
             {isEditing ? (
-              <>Enregistrer</>
+              <>{t("save")}</>
             ) : (
-              <><Settings className="mr-2 h-4 w-4" /> Paramètres</>
+              <><Settings className="mr-2 h-4 w-4" /> {t("settings")}</>
             )}
           </Button>
         </div>
@@ -114,12 +123,12 @@ export default function ChauffeurProfil() {
                         <div className="flex items-center gap-2 bg-zinc-900 p-1 rounded-lg border border-zinc-800">
                           <Select value={editStatus} onValueChange={setEditStatus}>
                             <SelectTrigger className="w-[180px] h-8 bg-transparent border-0 focus:ring-0 focus:ring-offset-0 text-sm">
-                              <SelectValue placeholder="Statut" />
+                              <SelectValue placeholder={t("status_available")} />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="available">Disponible</SelectItem>
-                              <SelectItem value="busy">En course</SelectItem>
-                              <SelectItem value="offline">Hors ligne</SelectItem>
+                              <SelectItem value="available">{t("status_online")}</SelectItem>
+                              <SelectItem value="busy">{t("status_busy_trip")}</SelectItem>
+                              <SelectItem value="offline">{t("status_offline")}</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -133,7 +142,7 @@ export default function ChauffeurProfil() {
                           }`}
                         >
                           {profile.status === 'available' && <CheckCircle2 className="w-3 h-3 mr-1.5" />}
-                          {profile.status === 'available' ? 'En ligne' : profile.status === 'busy' ? 'En course' : 'Hors ligne'}
+                          {statusLabel(profile.status)}
                         </Badge>
                       )}
                     </div>
@@ -144,7 +153,7 @@ export default function ChauffeurProfil() {
                       <Star className="w-5 h-5 fill-current" />
                     </div>
                     <div className="text-2xl font-bold text-zinc-100">{profile.rating.toFixed(2)}</div>
-                    <div className="text-xs text-zinc-500 mt-1">Note globale</div>
+                    <div className="text-xs text-zinc-500 mt-1">{t("rating_global")}</div>
                   </div>
                 </div>
               </CardContent>
@@ -156,13 +165,13 @@ export default function ChauffeurProfil() {
               <Card className="bg-zinc-950 border-zinc-800">
                 <CardHeader>
                   <CardTitle className="text-lg text-zinc-100 flex items-center gap-2">
-                    <Navigation className="h-5 w-5 text-orange-500" /> Statistiques
+                    <Navigation className="h-5 w-5 text-orange-500" /> {t("stats")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div>
                     <div className="flex justify-between items-end mb-2">
-                      <span className="text-zinc-400">Total des courses</span>
+                      <span className="text-zinc-400">{t("total_trips_label")}</span>
                       <span className="text-3xl font-bold text-zinc-100">{profile.totalTrips}</span>
                     </div>
                     <div className="h-2 w-full bg-zinc-900 rounded-full overflow-hidden">
@@ -173,11 +182,11 @@ export default function ChauffeurProfil() {
                   <div className="grid grid-cols-2 gap-4 pt-4 border-t border-zinc-800/50">
                     <div className="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800/50 flex flex-col items-center justify-center">
                       <CreditCard className="h-6 w-6 text-zinc-500 mb-2" />
-                      <div className="text-sm font-medium text-zinc-300">Niveau Gold</div>
+                      <div className="text-sm font-medium text-zinc-300">{t("level_gold")}</div>
                     </div>
                     <div className="bg-zinc-900/50 p-4 rounded-xl border border-zinc-800/50 flex flex-col items-center justify-center">
                       <div className="text-2xl font-bold text-zinc-100 mb-1">4.9/5</div>
-                      <div className="text-xs text-zinc-500 text-center">Derniers 30 jours</div>
+                      <div className="text-xs text-zinc-500 text-center">{t("last_30_days")}</div>
                     </div>
                   </div>
                 </CardContent>
@@ -187,7 +196,7 @@ export default function ChauffeurProfil() {
               <Card className="bg-zinc-950 border-zinc-800">
                 <CardHeader>
                   <CardTitle className="text-lg text-zinc-100 flex items-center gap-2">
-                    <Car className="h-5 w-5 text-zinc-400" /> Véhicule & Licence
+                    <Car className="h-5 w-5 text-zinc-400" /> {t("vehicle_license")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -195,7 +204,7 @@ export default function ChauffeurProfil() {
                     <div className="flex justify-between items-start mb-4">
                       <div>
                         <h3 className="text-xl font-bold text-zinc-100">{profile.vehicleModel}</h3>
-                        <p className="text-sm text-zinc-500 mt-1">Confort & Standard</p>
+                        <p className="text-sm text-zinc-500 mt-1">{t("comfort_standard")}</p>
                       </div>
                       <Badge variant="outline" className="bg-zinc-800 border-zinc-700 font-mono text-sm tracking-widest text-zinc-200 py-1">
                         {profile.vehiclePlate}
@@ -205,7 +214,7 @@ export default function ChauffeurProfil() {
                   
                   <div className="space-y-4">
                     <div>
-                      <p className="text-sm text-zinc-500 mb-1">Numéro de carte VTC</p>
+                      <p className="text-sm text-zinc-500 mb-1">{t("vtc_card")}</p>
                       <p className="text-base font-medium font-mono text-zinc-200 bg-zinc-900/50 p-2 rounded border border-zinc-800/50 inline-block">
                         {profile.licenseNumber}
                       </p>

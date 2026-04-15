@@ -5,8 +5,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { useI18n } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth";
 
-const DRIVER_ID = 1;
 const GOLD = "#D4880C";
 const GREEN = "#2A7A48";
 const TC = "#C14B2A";
@@ -18,6 +18,8 @@ const BROWN_LIGHT = "#9B7060";
 export default function ChauffeurDashboard() {
   const queryClient = useQueryClient();
   const { t } = useI18n();
+  const { chauffeur } = useAuth();
+  const DRIVER_ID = chauffeur?.id ?? 0;
 
   const { data: stats, isLoading: statsLoading } = useGetTripStats({ driverId: DRIVER_ID }, {
     query: { queryKey: getGetTripStatsQueryKey({ driverId: DRIVER_ID }) }
@@ -39,10 +41,10 @@ export default function ChauffeurDashboard() {
   };
 
   const statCards = [
-    { icon: Route,      label: "Courses",  value: stats?.completedToday || 0,         color: GOLD,  bg: "#FEF6E4" },
-    { icon: DollarSign, label: "Recettes", value: `${stats?.earningsToday || 0} €`,   color: GREEN, bg: "#E4F5EC" },
-    { icon: Navigation, label: "Distance", value: `${stats?.totalKmToday || 0} km`,   color: "#2563EB", bg: "#EFF6FF" },
-    { icon: Activity,   label: "Moyenne",  value: `${stats?.averageFare || 0} €`,     color: TC,    bg: "#FDEEE9" },
+    { icon: Route,      label: t("nav_trips"),  value: stats?.completedToday || 0,         color: GOLD,      bg: "#FEF6E4" },
+    { icon: DollarSign, label: t("earnings"),    value: `${stats?.earningsToday || 0} €`,   color: GREEN,     bg: "#E4F5EC" },
+    { icon: Navigation, label: t("distance"),    value: `${stats?.totalKmToday || 0} km`,   color: "#2563EB", bg: "#EFF6FF" },
+    { icon: Activity,   label: t("avg_time"),    value: `${stats?.averageFare || 0} €`,     color: TC,        bg: "#FDEEE9" },
   ];
 
   return (
@@ -52,7 +54,7 @@ export default function ChauffeurDashboard() {
         {/* Header */}
         <div>
           <h1 className="text-2xl font-bold tracking-tight" style={{ color: BROWN }}>{t("nav_dashboard")}</h1>
-          <p className="mt-1 text-sm" style={{ color: BROWN_LIGHT }}>{t("greeting")}, voici votre activité de la journée.</p>
+          <p className="mt-1 text-sm" style={{ color: BROWN_LIGHT }}>{t("greeting")}, {t("day_activity")}</p>
         </div>
 
         {/* Stats Grid */}
@@ -79,9 +81,9 @@ export default function ChauffeurDashboard() {
         {/* Active Trips */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold" style={{ color: BROWN }}>Course en cours</h2>
+            <h2 className="text-lg font-bold" style={{ color: BROWN }}>{t("trip_active")}</h2>
             <Link href="/chauffeur/trajets">
-              <span className="text-sm font-semibold" style={{ color: GOLD }}>Historique →</span>
+              <span className="text-sm font-semibold" style={{ color: GOLD }}>{t("history")} →</span>
             </Link>
           </div>
 
@@ -115,7 +117,7 @@ export default function ChauffeurDashboard() {
                         className="text-xs font-bold px-2 py-1 rounded-full"
                         style={{ background: "#EFF6FF", color: "#2563EB" }}
                       >
-                        En cours
+                        {t("trip_in_progress_label")}
                       </span>
                     </div>
 
@@ -139,7 +141,7 @@ export default function ChauffeurDashboard() {
                         className="w-full py-2 rounded-xl border text-sm font-semibold"
                         style={{ borderColor: BORDER, color: BROWN_MID, background: "#FAF6EF" }}
                       >
-                        Détails
+                        {t("details")}
                       </button>
                     </Link>
                     <button
@@ -149,7 +151,7 @@ export default function ChauffeurDashboard() {
                       style={{ background: GREEN, color: "white" }}
                     >
                       <CheckCircle2 className="h-4 w-4" />
-                      Terminer
+                      {t("finish")}
                     </button>
                   </div>
                 </div>
@@ -166,8 +168,8 @@ export default function ChauffeurDashboard() {
               >
                 <Navigation className="h-7 w-7" style={{ color: GOLD }} />
               </div>
-              <h3 className="text-base font-semibold" style={{ color: BROWN_MID }}>Aucune course en cours</h3>
-              <p className="text-sm mt-1" style={{ color: BROWN_LIGHT }}>En attente de nouvelles demandes.</p>
+              <h3 className="text-base font-semibold" style={{ color: BROWN_MID }}>{t("no_active_trip")}</h3>
+              <p className="text-sm mt-1" style={{ color: BROWN_LIGHT }}>{t("waiting_requests")}</p>
             </div>
           )}
         </div>
