@@ -15,6 +15,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
+import { GpsPickerModal } from "@/components/GpsPickerModal";
 
 const TC = "#C14B2A";
 const GREEN = "#2A7A48";
@@ -49,10 +50,6 @@ function parseOrderNotes(notes: string | null): ParsedOrder {
   return { items, total, extra };
 }
 
-function openGoogleMaps(address: string) {
-  const encoded = encodeURIComponent(address + ", Safi, Maroc");
-  window.open(`https://maps.google.com/?q=${encoded}`, "_blank");
-}
 
 function StatusPill({ status }: { status?: string }) {
   const { t } = useI18n();
@@ -118,6 +115,7 @@ export default function LivreurLivraisonDetail() {
   const { livreur } = useAuth();
   const LIVREUR_ID = livreur?.id ?? 0;
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [gpsTarget, setGpsTarget] = useState<{ address: string; label: string } | null>(null);
 
   const { data: delivery, isLoading } = useGetDelivery(id, {
     query: { enabled: !!id, queryKey: getGetDeliveryQueryKey(id) },
@@ -319,7 +317,7 @@ export default function LivreurLivraisonDetail() {
                   <p className="text-xs font-bold uppercase tracking-wide mb-0.5" style={{ color: BROWN_LIGHT }}>{t("pickup_point")}</p>
                   <p className="text-sm font-medium" style={{ color: BROWN }}>{delivery.pickupAddress}</p>
                   <button
-                    onClick={() => openGoogleMaps(delivery.pickupAddress)}
+                    onClick={() => setGpsTarget({ address: delivery.pickupAddress, label: t("gps_pickup") })}
                     className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"
                     style={{ background: SAND, color: BROWN_MID, border: `1px solid ${BORDER}` }}
                   >
@@ -337,7 +335,7 @@ export default function LivreurLivraisonDetail() {
                   <p className="text-xs font-bold uppercase tracking-wide mb-0.5" style={{ color: TC }}>{t("destination")}</p>
                   <p className="text-sm font-semibold" style={{ color: BROWN }}>{delivery.deliveryAddress}</p>
                   <button
-                    onClick={() => openGoogleMaps(delivery.deliveryAddress)}
+                    onClick={() => setGpsTarget({ address: delivery.deliveryAddress, label: t("gps_delivery") })}
                     className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white"
                     style={{ background: TC }}
                   >
@@ -511,6 +509,15 @@ export default function LivreurLivraisonDetail() {
         )}
 
       </div>
+
+      {gpsTarget && (
+        <GpsPickerModal
+          address={gpsTarget.address}
+          label={gpsTarget.label}
+          onClose={() => setGpsTarget(null)}
+        />
+      )}
+
     </LivreurLayout>
   );
 }

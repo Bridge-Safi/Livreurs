@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, ne } from "drizzle-orm";
+import { eq, and, ne, count } from "drizzle-orm";
 import { db, deliveriesTable, deliverersTable } from "@workspace/db";
 import {
   DispatchDeliveryParams,
@@ -144,6 +144,20 @@ router.post("/deliveries/:id/accept", async (req, res): Promise<void> => {
     return;
   }
 
+  // Enforce max 3 simultaneous deliveries
+  const [{ activeCount }] = await db
+    .select({ activeCount: count() })
+    .from(deliveriesTable)
+    .where(and(
+      eq(deliveriesTable.delivererId, body.data.delivererId),
+      eq(deliveriesTable.status, "in_progress")
+    ));
+
+  if (activeCount >= 3) {
+    res.status(409).json({ error: "Maximum 3 commandes simultanées atteint" });
+    return;
+  }
+
   const [updated] = await db
     .update(deliveriesTable)
     .set({
@@ -160,7 +174,7 @@ router.post("/deliveries/:id/accept", async (req, res): Promise<void> => {
     .set({ status: "busy" })
     .where(eq(deliverersTable.id, body.data.delivererId));
 
-  req.log.info({ deliveryId: params.data.id, delivererId: body.data.delivererId }, "Delivery accepted");
+  req.log.info({ deliveryId: params.data.id, delivererId: body.data.delivererId, activeCount: activeCount + 1 }, "Delivery accepted");
 
   res.json(GetDeliveryResponse.parse(serializeDelivery(updated)));
 });
@@ -219,10 +233,19 @@ router.post("/deliveries/:id/confirm-delivered", async (req, res): Promise<void>
     .where(eq(deliveriesTable.id, params.data.id))
     .returning();
 
+  // Check remaining active deliveries (excluding this one just delivered)
+  const [{ remainingCount }] = await db
+    .select({ remainingCount: count() })
+    .from(deliveriesTable)
+    .where(and(
+      eq(deliveriesTable.delivererId, delivererId),
+      eq(deliveriesTable.status, "in_progress")
+    ));
+
   await db
     .update(deliverersTable)
     .set({
-      status: "available",
+      status: remainingCount > 0 ? "busy" : "available",
       totalDeliveries: (deliverer?.totalDeliveries ?? 0) + 1,
     })
     .where(eq(deliverersTable.id, delivererId));
