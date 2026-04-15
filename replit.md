@@ -2,7 +2,7 @@
 
 ## Overview
 
-Application logistique marocaine pour Safi, Maroc avec deux rôles : **Livreur Bridge** (coursiers) et **Chauffeur VTC** (chauffeurs de taxi). pnpm workspace monorepo TypeScript.
+Application logistique marocaine pour Safi, Maroc avec deux rôles : **Livreur de Repas** (coursiers food delivery) et **Taxi Confort** (chauffeurs taxi). pnpm workspace monorepo TypeScript.
 
 ## Stack
 

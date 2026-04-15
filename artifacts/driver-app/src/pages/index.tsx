@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Package, MapPin, ChevronRight } from "lucide-react";
+import { UtensilsCrossed, Car, ChevronRight } from "lucide-react";
 import { useI18n, LANGUAGES, type Lang } from "@/lib/i18n";
 
 export default function RoleSelection() {
@@ -86,7 +86,7 @@ export default function RoleSelection() {
             />
             <div className="relative p-5 flex items-center gap-4">
               <div className="flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center shadow-sm" style={{ background: "#FDEEE9" }}>
-                <Package className="w-7 h-7" style={{ color: "#C14B2A" }} />
+                <UtensilsCrossed className="w-7 h-7" style={{ color: "#C14B2A" }} />
               </div>
               <div className="flex-1">
                 <h2 className="text-lg font-bold" style={{ color: "#2C1810" }}>{t("role_livreur")}</h2>
@@ -113,7 +113,7 @@ export default function RoleSelection() {
             />
             <div className="relative p-5 flex items-center gap-4">
               <div className="flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center shadow-sm" style={{ background: "#FEF6E4" }}>
-                <MapPin className="w-7 h-7" style={{ color: "#D4880C" }} />
+                <Car className="w-7 h-7" style={{ color: "#D4880C" }} />
               </div>
               <div className="flex-1">
                 <h2 className="text-lg font-bold" style={{ color: "#2C1810" }}>{t("role_chauffeur")}</h2>

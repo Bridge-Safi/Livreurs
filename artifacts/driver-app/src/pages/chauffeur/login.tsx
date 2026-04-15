@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
+import { useI18n } from "@/lib/i18n";
 import { subscribeToPush, isPushSupported } from "@/lib/push";
 import { ArrowLeft, Delete } from "lucide-react";
 
@@ -37,6 +38,7 @@ const PAD = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "⌫"];
 export default function ChauffeurLogin() {
   const [, navigate] = useLocation();
   const { chauffeur, loginChauffeur } = useAuth();
+  const { t } = useI18n();
 
   useEffect(() => {
     if (chauffeur) navigate("/chauffeur");
@@ -53,7 +55,7 @@ export default function ChauffeurLogin() {
     fetch(`${BASE}/api/auth/drivers`)
       .then((r) => r.json())
       .then((data) => setDrivers(data))
-      .catch(() => setError("Impossible de charger les chauffeurs"))
+      .catch(() => setError(t("login_conn_error")))
       .finally(() => setFetching(false));
   }, []);
 
@@ -91,11 +93,11 @@ export default function ChauffeurLogin() {
         }
         navigate("/chauffeur");
       } else {
-        setError(data.error || "Code PIN incorrect");
+        setError(data.error || t("login_pin_error"));
         setPin("");
       }
     } catch {
-      setError("Erreur de connexion");
+      setError(t("login_conn_error"));
       setPin("");
     } finally {
       setLoading(false);
@@ -122,9 +124,9 @@ export default function ChauffeurLogin() {
               <path d="M20 4 L23 13 L32 10 L27 18 L34 24 L25 24 L24 33 L20 25 L16 33 L15 24 L6 24 L13 18 L8 10 L17 13 Z" fill="white" opacity="0.92" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold" style={{ color: BROWN }}>Bridge Chauffeur</h1>
+          <h1 className="text-2xl font-bold" style={{ color: BROWN }}>{t("chauffeur_title")}</h1>
           <p className="text-sm mt-1" style={{ color: BROWN_LIGHT }}>
-            {selected ? "Entrez votre code PIN" : "Choisissez votre nom"}
+            {selected ? t("login_enter_pin") : t("login_select_name")}
           </p>
         </div>
 
@@ -135,7 +137,7 @@ export default function ChauffeurLogin() {
             style={{ color: BROWN_MID }}
           >
             <ArrowLeft className="h-4 w-4" />
-            Retour
+            {t("back")}
           </button>
         )}
 
@@ -143,9 +145,9 @@ export default function ChauffeurLogin() {
         {!selected && (
           <div className="space-y-2">
             {fetching ? (
-              <p className="text-center py-8" style={{ color: BROWN_LIGHT }}>Chargement…</p>
+              <p className="text-center py-8" style={{ color: BROWN_LIGHT }}>{t("loading")}</p>
             ) : drivers.length === 0 ? (
-              <p className="text-center py-8" style={{ color: BROWN_LIGHT }}>Aucun chauffeur trouvé</p>
+              <p className="text-center py-8" style={{ color: BROWN_LIGHT }}>{t("login_no_drivers")}</p>
             ) : (
               drivers.map((d) => (
                 <button
@@ -183,7 +185,7 @@ export default function ChauffeurLogin() {
               </div>
               <div>
                 <p className="font-semibold text-sm" style={{ color: BROWN }}>{selected.name}</p>
-                <p className="text-xs" style={{ color: BROWN_LIGHT }}>Code PIN à 4 chiffres</p>
+                <p className="text-xs" style={{ color: BROWN_LIGHT }}>{t("login_pin_label")}</p>
               </div>
             </div>
 
@@ -220,7 +222,7 @@ export default function ChauffeurLogin() {
             </div>
 
             {loading && (
-              <p className="text-center text-sm mt-4" style={{ color: BROWN_LIGHT }}>Vérification…</p>
+              <p className="text-center text-sm mt-4" style={{ color: BROWN_LIGHT }}>{t("login_verifying")}</p>
             )}
           </div>
         )}
@@ -230,7 +232,7 @@ export default function ChauffeurLogin() {
           className="mt-6 w-full text-sm py-3"
           style={{ color: BROWN_LIGHT }}
         >
-          ← Retour à l'accueil
+          {t("login_back_home")}
         </button>
       </div>
     </div>
