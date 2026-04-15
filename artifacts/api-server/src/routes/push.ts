@@ -61,21 +61,21 @@ router.delete("/push/unsubscribe", async (req, res): Promise<void> => {
   res.json({ success: true });
 });
 
-export async function sendPushToAll(payload: {
-  title: string;
-  body: string;
-  url?: string;
-}) {
+async function sendPushBatch(
+  subs: typeof pushSubscriptionsTable.$inferSelect[],
+  payload: { title: string; body: string; url?: string; urgent?: boolean }
+) {
   if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) return;
-
-  const allSubs = await db.select().from(pushSubscriptionsTable);
   const message = JSON.stringify(payload);
 
   await Promise.allSettled(
-    allSubs.map(async (sub) => {
+    subs.map(async (sub) => {
       try {
         const parsed = JSON.parse(sub.subscription);
-        await webpush.sendNotification(parsed, message);
+        await webpush.sendNotification(parsed, message, {
+          urgency: payload.urgent ? "high" : "normal",
+          TTL: 300,
+        });
       } catch (err: any) {
         if (err?.statusCode === 410 || err?.statusCode === 404) {
           await db.delete(pushSubscriptionsTable).where(eq(pushSubscriptionsTable.endpoint, sub.endpoint));
@@ -83,6 +83,31 @@ export async function sendPushToAll(payload: {
       }
     })
   );
+}
+
+export async function sendPushToAll(payload: {
+  title: string;
+  body: string;
+  url?: string;
+  urgent?: boolean;
+}) {
+  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) return;
+  const allSubs = await db.select().from(pushSubscriptionsTable);
+  await sendPushBatch(allSubs, payload);
+}
+
+export async function sendPushToAllDeliverers(payload: {
+  title: string;
+  body: string;
+  url?: string;
+  urgent?: boolean;
+}) {
+  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) return;
+  const subs = await db
+    .select()
+    .from(pushSubscriptionsTable)
+    .where(isNotNull(pushSubscriptionsTable.delivererId));
+  await sendPushBatch(subs, payload);
 }
 
 export default router;

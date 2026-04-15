@@ -1,10 +1,11 @@
-import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
+import { Switch, Route, Router as WouterRouter, Redirect, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProvider } from "@/lib/i18n";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { registerServiceWorker } from "@/lib/push";
+import { playAlarm, unlockAudio } from "@/lib/alarm";
 import { useEffect } from "react";
 
 import RoleSelection from "@/pages/index";
@@ -62,9 +63,38 @@ function Router() {
   );
 }
 
+function AlarmListener() {
+  const [, navigate] = useLocation();
+
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+
+    const handler = (event: MessageEvent) => {
+      if (event.data?.type === "BRIDGE_ALARM") {
+        playAlarm(event.data.urgent === true);
+      }
+      if (event.data?.type === "BRIDGE_NAVIGATE" && event.data.url) {
+        navigate(event.data.url);
+      }
+    };
+
+    navigator.serviceWorker.addEventListener("message", handler);
+    return () => navigator.serviceWorker.removeEventListener("message", handler);
+  }, [navigate]);
+
+  return null;
+}
+
 function App() {
   useEffect(() => {
     registerServiceWorker();
+    const unlock = () => unlockAudio();
+    window.addEventListener("touchstart", unlock, { once: true });
+    window.addEventListener("click", unlock, { once: true });
+    return () => {
+      window.removeEventListener("touchstart", unlock);
+      window.removeEventListener("click", unlock);
+    };
   }, []);
 
   return (
@@ -73,6 +103,7 @@ function App() {
         <QueryClientProvider client={queryClient}>
           <TooltipProvider>
             <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+              <AlarmListener />
               <Router />
             </WouterRouter>
             <Toaster />
