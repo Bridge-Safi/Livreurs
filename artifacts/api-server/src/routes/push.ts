@@ -65,24 +65,41 @@ async function sendPushBatch(
   subs: typeof pushSubscriptionsTable.$inferSelect[],
   payload: { title: string; body: string; url?: string; urgent?: boolean }
 ) {
-  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) return;
+  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
+    console.error("[PUSH] VAPID keys manquantes — push annulé");
+    return;
+  }
+  if (subs.length === 0) {
+    console.warn("[PUSH] Aucun abonnement trouvé — personne à notifier");
+    return;
+  }
   const message = JSON.stringify(payload);
+  console.log(`[PUSH] Envoi à ${subs.length} abonné(s) — payload: ${payload.title}`);
 
-  await Promise.allSettled(
+  const results = await Promise.allSettled(
     subs.map(async (sub) => {
       try {
         const parsed = JSON.parse(sub.subscription);
-        await webpush.sendNotification(parsed, message, {
+        const result = await webpush.sendNotification(parsed, message, {
           urgency: payload.urgent ? "high" : "normal",
           TTL: 300,
         });
+        console.log(`[PUSH] ✅ OK — delivererId=${sub.delivererId ?? "?"} status=${result.statusCode}`);
+        return { ok: true, delivererId: sub.delivererId };
       } catch (err: any) {
+        console.error(`[PUSH] ❌ ERREUR — delivererId=${sub.delivererId ?? "?"} status=${err?.statusCode} body=${JSON.stringify(err?.body ?? err?.message)}`);
         if (err?.statusCode === 410 || err?.statusCode === 404) {
           await db.delete(pushSubscriptionsTable).where(eq(pushSubscriptionsTable.endpoint, sub.endpoint));
+          console.log(`[PUSH] 🗑 Subscription expirée supprimée — delivererId=${sub.delivererId}`);
         }
+        return { ok: false, delivererId: sub.delivererId, error: err?.statusCode };
       }
     })
   );
+
+  const ok = results.filter(r => r.status === "fulfilled" && (r.value as any).ok).length;
+  const fail = results.length - ok;
+  console.log(`[PUSH] Résultat: ${ok} succès, ${fail} échec(s)`);
 }
 
 export async function sendPushToAll(payload: {

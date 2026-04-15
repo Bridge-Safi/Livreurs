@@ -61,7 +61,7 @@ router.post("/orders/inbound", async (req, res): Promise<void> => {
       dispatchPhase: "cascade",
       dispatchedAt: new Date(),
       notes: orderNotes || null,
-      priority: "high",
+      priority: "urgent",
     })
     .returning();
 
