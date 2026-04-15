@@ -56,8 +56,15 @@ export function GpsPickerModal({ address, label, onClose }: GpsPickerModalProps)
   const encoded = encodeURIComponent(address + ", Safi, Maroc");
 
   const handleOpen = (option: GpsOption) => {
-    window.open(option.buildUrl(encoded), "_blank", "noopener");
+    // 1. Close modal and let wouter navigate to the delivery page first
     onClose();
+    // 2. Then open GPS — on iOS PWA, window.open("_blank") creates a blank Safari tab,
+    //    so we use location.href. iOS intercepts map URLs and opens the native app,
+    //    leaving the PWA at the delivery page when the user returns.
+    const url = option.buildUrl(encoded);
+    setTimeout(() => {
+      window.location.href = url;
+    }, 50);
   };
 
   return (
