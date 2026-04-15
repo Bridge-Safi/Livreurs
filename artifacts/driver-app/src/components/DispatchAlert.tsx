@@ -281,14 +281,16 @@ export function DispatchAlert({ delivererId }: DispatchAlertProps) {
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
       style={{ background: "rgba(44,24,16,0.55)", backdropFilter: "blur(4px)" }}
     >
+      {/* Card — max 85vh so buttons are always reachable */}
       <div
-        className="rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md mx-0 sm:mx-4 overflow-hidden animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300 border"
-        style={{ background: "white", borderColor: TC + "60" }}
+        className="rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md mx-0 sm:mx-4 flex flex-col animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300 border"
+        style={{ background: "white", borderColor: TC + "60", maxHeight: "85vh" }}
       >
-        <div className="h-1 w-full" style={{ backgroundImage: `repeating-linear-gradient(90deg,${TC} 0,${TC} 20px,#D4880C 20px,#D4880C 40px,#2A7A48 40px,#2A7A48 60px,#D4880C 60px,#D4880C 80px)` }} />
+        {/* Rainbow bar — fixed */}
+        <div className="h-1 w-full flex-shrink-0" style={{ backgroundImage: `repeating-linear-gradient(90deg,${TC} 0,${TC} 20px,#D4880C 20px,#D4880C 40px,#2A7A48 40px,#2A7A48 60px,#D4880C 60px,#D4880C 80px)` }} />
 
-        {/* ── Header ── */}
-        <div className="px-5 py-4 flex items-center gap-3 border-b" style={{ background: "#FDEEE9", borderColor: TC + "30" }}>
+        {/* ── Header — fixed at top ── */}
+        <div className="px-5 py-4 flex items-center gap-3 border-b flex-shrink-0" style={{ background: "#FDEEE9", borderColor: TC + "30" }}>
           <div className="relative flex h-10 w-10 items-center justify-center rounded-full flex-shrink-0" style={{ background: TC + "20" }}>
             <Bell className="h-5 w-5 animate-bounce" style={{ color: TC }} />
             <span className="absolute top-0 right-0 h-3 w-3 rounded-full border-2 border-white" style={{ background: "#E53E3E" }} />
@@ -306,9 +308,9 @@ export function DispatchAlert({ delivererId }: DispatchAlertProps) {
           </div>
         </div>
 
-        {/* ── Active batch indicator ── */}
+        {/* ── Active batch indicator — fixed ── */}
         {activeCount > 0 && (
-          <div className="px-5 py-2 flex items-center gap-2 border-b" style={{ background: "#FEF6E4", borderColor: "#D4880C30" }}>
+          <div className="px-5 py-2 flex items-center gap-2 border-b flex-shrink-0" style={{ background: "#FEF6E4", borderColor: "#D4880C30" }}>
             <Layers className="h-3.5 w-3.5 flex-shrink-0" style={{ color: "#D4880C" }} />
             <span className="text-xs font-semibold" style={{ color: "#D4880C" }}>
               {activeCount}/3 commande(s) active(s) — Même tournée possible
@@ -321,8 +323,8 @@ export function DispatchAlert({ delivererId }: DispatchAlertProps) {
           </div>
         )}
 
-        {/* ── Delivery details ── */}
-        <div className="p-5 space-y-4">
+        {/* ── Delivery details — SCROLLABLE ── */}
+        <div className="overflow-y-auto flex-1 p-5 space-y-4">
           {delivery && (
             <>
               <div className="flex items-center justify-between">
@@ -395,12 +397,12 @@ export function DispatchAlert({ delivererId }: DispatchAlertProps) {
           )}
         </div>
 
-        {/* ── Actions ── */}
-        <div className="px-5 pb-6 grid grid-cols-2 gap-3">
+        {/* ── Actions — ALWAYS visible at bottom ── */}
+        <div className="px-5 py-4 grid grid-cols-2 gap-3 flex-shrink-0 border-t" style={{ borderColor: BORDER, background: "white" }}>
           <button
             onClick={handleRefuse}
             disabled={isPending}
-            className="flex items-center justify-center gap-2 font-semibold h-12 rounded-xl transition-all border disabled:opacity-50"
+            className="flex items-center justify-center gap-2 font-semibold h-14 rounded-xl transition-all border disabled:opacity-50"
             style={{ borderColor: TC + "50", color: TC, background: "#FDEEE9" }}
           >
             <XCircle className="h-4 w-4" />
@@ -409,7 +411,7 @@ export function DispatchAlert({ delivererId }: DispatchAlertProps) {
           <button
             onClick={handleAcceptClick}
             disabled={isPending}
-            className="flex items-center justify-center gap-2 font-bold h-12 rounded-xl transition-all disabled:opacity-50"
+            className="flex items-center justify-center gap-2 font-bold h-14 rounded-xl transition-all disabled:opacity-50"
             style={{ background: TC, color: "white" }}
           >
             {isPending ? "…" : (
