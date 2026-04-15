@@ -1,4 +1,6 @@
 let audioCtx: AudioContext | null = null;
+let continuousTimerId: ReturnType<typeof setTimeout> | null = null;
+let isContinuousRunning = false;
 
 function getAudioCtx(): AudioContext {
   if (!audioCtx || audioCtx.state === "closed") {
@@ -22,12 +24,58 @@ function playBeep(ctx: AudioContext, startTime: number, freq: number, duration: 
   osc.stop(startTime + duration);
 }
 
+function playOneAlarmCycle(ctx: AudioContext): number {
+  const now = ctx.currentTime;
+  // bip bip bip — sonnette livraison urgente
+  // 3 bips courts aigus → pause → 2 bips graves
+  const beeps = [
+    { freq: 1200, dur: 0.12, gap: 0.08 },
+    { freq: 1200, dur: 0.12, gap: 0.08 },
+    { freq: 1200, dur: 0.12, gap: 0.22 },
+    { freq: 900,  dur: 0.25, gap: 0.10 },
+    { freq: 900,  dur: 0.35, gap: 0 },
+  ];
+  let t = now + 0.03;
+  for (const b of beeps) {
+    playBeep(ctx, t, b.freq, b.dur, 0.75);
+    t += b.dur + b.gap;
+  }
+  return t - now;
+}
+
+export function startContinuousAlarm(): () => void {
+  if (isContinuousRunning) return stopContinuousAlarm;
+  isContinuousRunning = true;
+
+  function loop() {
+    if (!isContinuousRunning) return;
+    try {
+      const ctx = getAudioCtx();
+      if (ctx.state === "suspended") ctx.resume();
+      const cycleDuration = playOneAlarmCycle(ctx);
+      const repeatAfterMs = Math.ceil(cycleDuration * 1000) + 900;
+      continuousTimerId = setTimeout(loop, repeatAfterMs);
+    } catch {
+      continuousTimerId = setTimeout(loop, 2000);
+    }
+  }
+
+  loop();
+  return stopContinuousAlarm;
+}
+
+export function stopContinuousAlarm() {
+  isContinuousRunning = false;
+  if (continuousTimerId !== null) {
+    clearTimeout(continuousTimerId);
+    continuousTimerId = null;
+  }
+}
+
 export function playAlarm(urgent = false) {
   try {
     const ctx = getAudioCtx();
-    if (ctx.state === "suspended") {
-      ctx.resume();
-    }
+    if (ctx.state === "suspended") ctx.resume();
     const now = ctx.currentTime;
 
     if (urgent) {
@@ -51,8 +99,7 @@ export function playAlarm(urgent = false) {
       playBeep(ctx, now + 0.35, 880, 0.2, 0.5);
       playBeep(ctx, now + 0.65, 1046, 0.35, 0.5);
     }
-  } catch {
-  }
+  } catch {}
 }
 
 export function unlockAudio() {

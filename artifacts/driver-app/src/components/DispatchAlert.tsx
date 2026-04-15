@@ -10,49 +10,13 @@ import {
 } from "@workspace/api-client-react";
 import { Bell, Package, Clock, CheckCircle2, XCircle } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
+import { startContinuousAlarm, stopContinuousAlarm } from "@/lib/alarm";
 
 interface DispatchAlertProps {
   delivererId: number;
   deliveryId: number;
 }
 
-function createAlertSound(): () => void {
-  let stopped = false;
-  let audioCtx: AudioContext | null = null;
-
-  const play = () => {
-    if (stopped) return;
-    try {
-      audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const oscillator = audioCtx.createOscillator();
-      const gainNode = audioCtx.createGain();
-
-      oscillator.connect(gainNode);
-      gainNode.connect(audioCtx.destination);
-
-      oscillator.type = "sine";
-      gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-      gainNode.gain.linearRampToValueAtTime(0.35, audioCtx.currentTime + 0.05);
-      gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.4);
-
-      oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
-      oscillator.frequency.setValueAtTime(1100, audioCtx.currentTime + 0.15);
-
-      oscillator.start(audioCtx.currentTime);
-      oscillator.stop(audioCtx.currentTime + 0.4);
-
-      oscillator.onended = () => {
-        if (!stopped) setTimeout(play, 1200);
-      };
-    } catch {}
-  };
-
-  play();
-  return () => {
-    stopped = true;
-    audioCtx?.close();
-  };
-}
 
 const LS_REFUSED = "bridge_refused_deliveries";
 
@@ -87,7 +51,7 @@ function formatTime(seconds: number): string {
 
 export function DispatchAlert({ delivererId, deliveryId }: DispatchAlertProps) {
   const queryClient = useQueryClient();
-  const stopSoundRef = useRef<(() => void) | null>(null);
+  const alarmStartedRef = useRef(false);
   const [alertState, setAlertState] = useState<AlertState>("idle");
   const [dismissed, setDismissed] = useState(false);
   const { t } = useI18n();
@@ -97,7 +61,7 @@ export function DispatchAlert({ delivererId, deliveryId }: DispatchAlertProps) {
     {
       query: {
         queryKey: getGetMyPendingDispatchQueryKey({ delivererId }),
-        refetchInterval: alertState === "idle" ? 4000 : false,
+        refetchInterval: alertState === "idle" ? 3000 : false,
       },
     }
   );
@@ -105,16 +69,11 @@ export function DispatchAlert({ delivererId, deliveryId }: DispatchAlertProps) {
   const acceptMutation = useAcceptDelivery();
   const refuseMutation = useRefuseDelivery();
 
-  const secondsLeft = pending?.secondsLeft ?? 420;
+  const secondsLeft = pending?.secondsLeft ?? 300;
   const delivery = pending?.delivery;
 
   const isRefused = delivery ? getRefused().includes(delivery.id) : false;
   const showAlert = pending?.hasPending && !dismissed && !isRefused && alertState === "idle";
-
-  const stopSound = () => {
-    stopSoundRef.current?.();
-    stopSoundRef.current = null;
-  };
 
   const invalidateAll = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: getListDeliveriesQueryKey({ delivererId }) });
@@ -123,21 +82,25 @@ export function DispatchAlert({ delivererId, deliveryId }: DispatchAlertProps) {
   }, [queryClient, delivererId]);
 
   useEffect(() => {
-    if (!showAlert) {
-      stopSound();
-      return;
+    if (showAlert) {
+      if (!alarmStartedRef.current) {
+        alarmStartedRef.current = true;
+        startContinuousAlarm();
+      }
+    } else {
+      if (alarmStartedRef.current) {
+        alarmStartedRef.current = false;
+        stopContinuousAlarm();
+      }
     }
-    if (!stopSoundRef.current) {
-      stopSoundRef.current = createAlertSound();
-    }
-    return () => stopSound();
   }, [showAlert]);
 
-  useEffect(() => () => stopSound(), []);
+  useEffect(() => () => stopContinuousAlarm(), []);
 
   const handleAccept = useCallback(() => {
     if (!delivery) return;
-    stopSound();
+    stopContinuousAlarm();
+    alarmStartedRef.current = false;
     acceptMutation.mutate(
       { id: delivery.id, data: { delivererId } },
       {
@@ -152,7 +115,8 @@ export function DispatchAlert({ delivererId, deliveryId }: DispatchAlertProps) {
 
   const handleRefuse = useCallback(() => {
     if (!delivery) return;
-    stopSound();
+    stopContinuousAlarm();
+    alarmStartedRef.current = false;
     addRefused(delivery.id);
     refuseMutation.mutate(
       { id: delivery.id, data: { delivererId } },

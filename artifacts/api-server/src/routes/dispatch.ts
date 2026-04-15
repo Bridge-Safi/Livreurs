@@ -19,7 +19,7 @@ import { sendPushToAll } from "./push";
 
 const router: IRouter = Router();
 
-const DISPATCH_TIMEOUT_MS = 7 * 60 * 1000;
+const DISPATCH_TIMEOUT_MS = 5 * 60 * 1000;
 
 router.get("/deliveries/pending-dispatch", async (req, res): Promise<void> => {
   const rawDelivererId = parseInt(req.query.delivererId as string, 10);

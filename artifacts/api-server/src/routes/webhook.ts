@@ -70,7 +70,7 @@ router.post("/orders/inbound", async (req, res): Promise<void> => {
   const pushBody = [
     `📍 ${deliveryAddress}`,
     itemsSummary ? `🍽️ ${itemsSummary}` : "",
-    `⏱️ 7 min pour accepter`,
+    `⏱️ 5 min pour accepter`,
   ]
     .filter(Boolean)
     .join("\n");
