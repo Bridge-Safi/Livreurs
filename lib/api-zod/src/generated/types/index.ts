@@ -6,6 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from "./acceptDeliveryBody";
+export * from "./confirmDeliveredBody";
 export * from "./createDelivererBody";
 export * from "./createDelivererBodyVehicleType";
 export * from "./createDeliveryBody";
@@ -19,15 +21,20 @@ export * from "./delivery";
 export * from "./deliveryPriority";
 export * from "./deliveryStats";
 export * from "./deliveryStatus";
+export * from "./dispatchResult";
+export * from "./dispatchResultPhase";
 export * from "./driver";
 export * from "./driverStatus";
 export * from "./getDeliveryStatsParams";
+export * from "./getMyPendingDispatchParams";
+export * from "./getPendingDispatchParams";
 export * from "./getTripStatsParams";
 export * from "./healthStatus";
 export * from "./listDeliveriesParams";
 export * from "./listDeliveriesStatus";
 export * from "./listTripsParams";
 export * from "./listTripsStatus";
+export * from "./pendingDispatch";
 export * from "./trip";
 export * from "./tripStats";
 export * from "./tripStatus";

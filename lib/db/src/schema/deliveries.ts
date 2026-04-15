@@ -15,6 +15,8 @@ export const deliveriesTable = pgTable("deliveries", {
   notes: text("notes"),
   delivererId: integer("deliverer_id"),
   estimatedDeliveryTime: text("estimated_delivery_time"),
+  dispatchedAt: timestamp("dispatched_at", { withTimezone: true }),
+  dispatchPhase: text("dispatch_phase").default("none"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

@@ -10,12 +10,13 @@ import {
   UpdateDelivererResponse,
   ListDeliverersResponse,
 } from "@workspace/api-zod";
+import { serializeDeliverer } from "../lib/serializers";
 
 const router: IRouter = Router();
 
 router.get("/deliverers", async (_req, res): Promise<void> => {
   const deliverers = await db.select().from(deliverersTable).orderBy(deliverersTable.createdAt);
-  res.json(ListDeliverersResponse.parse(deliverers));
+  res.json(ListDeliverersResponse.parse(deliverers.map(serializeDeliverer)));
 });
 
 router.post("/deliverers", async (req, res): Promise<void> => {
@@ -25,7 +26,7 @@ router.post("/deliverers", async (req, res): Promise<void> => {
     return;
   }
   const [deliverer] = await db.insert(deliverersTable).values(parsed.data).returning();
-  res.status(201).json(GetDelivererResponse.parse(deliverer));
+  res.status(201).json(GetDelivererResponse.parse(serializeDeliverer(deliverer)));
 });
 
 router.get("/deliverers/:id", async (req, res): Promise<void> => {
@@ -39,7 +40,7 @@ router.get("/deliverers/:id", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Deliverer not found" });
     return;
   }
-  res.json(GetDelivererResponse.parse(deliverer));
+  res.json(GetDelivererResponse.parse(serializeDeliverer(deliverer)));
 });
 
 router.patch("/deliverers/:id", async (req, res): Promise<void> => {
@@ -62,7 +63,7 @@ router.patch("/deliverers/:id", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Deliverer not found" });
     return;
   }
-  res.json(UpdateDelivererResponse.parse(deliverer));
+  res.json(UpdateDelivererResponse.parse(serializeDeliverer(deliverer)));
 });
 
 export default router;

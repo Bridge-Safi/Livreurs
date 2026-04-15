@@ -2,9 +2,14 @@ import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { Home, Package, User, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DispatchAlert } from "@/components/DispatchAlert";
+import { useDispatchPoller } from "@/hooks/useDispatchPoller";
+
+const LIVREUR_ID = 1;
 
 export function LivreurLayout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
+  const pendingDispatch = useDispatchPoller(LIVREUR_ID);
 
   const navItems = [
     { href: "/livreur", icon: Home, label: "Tableau de bord" },
@@ -14,6 +19,14 @@ export function LivreurLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-50 flex flex-col md:flex-row dark">
+      {/* Dispatch alert overlay */}
+      {pendingDispatch && (
+        <DispatchAlert
+          delivererId={LIVREUR_ID}
+          deliveryId={pendingDispatch.deliveryId}
+        />
+      )}
+
       {/* Sidebar - desktop */}
       <aside className="hidden md:flex w-64 flex-col border-r border-zinc-800 bg-zinc-950/50 backdrop-blur-xl">
         <div className="p-6 border-b border-zinc-800 flex items-center gap-3">

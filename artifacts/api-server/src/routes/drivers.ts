@@ -10,12 +10,13 @@ import {
   UpdateDriverResponse,
   ListDriversResponse,
 } from "@workspace/api-zod";
+import { serializeDriver } from "../lib/serializers";
 
 const router: IRouter = Router();
 
 router.get("/drivers", async (_req, res): Promise<void> => {
   const drivers = await db.select().from(driversTable).orderBy(driversTable.createdAt);
-  res.json(ListDriversResponse.parse(drivers));
+  res.json(ListDriversResponse.parse(drivers.map(serializeDriver)));
 });
 
 router.post("/drivers", async (req, res): Promise<void> => {
@@ -25,7 +26,7 @@ router.post("/drivers", async (req, res): Promise<void> => {
     return;
   }
   const [driver] = await db.insert(driversTable).values(parsed.data).returning();
-  res.status(201).json(GetDriverResponse.parse(driver));
+  res.status(201).json(GetDriverResponse.parse(serializeDriver(driver)));
 });
 
 router.get("/drivers/:id", async (req, res): Promise<void> => {
@@ -39,7 +40,7 @@ router.get("/drivers/:id", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Driver not found" });
     return;
   }
-  res.json(GetDriverResponse.parse(driver));
+  res.json(GetDriverResponse.parse(serializeDriver(driver)));
 });
 
 router.patch("/drivers/:id", async (req, res): Promise<void> => {
@@ -62,7 +63,7 @@ router.patch("/drivers/:id", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Driver not found" });
     return;
   }
-  res.json(UpdateDriverResponse.parse(driver));
+  res.json(UpdateDriverResponse.parse(serializeDriver(driver)));
 });
 
 export default router;

@@ -269,6 +269,39 @@ export interface UpdateDriverBody {
   vehiclePlate?: string;
 }
 
+export type DispatchResultPhase =
+  (typeof DispatchResultPhase)[keyof typeof DispatchResultPhase];
+
+export const DispatchResultPhase = {
+  primary: "primary",
+  cascade: "cascade",
+} as const;
+
+export interface DispatchResult {
+  delivery: Delivery;
+  assignedDelivererId?: number;
+  assignedDelivererName?: string;
+  phase: DispatchResultPhase;
+  message: string;
+}
+
+export interface AcceptDeliveryBody {
+  delivererId: number;
+}
+
+export interface ConfirmDeliveredBody {
+  delivererId: number;
+  proofNote?: string;
+}
+
+export interface PendingDispatch {
+  hasPending: boolean;
+  delivery?: Delivery;
+  expiresAt?: string;
+  secondsLeft?: number;
+  phase?: string;
+}
+
 export type ListDeliveriesParams = {
   status?: ListDeliveriesStatus;
   delivererId?: number;
@@ -283,6 +316,14 @@ export const ListDeliveriesStatus = {
   delivered: "delivered",
   cancelled: "cancelled",
 } as const;
+
+export type GetMyPendingDispatchParams = {
+  delivererId: number;
+};
+
+export type GetPendingDispatchParams = {
+  delivererId: number;
+};
 
 export type GetDeliveryStatsParams = {
   delivererId?: number;

@@ -13,6 +13,7 @@ import {
   GetTripStatsResponse,
   GetTripStatsQueryParams,
 } from "@workspace/api-zod";
+import { serializeTrip } from "../lib/serializers";
 
 const router: IRouter = Router();
 
@@ -68,7 +69,7 @@ router.get("/trips", async (req, res): Promise<void> => {
     ? await db.select().from(tripsTable).where(and(...conditions)).orderBy(tripsTable.createdAt)
     : await db.select().from(tripsTable).orderBy(tripsTable.createdAt);
 
-  res.json(ListTripsResponse.parse(trips));
+  res.json(ListTripsResponse.parse(trips.map(serializeTrip)));
 });
 
 router.post("/trips", async (req, res): Promise<void> => {
@@ -78,7 +79,7 @@ router.post("/trips", async (req, res): Promise<void> => {
     return;
   }
   const [trip] = await db.insert(tripsTable).values(parsed.data).returning();
-  res.status(201).json(GetTripResponse.parse(trip));
+  res.status(201).json(GetTripResponse.parse(serializeTrip(trip)));
 });
 
 router.get("/trips/:id", async (req, res): Promise<void> => {
@@ -92,7 +93,7 @@ router.get("/trips/:id", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Trip not found" });
     return;
   }
-  res.json(GetTripResponse.parse(trip));
+  res.json(GetTripResponse.parse(serializeTrip(trip)));
 });
 
 router.patch("/trips/:id", async (req, res): Promise<void> => {
@@ -115,7 +116,7 @@ router.patch("/trips/:id", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Trip not found" });
     return;
   }
-  res.json(UpdateTripResponse.parse(trip));
+  res.json(UpdateTripResponse.parse(serializeTrip(trip)));
 });
 
 export default router;

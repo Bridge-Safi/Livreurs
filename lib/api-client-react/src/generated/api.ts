@@ -17,6 +17,8 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  AcceptDeliveryBody,
+  ConfirmDeliveredBody,
   CreateDelivererBody,
   CreateDeliveryBody,
   CreateDriverBody,
@@ -24,12 +26,16 @@ import type {
   Deliverer,
   Delivery,
   DeliveryStats,
+  DispatchResult,
   Driver,
   GetDeliveryStatsParams,
+  GetMyPendingDispatchParams,
+  GetPendingDispatchParams,
   GetTripStatsParams,
   HealthStatus,
   ListDeliveriesParams,
   ListTripsParams,
+  PendingDispatch,
   Trip,
   TripStats,
   UpdateDelivererBody,
@@ -302,6 +308,481 @@ export const useCreateDelivery = <
 > => {
   return useMutation(getCreateDeliveryMutationOptions(options));
 };
+
+/**
+ * @summary Get pending dispatch for this deliverer (no delivery ID needed)
+ */
+export const getGetMyPendingDispatchUrl = (
+  params: GetMyPendingDispatchParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/deliveries/pending-dispatch?${stringifiedParams}`
+    : `/api/deliveries/pending-dispatch`;
+};
+
+export const getMyPendingDispatch = async (
+  params: GetMyPendingDispatchParams,
+  options?: RequestInit,
+): Promise<PendingDispatch> => {
+  return customFetch<PendingDispatch>(getGetMyPendingDispatchUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetMyPendingDispatchQueryKey = (
+  params?: GetMyPendingDispatchParams,
+) => {
+  return [
+    `/api/deliveries/pending-dispatch`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getGetMyPendingDispatchQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMyPendingDispatch>>,
+  TError = ErrorType<unknown>,
+>(
+  params: GetMyPendingDispatchParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getMyPendingDispatch>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetMyPendingDispatchQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getMyPendingDispatch>>
+  > = ({ signal }) =>
+    getMyPendingDispatch(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMyPendingDispatch>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetMyPendingDispatchQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMyPendingDispatch>>
+>;
+export type GetMyPendingDispatchQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get pending dispatch for this deliverer (no delivery ID needed)
+ */
+
+export function useGetMyPendingDispatch<
+  TData = Awaited<ReturnType<typeof getMyPendingDispatch>>,
+  TError = ErrorType<unknown>,
+>(
+  params: GetMyPendingDispatchParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getMyPendingDispatch>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMyPendingDispatchQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * Assigns the delivery to the best deliverer (highest rated + fastest). After 60s with no response, cascades to all available deliverers.
+ * @summary Dispatch a delivery to the best available deliverer
+ */
+export const getDispatchDeliveryUrl = (id: number) => {
+  return `/api/deliveries/${id}/dispatch`;
+};
+
+export const dispatchDelivery = async (
+  id: number,
+  options?: RequestInit,
+): Promise<DispatchResult> => {
+  return customFetch<DispatchResult>(getDispatchDeliveryUrl(id), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getDispatchDeliveryMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof dispatchDelivery>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof dispatchDelivery>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["dispatchDelivery"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof dispatchDelivery>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return dispatchDelivery(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DispatchDeliveryMutationResult = NonNullable<
+  Awaited<ReturnType<typeof dispatchDelivery>>
+>;
+
+export type DispatchDeliveryMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Dispatch a delivery to the best available deliverer
+ */
+export const useDispatchDelivery = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof dispatchDelivery>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof dispatchDelivery>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDispatchDeliveryMutationOptions(options));
+};
+
+/**
+ * @summary Livreur accepts a dispatched delivery
+ */
+export const getAcceptDeliveryUrl = (id: number) => {
+  return `/api/deliveries/${id}/accept`;
+};
+
+export const acceptDelivery = async (
+  id: number,
+  acceptDeliveryBody: AcceptDeliveryBody,
+  options?: RequestInit,
+): Promise<Delivery> => {
+  return customFetch<Delivery>(getAcceptDeliveryUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(acceptDeliveryBody),
+  });
+};
+
+export const getAcceptDeliveryMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof acceptDelivery>>,
+    TError,
+    { id: number; data: BodyType<AcceptDeliveryBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof acceptDelivery>>,
+  TError,
+  { id: number; data: BodyType<AcceptDeliveryBody> },
+  TContext
+> => {
+  const mutationKey = ["acceptDelivery"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof acceptDelivery>>,
+    { id: number; data: BodyType<AcceptDeliveryBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return acceptDelivery(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AcceptDeliveryMutationResult = NonNullable<
+  Awaited<ReturnType<typeof acceptDelivery>>
+>;
+export type AcceptDeliveryMutationBody = BodyType<AcceptDeliveryBody>;
+export type AcceptDeliveryMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Livreur accepts a dispatched delivery
+ */
+export const useAcceptDelivery = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof acceptDelivery>>,
+    TError,
+    { id: number; data: BodyType<AcceptDeliveryBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof acceptDelivery>>,
+  TError,
+  { id: number; data: BodyType<AcceptDeliveryBody> },
+  TContext
+> => {
+  return useMutation(getAcceptDeliveryMutationOptions(options));
+};
+
+/**
+ * @summary Confirm delivery completed - sends WhatsApp proof to admin
+ */
+export const getConfirmDeliveredUrl = (id: number) => {
+  return `/api/deliveries/${id}/confirm-delivered`;
+};
+
+export const confirmDelivered = async (
+  id: number,
+  confirmDeliveredBody: ConfirmDeliveredBody,
+  options?: RequestInit,
+): Promise<Delivery> => {
+  return customFetch<Delivery>(getConfirmDeliveredUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(confirmDeliveredBody),
+  });
+};
+
+export const getConfirmDeliveredMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof confirmDelivered>>,
+    TError,
+    { id: number; data: BodyType<ConfirmDeliveredBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof confirmDelivered>>,
+  TError,
+  { id: number; data: BodyType<ConfirmDeliveredBody> },
+  TContext
+> => {
+  const mutationKey = ["confirmDelivered"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof confirmDelivered>>,
+    { id: number; data: BodyType<ConfirmDeliveredBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return confirmDelivered(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ConfirmDeliveredMutationResult = NonNullable<
+  Awaited<ReturnType<typeof confirmDelivered>>
+>;
+export type ConfirmDeliveredMutationBody = BodyType<ConfirmDeliveredBody>;
+export type ConfirmDeliveredMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Confirm delivery completed - sends WhatsApp proof to admin
+ */
+export const useConfirmDelivered = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof confirmDelivered>>,
+    TError,
+    { id: number; data: BodyType<ConfirmDeliveredBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof confirmDelivered>>,
+  TError,
+  { id: number; data: BodyType<ConfirmDeliveredBody> },
+  TContext
+> => {
+  return useMutation(getConfirmDeliveredMutationOptions(options));
+};
+
+/**
+ * @summary Check if there is a pending dispatch for this deliverer
+ */
+export const getGetPendingDispatchUrl = (
+  id: number,
+  params: GetPendingDispatchParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/deliveries/${id}/pending-dispatch?${stringifiedParams}`
+    : `/api/deliveries/${id}/pending-dispatch`;
+};
+
+export const getPendingDispatch = async (
+  id: number,
+  params: GetPendingDispatchParams,
+  options?: RequestInit,
+): Promise<PendingDispatch> => {
+  return customFetch<PendingDispatch>(getGetPendingDispatchUrl(id, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetPendingDispatchQueryKey = (
+  id: number,
+  params?: GetPendingDispatchParams,
+) => {
+  return [
+    `/api/deliveries/${id}/pending-dispatch`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getGetPendingDispatchQueryOptions = <
+  TData = Awaited<ReturnType<typeof getPendingDispatch>>,
+  TError = ErrorType<unknown>,
+>(
+  id: number,
+  params: GetPendingDispatchParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getPendingDispatch>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetPendingDispatchQueryKey(id, params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getPendingDispatch>>
+  > = ({ signal }) =>
+    getPendingDispatch(id, params, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getPendingDispatch>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetPendingDispatchQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getPendingDispatch>>
+>;
+export type GetPendingDispatchQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Check if there is a pending dispatch for this deliverer
+ */
+
+export function useGetPendingDispatch<
+  TData = Awaited<ReturnType<typeof getPendingDispatch>>,
+  TError = ErrorType<unknown>,
+>(
+  id: number,
+  params: GetPendingDispatchParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getPendingDispatch>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetPendingDispatchQueryOptions(id, params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary Get a delivery by ID

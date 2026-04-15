@@ -75,6 +75,119 @@ paths:
               schema:
                 $ref: "#/components/schemas/Delivery"
 
+  /deliveries/pending-dispatch:
+    get:
+      operationId: getMyPendingDispatch
+      tags: [deliveries]
+      summary: Get pending dispatch for this deliverer (no delivery ID needed)
+      parameters:
+        - name: delivererId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Pending dispatch status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PendingDispatch"
+
+  /deliveries/{id}/dispatch:
+    post:
+      operationId: dispatchDelivery
+      tags: [deliveries]
+      summary: Dispatch a delivery to the best available deliverer
+      description: Assigns the delivery to the best deliverer (highest rated + fastest). After 60s with no response, cascades to all available deliverers.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Dispatch result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DispatchResult"
+
+  /deliveries/{id}/accept:
+    post:
+      operationId: acceptDelivery
+      tags: [deliveries]
+      summary: Livreur accepts a dispatched delivery
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AcceptDeliveryBody"
+      responses:
+        "200":
+          description: Accepted delivery
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Delivery"
+
+  /deliveries/{id}/confirm-delivered:
+    post:
+      operationId: confirmDelivered
+      tags: [deliveries]
+      summary: Confirm delivery completed - sends WhatsApp proof to admin
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConfirmDeliveredBody"
+      responses:
+        "200":
+          description: Delivery confirmed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Delivery"
+
+  /deliveries/{id}/pending-dispatch:
+    get:
+      operationId: getPendingDispatch
+      tags: [deliveries]
+      summary: Check if there is a pending dispatch for this deliverer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: delivererId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Dispatch status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PendingDispatch"
+
   /deliveries/{id}:
     get:
       operationId: getDelivery
@@ -748,3 +861,56 @@ components:
           type: string
         vehiclePlate:
           type: string
+
+    DispatchResult:
+      type: object
+      properties:
+        delivery:
+          $ref: "#/components/schemas/Delivery"
+        assignedDelivererId:
+          type: integer
+        assignedDelivererName:
+          type: string
+        phase:
+          type: string
+          enum: [primary, cascade]
+        message:
+          type: string
+      required:
+        - delivery
+        - phase
+        - message
+
+    AcceptDeliveryBody:
+      type: object
+      properties:
+        delivererId:
+          type: integer
+      required:
+        - delivererId
+
+    ConfirmDeliveredBody:
+      type: object
+      properties:
+        delivererId:
+          type: integer
+        proofNote:
+          type: string
+      required:
+        - delivererId
+
+    PendingDispatch:
+      type: object
+      properties:
+        hasPending:
+          type: boolean
+        delivery:
+          $ref: "#/components/schemas/Delivery"
+        expiresAt:
+          type: string
+        secondsLeft:
+          type: integer
+        phase:
+          type: string
+      required:
+        - hasPending

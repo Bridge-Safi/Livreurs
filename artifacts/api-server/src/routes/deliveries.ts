@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { db, deliveriesTable } from "@workspace/db";
 import {
   CreateDeliveryBody,
@@ -13,6 +13,7 @@ import {
   GetDeliveryStatsResponse,
   GetDeliveryStatsQueryParams,
 } from "@workspace/api-zod";
+import { serializeDelivery } from "../lib/serializers";
 
 const router: IRouter = Router();
 
@@ -65,7 +66,7 @@ router.get("/deliveries", async (req, res): Promise<void> => {
     ? await db.select().from(deliveriesTable).where(and(...conditions)).orderBy(deliveriesTable.createdAt)
     : await db.select().from(deliveriesTable).orderBy(deliveriesTable.createdAt);
 
-  res.json(ListDeliveriesResponse.parse(deliveries));
+  res.json(ListDeliveriesResponse.parse(deliveries.map(serializeDelivery)));
 });
 
 router.post("/deliveries", async (req, res): Promise<void> => {
@@ -75,7 +76,7 @@ router.post("/deliveries", async (req, res): Promise<void> => {
     return;
   }
   const [delivery] = await db.insert(deliveriesTable).values(parsed.data).returning();
-  res.status(201).json(GetDeliveryResponse.parse(delivery));
+  res.status(201).json(GetDeliveryResponse.parse(serializeDelivery(delivery)));
 });
 
 router.get("/deliveries/:id", async (req, res): Promise<void> => {
@@ -89,7 +90,7 @@ router.get("/deliveries/:id", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Delivery not found" });
     return;
   }
-  res.json(GetDeliveryResponse.parse(delivery));
+  res.json(GetDeliveryResponse.parse(serializeDelivery(delivery)));
 });
 
 router.patch("/deliveries/:id", async (req, res): Promise<void> => {
@@ -112,7 +113,7 @@ router.patch("/deliveries/:id", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Delivery not found" });
     return;
   }
-  res.json(UpdateDeliveryResponse.parse(delivery));
+  res.json(UpdateDeliveryResponse.parse(serializeDelivery(delivery)));
 });
 
 export default router;

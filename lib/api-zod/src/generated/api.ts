@@ -60,6 +60,162 @@ export const CreateDeliveryBody = zod.object({
 });
 
 /**
+ * @summary Get pending dispatch for this deliverer (no delivery ID needed)
+ */
+export const GetMyPendingDispatchQueryParams = zod.object({
+  delivererId: zod.coerce.number(),
+});
+
+export const GetMyPendingDispatchResponse = zod.object({
+  hasPending: zod.boolean(),
+  delivery: zod
+    .object({
+      id: zod.number(),
+      trackingNumber: zod.string(),
+      customerName: zod.string(),
+      customerPhone: zod.string().optional(),
+      pickupAddress: zod.string(),
+      deliveryAddress: zod.string(),
+      status: zod.enum(["pending", "in_progress", "delivered", "cancelled"]),
+      priority: zod.enum(["low", "normal", "urgent"]),
+      weight: zod.number().optional(),
+      notes: zod.string().optional(),
+      delivererId: zod.number().optional(),
+      estimatedDeliveryTime: zod.string().optional(),
+      createdAt: zod.string(),
+      updatedAt: zod.string().optional(),
+    })
+    .optional(),
+  expiresAt: zod.string().optional(),
+  secondsLeft: zod.number().optional(),
+  phase: zod.string().optional(),
+});
+
+/**
+ * Assigns the delivery to the best deliverer (highest rated + fastest). After 60s with no response, cascades to all available deliverers.
+ * @summary Dispatch a delivery to the best available deliverer
+ */
+export const DispatchDeliveryParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const DispatchDeliveryResponse = zod.object({
+  delivery: zod.object({
+    id: zod.number(),
+    trackingNumber: zod.string(),
+    customerName: zod.string(),
+    customerPhone: zod.string().optional(),
+    pickupAddress: zod.string(),
+    deliveryAddress: zod.string(),
+    status: zod.enum(["pending", "in_progress", "delivered", "cancelled"]),
+    priority: zod.enum(["low", "normal", "urgent"]),
+    weight: zod.number().optional(),
+    notes: zod.string().optional(),
+    delivererId: zod.number().optional(),
+    estimatedDeliveryTime: zod.string().optional(),
+    createdAt: zod.string(),
+    updatedAt: zod.string().optional(),
+  }),
+  assignedDelivererId: zod.number().optional(),
+  assignedDelivererName: zod.string().optional(),
+  phase: zod.enum(["primary", "cascade"]),
+  message: zod.string(),
+});
+
+/**
+ * @summary Livreur accepts a dispatched delivery
+ */
+export const AcceptDeliveryParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const AcceptDeliveryBody = zod.object({
+  delivererId: zod.number(),
+});
+
+export const AcceptDeliveryResponse = zod.object({
+  id: zod.number(),
+  trackingNumber: zod.string(),
+  customerName: zod.string(),
+  customerPhone: zod.string().optional(),
+  pickupAddress: zod.string(),
+  deliveryAddress: zod.string(),
+  status: zod.enum(["pending", "in_progress", "delivered", "cancelled"]),
+  priority: zod.enum(["low", "normal", "urgent"]),
+  weight: zod.number().optional(),
+  notes: zod.string().optional(),
+  delivererId: zod.number().optional(),
+  estimatedDeliveryTime: zod.string().optional(),
+  createdAt: zod.string(),
+  updatedAt: zod.string().optional(),
+});
+
+/**
+ * @summary Confirm delivery completed - sends WhatsApp proof to admin
+ */
+export const ConfirmDeliveredParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ConfirmDeliveredBody = zod.object({
+  delivererId: zod.number(),
+  proofNote: zod.string().optional(),
+});
+
+export const ConfirmDeliveredResponse = zod.object({
+  id: zod.number(),
+  trackingNumber: zod.string(),
+  customerName: zod.string(),
+  customerPhone: zod.string().optional(),
+  pickupAddress: zod.string(),
+  deliveryAddress: zod.string(),
+  status: zod.enum(["pending", "in_progress", "delivered", "cancelled"]),
+  priority: zod.enum(["low", "normal", "urgent"]),
+  weight: zod.number().optional(),
+  notes: zod.string().optional(),
+  delivererId: zod.number().optional(),
+  estimatedDeliveryTime: zod.string().optional(),
+  createdAt: zod.string(),
+  updatedAt: zod.string().optional(),
+});
+
+/**
+ * @summary Check if there is a pending dispatch for this deliverer
+ */
+export const GetPendingDispatchParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetPendingDispatchQueryParams = zod.object({
+  delivererId: zod.coerce.number(),
+});
+
+export const GetPendingDispatchResponse = zod.object({
+  hasPending: zod.boolean(),
+  delivery: zod
+    .object({
+      id: zod.number(),
+      trackingNumber: zod.string(),
+      customerName: zod.string(),
+      customerPhone: zod.string().optional(),
+      pickupAddress: zod.string(),
+      deliveryAddress: zod.string(),
+      status: zod.enum(["pending", "in_progress", "delivered", "cancelled"]),
+      priority: zod.enum(["low", "normal", "urgent"]),
+      weight: zod.number().optional(),
+      notes: zod.string().optional(),
+      delivererId: zod.number().optional(),
+      estimatedDeliveryTime: zod.string().optional(),
+      createdAt: zod.string(),
+      updatedAt: zod.string().optional(),
+    })
+    .optional(),
+  expiresAt: zod.string().optional(),
+  secondsLeft: zod.number().optional(),
+  phase: zod.string().optional(),
+});
+
+/**
  * @summary Get a delivery by ID
  */
 export const GetDeliveryParams = zod.object({

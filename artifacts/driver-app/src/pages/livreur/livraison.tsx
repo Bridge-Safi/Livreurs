@@ -1,6 +1,6 @@
 import { useParams, Link } from "wouter";
 import { LivreurLayout } from "@/components/layout/LivreurLayout";
-import { useGetDelivery, getGetDeliveryQueryKey, useUpdateDelivery } from "@workspace/api-client-react";
+import { useGetDelivery, getGetDeliveryQueryKey, useUpdateDelivery, useConfirmDelivered, getListDeliveriesQueryKey, getGetDeliveryStatsQueryKey } from "@workspace/api-client-react";
 import { 
   Package, MapPin, User, Phone, FileText, Clock, 
   ArrowLeft, CheckCircle2, XCircle, ChevronRight, Navigation
@@ -23,15 +23,29 @@ export default function LivreurLivraisonDetail() {
     query: { enabled: !!id, queryKey: getGetDeliveryQueryKey(id) }
   });
 
+  const LIVREUR_ID = 1;
   const updateDelivery = useUpdateDelivery();
+  const confirmDelivered = useConfirmDelivered();
 
   const handleUpdateStatus = (newStatus: string) => {
-    updateDelivery.mutate({ id, data: { status: newStatus as any } }, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getGetDeliveryQueryKey(id) });
-      }
-    });
+    if (newStatus === "delivered") {
+      confirmDelivered.mutate({ id, data: { delivererId: LIVREUR_ID } }, {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getGetDeliveryQueryKey(id) });
+          queryClient.invalidateQueries({ queryKey: getListDeliveriesQueryKey({ delivererId: LIVREUR_ID }) });
+          queryClient.invalidateQueries({ queryKey: getGetDeliveryStatsQueryKey({ delivererId: LIVREUR_ID }) });
+        }
+      });
+    } else {
+      updateDelivery.mutate({ id, data: { status: newStatus as any } }, {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getGetDeliveryQueryKey(id) });
+        }
+      });
+    }
   };
+
+  const isPending = updateDelivery.isPending || confirmDelivered.isPending;
 
   const getStatusBadge = (status?: string) => {
     switch(status) {
@@ -106,7 +120,7 @@ export default function LivreurLivraisonDetail() {
                   {delivery.status === "pending" ? (
                     <Button 
                       onClick={() => handleUpdateStatus("in_progress")}
-                      disabled={updateDelivery.isPending}
+                      disabled={isPending}
                       className="w-full sm:w-auto bg-cyan-600 hover:bg-cyan-500 text-white font-semibold"
                     >
                       Démarrer la course
@@ -114,7 +128,7 @@ export default function LivreurLivraisonDetail() {
                   ) : (
                     <Button 
                       onClick={() => handleUpdateStatus("delivered")}
-                      disabled={updateDelivery.isPending}
+                      disabled={isPending}
                       className="w-full sm:w-auto bg-green-600 hover:bg-green-500 text-white font-semibold"
                     >
                       <CheckCircle2 className="mr-2 h-4 w-4" />
