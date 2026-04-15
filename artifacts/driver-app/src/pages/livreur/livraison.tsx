@@ -8,7 +8,7 @@ import {
 } from "@workspace/api-client-react";
 import {
   ArrowLeft, MapPin, Phone, UtensilsCrossed, Navigation,
-  CheckCircle2, Clock, Star, Bike, ShoppingBag, ChevronRight,
+  CheckCircle2, Clock, Star, Bike, ShoppingBag, ChevronRight, Share2,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQueryClient } from "@tanstack/react-query";
@@ -209,6 +209,21 @@ export default function LivreurLivraisonDetail() {
             <p className="text-xs font-mono" style={{ color: BROWN_LIGHT }}>{delivery.trackingNumber}</p>
             <p className="text-sm font-bold truncate" style={{ color: BROWN }}>{delivery.customerName}</p>
           </div>
+          <button
+            onClick={() => {
+              const url = `${window.location.origin}${import.meta.env.BASE_URL}suivi/${delivery.trackingNumber}`;
+              if (navigator.share) {
+                navigator.share({ title: "Suivi Bridge", text: `Suivez votre livraison : ${delivery.trackingNumber}`, url });
+              } else {
+                navigator.clipboard?.writeText(url);
+              }
+            }}
+            className="w-8 h-8 rounded-full flex items-center justify-center mr-1"
+            style={{ background: "#FDEEE9" }}
+            title="Partager le lien de suivi"
+          >
+            <Share2 className="h-4 w-4" style={{ color: TC }} />
+          </button>
           <StatusPill status={delivery.status} />
         </div>
 

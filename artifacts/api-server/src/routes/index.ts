@@ -8,6 +8,7 @@ import dispatchRouter from "./dispatch";
 import authRouter from "./auth";
 import pushRouter from "./push";
 import webhookRouter from "./webhook";
+import trackingRouter from "./tracking";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use(deliveriesRouter);
 router.use(driversRouter);
 router.use(tripsRouter);
 router.use(webhookRouter);
+router.use("/", trackingRouter);
 
 export default router;
