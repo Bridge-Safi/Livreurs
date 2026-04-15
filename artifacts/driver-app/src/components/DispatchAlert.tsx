@@ -77,6 +77,7 @@ const GREEN = "#2A7A48";
 const BORDER = "#E8DDD0";
 const BROWN = "#2C1810";
 const BROWN_MID = "#6B4033";
+const SAND = "#FAF6EF";
 
 function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -318,6 +319,37 @@ export function DispatchAlert({ delivererId, deliveryId }: DispatchAlertProps) {
                   </div>
                 </div>
               </div>
+
+              {/* Items from Bridge Eats (parsed from notes) */}
+              {delivery.notes && (() => {
+                const match = delivery.notes.match(/Commande: ([^|]+)/);
+                const totalMatch = delivery.notes.match(/Total: ([^|]+)/);
+                if (!match && !totalMatch) return null;
+                const items = match ? match[1].split(", ").filter(Boolean) : [];
+                const total = totalMatch ? totalMatch[1].trim() : null;
+                return (
+                  <div
+                    className="rounded-xl p-3 space-y-1.5"
+                    style={{ background: SAND, border: `1px solid ${BORDER}` }}
+                  >
+                    <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: BROWN_MID }}>
+                      🍽 {t("order_items")}
+                    </p>
+                    {items.map((item, i) => (
+                      <div key={i} className="flex items-center gap-2 text-xs" style={{ color: BROWN }}>
+                        <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: TC }} />
+                        {item}
+                      </div>
+                    ))}
+                    {total && (
+                      <div className="flex items-center justify-between pt-1.5 mt-1 border-t" style={{ borderColor: BORDER }}>
+                        <span className="text-xs font-semibold" style={{ color: BROWN_MID }}>{t("order_total")}</span>
+                        <span className="text-sm font-bold" style={{ color: TC }}>{total}</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               {delivery.weight && (
                 <p className="text-xs" style={{ color: "#9B7060" }}>
