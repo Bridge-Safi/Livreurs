@@ -1,76 +1,166 @@
-import { useParams, Link } from "wouter";
+import { useParams, Link, useLocation } from "wouter";
 import { LivreurLayout } from "@/components/layout/LivreurLayout";
-import { useGetDelivery, getGetDeliveryQueryKey, useUpdateDelivery, useConfirmDelivered, getListDeliveriesQueryKey, getGetDeliveryStatsQueryKey } from "@workspace/api-client-react";
-import { 
-  Package, MapPin, User, Phone, FileText, Clock, 
-  ArrowLeft, CheckCircle2, XCircle, Navigation
+import {
+  useGetDelivery, getGetDeliveryQueryKey,
+  useUpdateDelivery, useConfirmDelivered,
+  useGetDeliverer, getGetDelivererQueryKey,
+  getListDeliveriesQueryKey, getGetDeliveryStatsQueryKey,
+} from "@workspace/api-client-react";
+import {
+  ArrowLeft, MapPin, Phone, UtensilsCrossed, Navigation,
+  CheckCircle2, Clock, Star, Bike, ShoppingBag, ChevronRight,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
-import { Separator } from "@/components/ui/separator";
+import { useState } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
+
+const TC = "#C14B2A";
+const GREEN = "#2A7A48";
+const GOLD = "#D4880C";
+const SAND = "#FAF6EF";
+const BORDER = "#E8DDD0";
+const BROWN = "#2C1810";
+const BROWN_MID = "#6B4033";
+const BROWN_LIGHT = "#9B7060";
+
+interface ParsedOrder {
+  items: string[];
+  total: string | null;
+  extra: string | null;
+}
+
+function parseOrderNotes(notes: string | null): ParsedOrder {
+  if (!notes) return { items: [], total: null, extra: null };
+  const parts = notes.split(" | ");
+  let items: string[] = [];
+  let total: string | null = null;
+  let extra: string | null = null;
+  for (const part of parts) {
+    if (part.startsWith("Commande: ")) {
+      items = part.slice("Commande: ".length).split(", ").filter(Boolean);
+    } else if (part.startsWith("Total: ")) {
+      total = part.slice("Total: ".length);
+    } else if (part.trim()) {
+      extra = part.trim();
+    }
+  }
+  return { items, total, extra };
+}
+
+function openGoogleMaps(address: string) {
+  const encoded = encodeURIComponent(address + ", Safi, Maroc");
+  window.open(`https://maps.google.com/?q=${encoded}`, "_blank");
+}
+
+function StatusPill({ status }: { status?: string }) {
+  const { t } = useI18n();
+  const config: Record<string, { label: string; color: string; bg: string }> = {
+    pending:     { label: t("status_pending"),     color: BROWN_MID, bg: "#F5EFE4" },
+    in_progress: { label: t("status_in_progress"), color: TC,        bg: "#FDEEE9" },
+    delivered:   { label: t("status_delivered"),   color: GREEN,     bg: "#E4F5EC" },
+    cancelled:   { label: t("status_cancelled"),   color: "#DC2626",  bg: "#FEE2E2" },
+  };
+  const c = config[status ?? "pending"] ?? config.pending;
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold"
+      style={{ background: c.bg, color: c.color }}
+    >
+      {status === "in_progress" && <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />}
+      {c.label}
+    </span>
+  );
+}
+
+function StepTimeline({ status }: { status?: string }) {
+  const { t } = useI18n();
+  const steps = [
+    { key: "pending",     label: t("timeline_accepted") },
+    { key: "in_progress", label: t("timeline_pickup") },
+    { key: "delivered",   label: t("timeline_done") },
+  ];
+  const idx = status === "delivered" ? 2 : status === "in_progress" ? 1 : 0;
+  return (
+    <div className="flex items-center gap-0 mt-3">
+      {steps.map((s, i) => (
+        <div key={s.key} className="flex items-center flex-1 last:flex-none">
+          <div className="flex flex-col items-center">
+            <div
+              className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
+              style={{
+                background: i <= idx ? TC : "#E8DDD0",
+                color: i <= idx ? "white" : "#9B7060",
+              }}
+            >
+              {i < idx ? <CheckCircle2 className="w-3 h-3" /> : i + 1}
+            </div>
+            <span className="text-[10px] mt-1 text-center w-14" style={{ color: i <= idx ? TC : BROWN_LIGHT }}>
+              {s.label}
+            </span>
+          </div>
+          {i < steps.length - 1 && (
+            <div className="flex-1 h-0.5 mb-4 mx-0.5" style={{ background: i < idx ? TC : "#E8DDD0" }} />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function LivreurLivraisonDetail() {
   const params = useParams();
   const id = parseInt(params.id || "0", 10);
+  const [, navigate] = useLocation();
   const queryClient = useQueryClient();
   const { t } = useI18n();
   const { livreur } = useAuth();
   const LIVREUR_ID = livreur?.id ?? 0;
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const { data: delivery, isLoading } = useGetDelivery(id, {
-    query: { enabled: !!id, queryKey: getGetDeliveryQueryKey(id) }
+    query: { enabled: !!id, queryKey: getGetDeliveryQueryKey(id) },
+  });
+
+  const { data: profile } = useGetDeliverer(LIVREUR_ID, {
+    query: { enabled: !!LIVREUR_ID, queryKey: getGetDelivererQueryKey(LIVREUR_ID) },
   });
 
   const updateDelivery = useUpdateDelivery();
   const confirmDelivered = useConfirmDelivered();
-
-  const handleUpdateStatus = (newStatus: string) => {
-    if (newStatus === "delivered") {
-      confirmDelivered.mutate({ id, data: { delivererId: LIVREUR_ID } }, {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getGetDeliveryQueryKey(id) });
-          queryClient.invalidateQueries({ queryKey: getListDeliveriesQueryKey({ delivererId: LIVREUR_ID }) });
-          queryClient.invalidateQueries({ queryKey: getGetDeliveryStatsQueryKey({ delivererId: LIVREUR_ID }) });
-        }
-      });
-    } else {
-      updateDelivery.mutate({ id, data: { status: newStatus as any } }, {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getGetDeliveryQueryKey(id) });
-        }
-      });
-    }
-  };
-
   const isPending = updateDelivery.isPending || confirmDelivered.isPending;
 
-  const getStatusBadge = (status?: string) => {
-    switch(status) {
-      case "pending": return <Badge className="bg-zinc-800 text-zinc-300 hover:bg-zinc-700 px-3 py-1 text-sm"><Clock className="mr-1.5 h-4 w-4" /> {t("status_pending")}</Badge>;
-      case "in_progress": return <Badge className="bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 border-cyan-500/50 px-3 py-1 text-sm border"><Package className="mr-1.5 h-4 w-4" /> {t("status_in_progress")}</Badge>;
-      case "delivered": return <Badge className="bg-green-500/20 text-green-400 hover:bg-green-500/30 border-green-500/50 px-3 py-1 text-sm border"><CheckCircle2 className="mr-1.5 h-4 w-4" /> {t("status_delivered")}</Badge>;
-      case "cancelled": return <Badge className="bg-red-500/20 text-red-400 hover:bg-red-500/30 border-red-500/50 px-3 py-1 text-sm border"><XCircle className="mr-1.5 h-4 w-4" /> {t("status_cancelled")}</Badge>;
-      default: return null;
-    }
+  const handleStart = () => {
+    updateDelivery.mutate({ id, data: { status: "in_progress" } }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetDeliveryQueryKey(id) });
+        queryClient.invalidateQueries({ queryKey: getListDeliveriesQueryKey({ delivererId: LIVREUR_ID }) });
+      },
+    });
   };
+
+  const handleDelivered = () => {
+    confirmDelivered.mutate({ id, data: { delivererId: LIVREUR_ID } }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetDeliveryQueryKey(id) });
+        queryClient.invalidateQueries({ queryKey: getListDeliveriesQueryKey({ delivererId: LIVREUR_ID }) });
+        queryClient.invalidateQueries({ queryKey: getGetDeliveryStatsQueryKey({ delivererId: LIVREUR_ID }) });
+        setConfirmOpen(false);
+        navigate("/livreur");
+      },
+    });
+  };
+
+  const order = parseOrderNotes(delivery?.notes ?? null);
 
   if (isLoading) {
     return (
       <LivreurLayout>
-        <div className="p-6 space-y-6">
-          <Skeleton className="h-8 w-32 bg-zinc-900" />
-          <Skeleton className="h-64 w-full bg-zinc-900 rounded-xl" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Skeleton className="h-48 bg-zinc-900 rounded-xl" />
-            <Skeleton className="h-48 bg-zinc-900 rounded-xl" />
-          </div>
+        <div className="p-5 space-y-4">
+          <Skeleton className="h-8 w-40 rounded-lg" style={{ background: "#F5EFE4" }} />
+          <Skeleton className="h-32 w-full rounded-2xl" style={{ background: "#F5EFE4" }} />
+          <Skeleton className="h-48 w-full rounded-2xl" style={{ background: "#F5EFE4" }} />
         </div>
       </LivreurLayout>
     );
@@ -80,179 +170,346 @@ export default function LivreurLivraisonDetail() {
     return (
       <LivreurLayout>
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-          <Package className="h-16 w-16 text-zinc-800 mb-4" />
-          <h2 className="text-2xl font-bold text-zinc-200">{t("delivery_not_found")}</h2>
-          <p className="text-zinc-500 mt-2 mb-6">{t("delivery_not_found_sub")}</p>
+          <UtensilsCrossed className="h-16 w-16 mb-4" style={{ color: "#D0BEB0" }} />
+          <h2 className="text-xl font-bold mb-2" style={{ color: BROWN }}>{t("not_found")}</h2>
           <Link href="/livreur/livraisons">
-            <Button className="bg-cyan-600 hover:bg-cyan-500 text-white">{t("back_to_deliveries")}</Button>
+            <button className="mt-4 px-6 py-2.5 rounded-xl font-semibold text-white" style={{ background: TC }}>
+              {t("back_to_deliveries")}
+            </button>
           </Link>
         </div>
       </LivreurLayout>
     );
   }
 
+  const isActive = delivery.status === "pending" || delivery.status === "in_progress";
+
   return (
     <LivreurLayout>
-      <div className="flex-1 overflow-auto animate-in fade-in duration-300">
-        <div className="sticky top-0 z-10 bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-800 p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link href="/livreur/livraisons">
-              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-            </Link>
-            <div className="flex flex-col">
-              <span className="text-xs text-zinc-500 font-medium tracking-wider uppercase">{t("nav_deliveries")}</span>
-              <span className="font-mono font-bold text-zinc-200">{delivery.trackingNumber}</span>
-            </div>
+      <div className="flex-1 overflow-auto" style={{ background: SAND }}>
+
+        {/* ── Sticky header ── */}
+        <div
+          className="sticky top-0 z-20 flex items-center gap-3 px-4 py-3 border-b"
+          style={{ background: "white", borderColor: BORDER }}
+        >
+          <Link href="/livreur/livraisons">
+            <button className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: SAND }}>
+              <ArrowLeft className="h-4 w-4" style={{ color: BROWN }} />
+            </button>
+          </Link>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-mono" style={{ color: BROWN_LIGHT }}>{delivery.trackingNumber}</p>
+            <p className="text-sm font-bold truncate" style={{ color: BROWN }}>{delivery.customerName}</p>
           </div>
-          {getStatusBadge(delivery.status)}
+          <StatusPill status={delivery.status} />
         </div>
 
-        <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-6">
-          
-          {/* Action Bar */}
-          {delivery.status !== "delivered" && delivery.status !== "cancelled" && (
-            <Card className="bg-zinc-900/50 border-cyan-500/20 shadow-[0_0_15px_-3px_rgba(6,182,212,0.1)]">
-              <CardContent className="p-4 flex flex-col sm:flex-row items-center gap-4 justify-between">
-                <div className="text-sm text-zinc-300 text-center sm:text-left">
-                  {delivery.status === "pending" 
-                    ? t("delivery_pending_msg")
-                    : t("delivery_going_msg")}
+        <div className="p-4 space-y-4 max-w-lg mx-auto pb-32">
+
+          {/* ── Timeline ── */}
+          <StepTimeline status={delivery.status} />
+
+          {/* ── Livreur ID card (shown when in_progress or delivered) ── */}
+          {(delivery.status === "in_progress" || delivery.status === "delivered") && profile && (
+            <div
+              className="rounded-2xl border overflow-hidden"
+              style={{ background: "white", borderColor: BORDER }}
+            >
+              <div className="px-4 py-2 flex items-center gap-2 border-b" style={{ background: "#FDEEE9", borderColor: TC + "30" }}>
+                <Bike className="h-3.5 w-3.5" style={{ color: TC }} />
+                <span className="text-xs font-bold uppercase tracking-wide" style={{ color: TC }}>
+                  {delivery.status === "in_progress" ? t("livreur_en_route") : t("livreur_delivered")}
+                </span>
+              </div>
+              <div className="p-4 flex items-center gap-4">
+                <div
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold text-white flex-shrink-0 shadow-sm"
+                  style={{ background: TC }}
+                >
+                  {profile.name.charAt(0).toUpperCase()}
                 </div>
-                <div className="flex gap-3 w-full sm:w-auto">
-                  {delivery.status === "pending" ? (
-                    <Button 
-                      onClick={() => handleUpdateStatus("in_progress")}
-                      disabled={isPending}
-                      className="w-full sm:w-auto bg-cyan-600 hover:bg-cyan-500 text-white font-semibold"
-                    >
-                      {t("start_ride")}
-                    </Button>
-                  ) : (
-                    <Button 
-                      onClick={() => handleUpdateStatus("delivered")}
-                      disabled={isPending}
-                      className="w-full sm:w-auto bg-green-600 hover:bg-green-500 text-white font-semibold"
-                    >
-                      <CheckCircle2 className="mr-2 h-4 w-4" />
-                      {t("mark_as_delivered")}
-                    </Button>
-                  )}
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-base" style={{ color: BROWN }}>{profile.name}</p>
+                  <p className="text-sm font-mono" style={{ color: BROWN_LIGHT }}>{profile.phone}</p>
+                  <div className="flex items-center gap-1 mt-1">
+                    {[1, 2, 3, 4, 5].map(s => (
+                      <Star
+                        key={s}
+                        className="w-3.5 h-3.5"
+                        style={{
+                          fill: s <= Math.round(profile.rating) ? GOLD : "transparent",
+                          color: s <= Math.round(profile.rating) ? GOLD : BORDER,
+                        }}
+                      />
+                    ))}
+                    <span className="text-xs ml-1 font-medium" style={{ color: BROWN_MID }}>
+                      {profile.rating.toFixed(1)}
+                    </span>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center"
+                  style={{ background: "#E4F5EC" }}
+                >
+                  <Bike className="h-5 w-5" style={{ color: GREEN }} />
+                </div>
+              </div>
+            </div>
           )}
 
-          {/* Route Card */}
-          <Card className="bg-zinc-950 border-zinc-800">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg flex items-center gap-2 text-zinc-100">
-                <MapPin className="h-5 w-5 text-cyan-500" /> {t("route")}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="relative pl-6 space-y-8 before:absolute before:inset-y-2 before:left-2.5 before:w-0.5 before:bg-zinc-800">
-                
-                <div className="relative">
-                  <div className="absolute -left-6 top-1 h-3 w-3 rounded-full bg-zinc-950 border-2 border-zinc-500 z-10" />
-                  <h4 className="text-sm font-medium text-zinc-400 mb-1">{t("pickup_point")}</h4>
-                  <p className="text-lg font-medium text-zinc-100">{delivery.pickupAddress}</p>
-                  <Button variant="outline" size="sm" className="mt-3 bg-zinc-900 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white h-8 text-xs">
-                    <Navigation className="mr-2 h-3 w-3" /> {t("navigate")}
-                  </Button>
-                </div>
-
-                <div className="relative">
-                  <div className="absolute -left-6 top-1 h-3 w-3 rounded-full bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.8)] z-10" />
-                  <h4 className="text-sm font-medium text-cyan-400 mb-1">{t("destination")}</h4>
-                  <p className="text-lg font-medium text-zinc-100">{delivery.deliveryAddress}</p>
-                  <Button variant="outline" size="sm" className="mt-3 bg-cyan-950/30 border-cyan-900/50 text-cyan-400 hover:bg-cyan-900/50 hover:text-cyan-300 h-8 text-xs">
-                    <Navigation className="mr-2 h-3 w-3" /> {t("navigate")}
-                  </Button>
-                </div>
-
+          {/* ── Order items (if from Bridge Eats) ── */}
+          {(order.items.length > 0 || order.total) && (
+            <div
+              className="rounded-2xl border overflow-hidden"
+              style={{ background: "white", borderColor: BORDER }}
+            >
+              <div className="px-4 py-3 flex items-center gap-2 border-b" style={{ borderColor: BORDER }}>
+                <ShoppingBag className="h-4 w-4" style={{ color: TC }} />
+                <span className="text-sm font-bold" style={{ color: BROWN }}>{t("order_items")}</span>
               </div>
-            </CardContent>
-          </Card>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Customer Info */}
-            <Card className="bg-zinc-950 border-zinc-800">
-              <CardHeader className="pb-4 border-b border-zinc-800/50">
-                <CardTitle className="text-lg flex items-center gap-2 text-zinc-100">
-                  <User className="h-5 w-5 text-zinc-400" /> {t("customer")}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-4 space-y-4">
-                <div>
-                  <p className="text-sm text-zinc-500 mb-1">{t("name_label")}</p>
-                  <p className="text-base font-medium text-zinc-200">{delivery.customerName}</p>
-                </div>
-                
-                {delivery.customerPhone && (
-                  <div>
-                    <p className="text-sm text-zinc-500 mb-1">{t("phone")}</p>
-                    <div className="flex items-center justify-between bg-zinc-900 p-3 rounded-lg border border-zinc-800">
-                      <p className="text-base font-medium text-zinc-200 font-mono">{delivery.customerPhone}</p>
-                      <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full bg-zinc-800 hover:bg-cyan-600 hover:text-white text-zinc-300">
-                        <Phone className="h-4 w-4" />
-                      </Button>
+              <div className="p-4 space-y-2">
+                {order.items.length > 0 ? (
+                  order.items.map((item, i) => (
+                    <div key={i} className="flex items-center justify-between py-1.5 border-b last:border-0" style={{ borderColor: BORDER }}>
+                      <div className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: TC }} />
+                        <span className="text-sm font-medium" style={{ color: BROWN }}>{item}</span>
+                      </div>
                     </div>
+                  ))
+                ) : (
+                  <p className="text-sm italic" style={{ color: BROWN_LIGHT }}>{t("no_instructions")}</p>
+                )}
+                {order.total && (
+                  <div className="flex items-center justify-between pt-2 mt-1 border-t" style={{ borderColor: BORDER }}>
+                    <span className="text-sm font-semibold" style={{ color: BROWN_MID }}>{t("order_total")}</span>
+                    <span className="text-base font-bold" style={{ color: TC }}>{order.total}</span>
                   </div>
                 )}
-              </CardContent>
-            </Card>
-
-            {/* Package Details */}
-            <Card className="bg-zinc-950 border-zinc-800">
-              <CardHeader className="pb-4 border-b border-zinc-800/50">
-                <CardTitle className="text-lg flex items-center gap-2 text-zinc-100">
-                  <Package className="h-5 w-5 text-zinc-400" /> {t("package_details")}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-4 space-y-4">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="text-sm text-zinc-500 mb-1">{t("priority")}</p>
-                    <p className="text-base font-medium capitalize text-zinc-200">{delivery.priority}</p>
-                  </div>
-                  {delivery.weight && (
-                    <div className="text-right">
-                      <p className="text-sm text-zinc-500 mb-1">{t("weight")}</p>
-                      <p className="text-base font-medium text-zinc-200">{delivery.weight} {t("kg")}</p>
-                    </div>
-                  )}
-                </div>
-                
-                <Separator className="bg-zinc-800" />
-                
-                <div>
-                  <p className="text-sm text-zinc-500 mb-2 flex items-center gap-1.5">
-                    <FileText className="h-4 w-4" /> {t("delivery_notes")}
-                  </p>
-                  {delivery.notes ? (
-                    <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-3">
-                      <p className="text-sm text-zinc-300 whitespace-pre-wrap">{delivery.notes}</p>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-zinc-600 italic">{t("no_instructions")}</p>
-                  )}
-                </div>
-                
-                {delivery.estimatedDeliveryTime && (
-                  <div className="pt-2">
-                    <p className="text-sm text-zinc-500 mb-1">{t("estimated_slot")}</p>
-                    <p className="text-sm font-medium text-zinc-300">
-                      {(() => { try { const d = new Date(delivery.estimatedDeliveryTime!); return isNaN(d.getTime()) ? delivery.estimatedDeliveryTime : format(d, "dd MMMM yyyy à HH'h'mm", { locale: fr }); } catch { return delivery.estimatedDeliveryTime; } })()}
-                    </p>
-                  </div>
+                {order.extra && (
+                  <p className="text-xs italic px-1 pt-1" style={{ color: BROWN_LIGHT }}>📝 {order.extra}</p>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
+          )}
+
+          {/* ── Delivery notes (if no Bridge Eats items) ── */}
+          {order.items.length === 0 && delivery.notes && !order.total && (
+            <div className="rounded-2xl border p-4" style={{ background: "white", borderColor: BORDER }}>
+              <p className="text-sm font-semibold mb-1" style={{ color: BROWN_MID }}>{t("delivery_notes")}</p>
+              <p className="text-sm" style={{ color: BROWN }}>{delivery.notes}</p>
+            </div>
+          )}
+
+          {/* ── Route ── */}
+          <div className="rounded-2xl border overflow-hidden" style={{ background: "white", borderColor: BORDER }}>
+            <div className="px-4 py-3 flex items-center gap-2 border-b" style={{ borderColor: BORDER }}>
+              <MapPin className="h-4 w-4" style={{ color: TC }} />
+              <span className="text-sm font-bold" style={{ color: BROWN }}>{t("route")}</span>
+            </div>
+            <div className="p-4 space-y-0">
+              {/* Pickup */}
+              <div className="flex gap-3">
+                <div className="flex flex-col items-center pt-1">
+                  <div className="w-4 h-4 rounded-full border-2 flex-shrink-0" style={{ borderColor: BROWN_LIGHT, background: SAND }} />
+                  <div className="w-0.5 flex-1 my-1" style={{ background: BORDER, minHeight: 24 }} />
+                </div>
+                <div className="flex-1 pb-4 min-w-0">
+                  <p className="text-xs font-bold uppercase tracking-wide mb-0.5" style={{ color: BROWN_LIGHT }}>{t("pickup_point")}</p>
+                  <p className="text-sm font-medium" style={{ color: BROWN }}>{delivery.pickupAddress}</p>
+                  <button
+                    onClick={() => openGoogleMaps(delivery.pickupAddress)}
+                    className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"
+                    style={{ background: SAND, color: BROWN_MID, border: `1px solid ${BORDER}` }}
+                  >
+                    <Navigation className="h-3 w-3" />
+                    {t("navigate_pickup")}
+                  </button>
+                </div>
+              </div>
+              {/* Delivery */}
+              <div className="flex gap-3">
+                <div className="flex flex-col items-center pt-1">
+                  <div className="w-4 h-4 rounded-full flex-shrink-0" style={{ background: TC }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold uppercase tracking-wide mb-0.5" style={{ color: TC }}>{t("destination")}</p>
+                  <p className="text-sm font-semibold" style={{ color: BROWN }}>{delivery.deliveryAddress}</p>
+                  <button
+                    onClick={() => openGoogleMaps(delivery.deliveryAddress)}
+                    className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white"
+                    style={{ background: TC }}
+                  >
+                    <Navigation className="h-3 w-3" />
+                    {t("navigate_delivery")}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
+          {/* ── Customer ── */}
+          <div className="rounded-2xl border overflow-hidden" style={{ background: "white", borderColor: BORDER }}>
+            <div className="px-4 py-3 flex items-center gap-2 border-b" style={{ borderColor: BORDER }}>
+              <UtensilsCrossed className="h-4 w-4" style={{ color: TC }} />
+              <span className="text-sm font-bold" style={{ color: BROWN }}>{t("customer")}</span>
+            </div>
+            <div className="p-4 flex items-center gap-4">
+              <div
+                className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg text-white flex-shrink-0"
+                style={{ background: GOLD }}
+              >
+                {delivery.customerName.charAt(0).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold" style={{ color: BROWN }}>{delivery.customerName}</p>
+                {delivery.customerPhone && (
+                  <p className="text-sm font-mono" style={{ color: BROWN_LIGHT }}>{delivery.customerPhone}</p>
+                )}
+              </div>
+              {delivery.customerPhone && (
+                <a
+                  href={`tel:${delivery.customerPhone}`}
+                  className="w-11 h-11 rounded-full flex items-center justify-center text-white flex-shrink-0"
+                  style={{ background: GREEN }}
+                >
+                  <Phone className="h-5 w-5" />
+                </a>
+              )}
+            </div>
+          </div>
+
+          {/* ── Info extras ── */}
+          {(delivery.estimatedDeliveryTime || delivery.weight) && (
+            <div className="flex gap-3">
+              {delivery.estimatedDeliveryTime && (
+                <div className="flex-1 rounded-2xl border p-3 flex items-center gap-2" style={{ background: "white", borderColor: BORDER }}>
+                  <Clock className="h-4 w-4 flex-shrink-0" style={{ color: GOLD }} />
+                  <div>
+                    <p className="text-xs" style={{ color: BROWN_LIGHT }}>{t("est_time")}</p>
+                    <p className="text-sm font-bold" style={{ color: BROWN }}>{delivery.estimatedDeliveryTime}</p>
+                  </div>
+                </div>
+              )}
+              {delivery.weight && (
+                <div className="flex-1 rounded-2xl border p-3 flex items-center gap-2" style={{ background: "white", borderColor: BORDER }}>
+                  <ShoppingBag className="h-4 w-4 flex-shrink-0" style={{ color: TC }} />
+                  <div>
+                    <p className="text-xs" style={{ color: BROWN_LIGHT }}>{t("weight")}</p>
+                    <p className="text-sm font-bold" style={{ color: BROWN }}>{delivery.weight} {t("kg")}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Delivered success ── */}
+          {delivery.status === "delivered" && (
+            <div className="rounded-2xl border p-5 text-center" style={{ background: "#E4F5EC", borderColor: "#A8DFC1" }}>
+              <CheckCircle2 className="h-10 w-10 mx-auto mb-2" style={{ color: GREEN }} />
+              <h3 className="font-bold text-lg" style={{ color: GREEN }}>{t("status_delivered")}</h3>
+              <p className="text-sm mt-1" style={{ color: "#2A5C38" }}>{t("delivery_done_msg")}</p>
+            </div>
+          )}
+
         </div>
+
+        {/* ── Floating action button ── */}
+        {isActive && (
+          <div
+            className="fixed bottom-20 left-0 right-0 px-4 z-30"
+            style={{ maxWidth: 440, margin: "0 auto" }}
+          >
+            {delivery.status === "pending" ? (
+              <button
+                onClick={handleStart}
+                disabled={isPending}
+                className="w-full h-14 rounded-2xl font-bold text-base text-white shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-60"
+                style={{ background: TC }}
+              >
+                <Bike className="h-5 w-5" />
+                {t("start_delivery_btn")}
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            ) : delivery.status === "in_progress" ? (
+              <button
+                onClick={() => setConfirmOpen(true)}
+                disabled={isPending}
+                className="w-full h-14 rounded-2xl font-bold text-base text-white shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-60"
+                style={{ background: GREEN }}
+              >
+                <CheckCircle2 className="h-5 w-5" />
+                {t("confirm_delivered_btn")}
+              </button>
+            ) : null}
+          </div>
+        )}
+
+        {/* ── Confirm delivery modal ── */}
+        {confirmOpen && (
+          <div
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+            style={{ background: "rgba(44,24,16,0.6)", backdropFilter: "blur(6px)" }}
+          >
+            <div
+              className="rounded-t-3xl sm:rounded-3xl w-full sm:max-w-sm mx-0 sm:mx-4 overflow-hidden border animate-in slide-in-from-bottom-4 duration-300"
+              style={{ background: "white", borderColor: GREEN + "40" }}
+            >
+              <div className="h-1 w-full" style={{ background: GREEN }} />
+              <div className="p-6 text-center">
+                <div
+                  className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+                  style={{ background: "#E4F5EC" }}
+                >
+                  <CheckCircle2 className="h-8 w-8" style={{ color: GREEN }} />
+                </div>
+                <h3 className="text-xl font-bold mb-1" style={{ color: BROWN }}>{t("confirm_delivery_title")}</h3>
+                <p className="text-sm mb-2" style={{ color: BROWN_MID }}>{delivery.customerName}</p>
+                <p className="text-sm mb-6" style={{ color: BROWN_LIGHT }}>{delivery.deliveryAddress}</p>
+                {profile && (
+                  <div
+                    className="flex items-center gap-3 p-3 rounded-xl border mb-6"
+                    style={{ borderColor: BORDER, background: SAND }}
+                  >
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-white flex-shrink-0"
+                      style={{ background: TC }}
+                    >
+                      {profile.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm font-bold" style={{ color: BROWN }}>{profile.name}</p>
+                      <div className="flex items-center gap-1">
+                        <Star className="w-3 h-3" style={{ fill: GOLD, color: GOLD }} />
+                        <span className="text-xs" style={{ color: BROWN_LIGHT }}>{profile.rating.toFixed(1)}</span>
+                      </div>
+                    </div>
+                    <Bike className="h-5 w-5 ml-auto" style={{ color: TC }} />
+                  </div>
+                )}
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => setConfirmOpen(false)}
+                    className="h-12 rounded-xl font-semibold border"
+                    style={{ borderColor: BORDER, color: BROWN_MID, background: SAND }}
+                  >
+                    {t("back")}
+                  </button>
+                  <button
+                    onClick={handleDelivered}
+                    disabled={isPending}
+                    className="h-12 rounded-xl font-bold text-white disabled:opacity-60"
+                    style={{ background: GREEN }}
+                  >
+                    {isPending ? "…" : t("confirm_delivered_btn")}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </LivreurLayout>
   );
