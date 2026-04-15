@@ -1,0 +1,19 @@
+{
+  "name": "Bridge — Safi Logistique",
+  "short_name": "Bridge",
+  "description": "Plateforme logistique pour Safi, Maroc",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAF6EF",
+  "theme_color": "#C14B2A",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["logistics", "productivity"]
+}

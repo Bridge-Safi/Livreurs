@@ -6,11 +6,13 @@ import driversRouter from "./drivers";
 import tripsRouter from "./trips";
 import dispatchRouter from "./dispatch";
 import authRouter from "./auth";
+import pushRouter from "./push";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use(authRouter);
+router.use(pushRouter);
 router.use(dispatchRouter);
 router.use(deliverersRouter);
 router.use(deliveriesRouter);

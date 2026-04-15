@@ -15,6 +15,7 @@ import {
 } from "@workspace/api-zod";
 import { sendWhatsAppProof } from "../lib/whatsapp";
 import { serializeDelivery } from "../lib/serializers";
+import { sendPushToAll } from "./push";
 
 const router: IRouter = Router();
 
@@ -106,6 +107,12 @@ router.post("/deliveries/:id/dispatch", async (req, res): Promise<void> => {
     .returning();
 
   req.log.info({ deliveryId: params.data.id, phase: "cascade" }, "Delivery broadcast to all deliverers");
+
+  sendPushToAll({
+    title: "🛵 Nouvelle commande — Bridge Safi",
+    body: `${updated.customerName} · ${updated.deliveryAddress} — 7 min pour accepter`,
+    url: "/",
+  }).catch(() => {});
 
   res.json({
     delivery: GetDeliveryResponse.parse(serializeDelivery(updated)),

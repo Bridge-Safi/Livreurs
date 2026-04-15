@@ -240,7 +240,7 @@ export default function ChauffeurTrajetDetail() {
                   <div className="pt-2 border-t border-zinc-800/50">
                     <p className="text-sm text-zinc-500 mb-1">Prise en charge programmée</p>
                     <p className="text-sm font-medium text-zinc-300">
-                      {format(new Date(trip.scheduledAt), "dd MMMM yyyy à HH'h'mm", { locale: fr })}
+                      {(() => { try { const d = new Date(trip.scheduledAt!); return isNaN(d.getTime()) ? String(trip.scheduledAt) : format(d, "dd MMMM yyyy à HH'h'mm", { locale: fr }); } catch { return String(trip.scheduledAt); } })()}
                     </p>
                   </div>
                 )}

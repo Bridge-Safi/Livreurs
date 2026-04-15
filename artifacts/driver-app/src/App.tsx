@@ -4,6 +4,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProvider } from "@/lib/i18n";
 import { AuthProvider, useAuth } from "@/lib/auth";
+import { registerServiceWorker } from "@/lib/push";
+import { useEffect } from "react";
 
 import RoleSelection from "@/pages/index";
 import LivreurLogin from "@/pages/livreur/login";
@@ -61,6 +63,10 @@ function Router() {
 }
 
 function App() {
+  useEffect(() => {
+    registerServiceWorker();
+  }, []);
+
   return (
     <I18nProvider>
       <AuthProvider>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
+import { subscribeToPush, isPushSupported } from "@/lib/push";
 import { ArrowLeft, Delete } from "lucide-react";
 
 const GOLD = "#D4880C";
@@ -85,6 +86,9 @@ export default function ChauffeurLogin() {
       const data = await res.json();
       if (data.success) {
         loginChauffeur({ id: data.id, name: data.name, phone: data.phone, role: "chauffeur" });
+        if (isPushSupported()) {
+          subscribeToPush({ driverId: data.id }).catch(() => {});
+        }
         navigate("/chauffeur");
       } else {
         setError(data.error || "Code PIN incorrect");

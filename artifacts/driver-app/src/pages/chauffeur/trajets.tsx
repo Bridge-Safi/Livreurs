@@ -134,7 +134,7 @@ export default function ChauffeurTrajets() {
                         {trip.scheduledAt && (
                           <div className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
-                            <span>{format(new Date(trip.scheduledAt), "dd MMM à HH:mm", { locale: fr })}</span>
+                            <span>{(() => { try { const d = new Date(trip.scheduledAt!); return isNaN(d.getTime()) ? String(trip.scheduledAt) : format(d, "dd MMM à HH:mm", { locale: fr }); } catch { return String(trip.scheduledAt); } })()}</span>
                           </div>
                         )}
                         {trip.distance && (

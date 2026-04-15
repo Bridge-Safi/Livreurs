@@ -160,18 +160,12 @@ export default function LivreurLivraisons() {
                     <span className="truncate max-w-[180px] md:max-w-xs font-medium" style={{ color: BROWN }}>{delivery.deliveryAddress}</span>
                   </div>
 
-                  {delivery.estimatedDeliveryTime && (() => {
-                    try {
-                      const d = new Date(delivery.estimatedDeliveryTime);
-                      if (isNaN(d.getTime())) return null;
-                      return (
-                        <div className="flex items-center gap-1 mt-2 text-xs" style={{ color: BROWN_LIGHT }}>
-                          <Clock className="h-3 w-3" />
-                          <span>{t("est_time")} : {format(d, "HH'h'mm", { locale: fr })}</span>
-                        </div>
-                      );
-                    } catch { return null; }
-                  })()}
+                  {delivery.estimatedDeliveryTime && (
+                    <div className="flex items-center gap-1 mt-2 text-xs" style={{ color: BROWN_LIGHT }}>
+                      <Clock className="h-3 w-3" />
+                      <span>{t("est_time")} : {delivery.estimatedDeliveryTime}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div

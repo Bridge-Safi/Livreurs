@@ -12,7 +12,7 @@ export const LANGUAGES: { code: Lang; label: string; native: string; rtl?: boole
 const T = {
   fr: {
     app_name: "Bridge",
-    app_subtitle: "Plateforme Logistique Maroc",
+    app_subtitle: "Safi, Maroc — Logistique",
     role_livreur: "Livreur Bridge",
     role_livreur_desc: "Gestion des livraisons et colis",
     role_chauffeur: "Chauffeur VTC",
@@ -128,7 +128,7 @@ const T = {
   },
   ar: {
     app_name: "Bridge",
-    app_subtitle: "منصة لوجستية بالمغرب",
+    app_subtitle: "صافي، المغرب — لوجستيك",
     role_livreur: "مندوب التوصيل",
     role_livreur_desc: "إدارة التوصيلات والطرود",
     role_chauffeur: "سائق VTC",
@@ -186,7 +186,7 @@ const T = {
   },
   tzm: {
     app_name: "Bridge",
-    app_subtitle: "ⴰⵙⵢⴰⵍ ⵏ ⵓⵏⵓⵔ ⵏ ⵍⵎⵖⵔⵉⴱ",
+    app_subtitle: "ⵙⴰⴼⵉ, ⵍⵎⵖⵔⵉⴱ — ⵍⵓⵊⵉⵙⵜⵉⴽ",
     role_livreur: "ⴰⵎⵙⵓⴼⵖ Bridge",
     role_livreur_desc: "ⴰⵙⴳⵎⵉ ⵏ ⵜⵉⴷⴷⵓⴽⴽⵍⵉⵏ",
     role_chauffeur: "ⴰⵏⵔⵔⴰⵔ VTC",

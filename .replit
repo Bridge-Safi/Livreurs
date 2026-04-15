@@ -33,3 +33,10 @@ externalPort = 3000
 
 [nix]
 channel = "stable-25_05"
+
+[userenv]
+
+[userenv.shared]
+VAPID_PUBLIC_KEY = "BBaaVGsjvHTKOpPoxHngYRzqRhTrO6aJridTTkM487k6sDgTh-DN99lrUy7PEROx4kOvlQRXZHmw5fOUPU1avpA"
+VAPID_PRIVATE_KEY = "57xxQM2_S8hCO3xVHTeyROUIfSGIYkkg2VZV_mW-nYg"
+VAPID_SUBJECT = "mailto:admin@bridge-safi.ma"

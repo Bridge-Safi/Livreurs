@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
-import { ArrowLeft, Delete } from "lucide-react";
+import { subscribeToPush, isPushSupported } from "@/lib/push";
+import { ArrowLeft, Delete, Bell } from "lucide-react";
 
 const TC = "#C14B2A";
 const SAND = "#FAF6EF";
@@ -87,6 +88,9 @@ export default function LivreurLogin() {
       const data = await res.json();
       if (data.success) {
         loginLivreur({ id: data.id, name: data.name, phone: data.phone, role: "livreur" });
+        if (isPushSupported()) {
+          subscribeToPush({ delivererId: data.id }).catch(() => {});
+        }
         navigate("/livreur");
       } else {
         setError(data.error || "Code PIN incorrect");

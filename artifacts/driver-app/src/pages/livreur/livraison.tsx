@@ -240,7 +240,7 @@ export default function LivreurLivraisonDetail() {
                   <div className="pt-2">
                     <p className="text-sm text-zinc-500 mb-1">Créneau estimé</p>
                     <p className="text-sm font-medium text-zinc-300">
-                      {format(new Date(delivery.estimatedDeliveryTime), "dd MMMM yyyy à HH'h'mm", { locale: fr })}
+                      {(() => { try { const d = new Date(delivery.estimatedDeliveryTime!); return isNaN(d.getTime()) ? delivery.estimatedDeliveryTime : format(d, "dd MMMM yyyy à HH'h'mm", { locale: fr }); } catch { return delivery.estimatedDeliveryTime; } })()}
                     </p>
                   </div>
                 )}
