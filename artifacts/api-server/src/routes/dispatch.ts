@@ -5,6 +5,8 @@ import {
   DispatchDeliveryParams,
   AcceptDeliveryBody,
   AcceptDeliveryParams,
+  RefuseDeliveryBody,
+  RefuseDeliveryParams,
   ConfirmDeliveredBody,
   ConfirmDeliveredParams,
   GetPendingDispatchQueryParams,
@@ -175,6 +177,40 @@ router.post("/deliveries/:id/accept", async (req, res): Promise<void> => {
     .where(eq(deliverersTable.id, body.data.delivererId));
 
   req.log.info({ deliveryId: params.data.id, delivererId: body.data.delivererId }, "Delivery accepted by deliverer");
+
+  res.json(GetDeliveryResponse.parse(serializeDelivery(updated)));
+});
+
+router.post("/deliveries/:id/refuse", async (req, res): Promise<void> => {
+  const params = RefuseDeliveryParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  const body = RefuseDeliveryBody.safeParse(req.body);
+  if (!body.success) {
+    res.status(400).json({ error: body.error.message });
+    return;
+  }
+
+  const [delivery] = await db.select().from(deliveriesTable).where(eq(deliveriesTable.id, params.data.id));
+  if (!delivery) {
+    res.status(404).json({ error: "Delivery not found" });
+    return;
+  }
+
+  if (delivery.dispatchPhase !== "primary" && delivery.dispatchPhase !== "cascade") {
+    res.status(409).json({ error: "Cette livraison n'est pas en cours de dispatch" });
+    return;
+  }
+
+  const [updated] = await db
+    .update(deliveriesTable)
+    .set({ dispatchPhase: "cascade", updatedAt: new Date() })
+    .where(eq(deliveriesTable.id, params.data.id))
+    .returning();
+
+  req.log.info({ deliveryId: params.data.id, delivererId: body.data.delivererId }, "Delivery refused - cascaded");
 
   res.json(GetDeliveryResponse.parse(serializeDelivery(updated)));
 });

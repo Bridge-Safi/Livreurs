@@ -151,6 +151,34 @@ export const AcceptDeliveryResponse = zod.object({
 });
 
 /**
+ * @summary Livreur refuses a dispatched delivery - triggers immediate cascade
+ */
+export const RefuseDeliveryParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const RefuseDeliveryBody = zod.object({
+  delivererId: zod.number(),
+});
+
+export const RefuseDeliveryResponse = zod.object({
+  id: zod.number(),
+  trackingNumber: zod.string(),
+  customerName: zod.string(),
+  customerPhone: zod.string().optional(),
+  pickupAddress: zod.string(),
+  deliveryAddress: zod.string(),
+  status: zod.enum(["pending", "in_progress", "delivered", "cancelled"]),
+  priority: zod.enum(["low", "normal", "urgent"]),
+  weight: zod.number().optional(),
+  notes: zod.string().optional(),
+  delivererId: zod.number().optional(),
+  estimatedDeliveryTime: zod.string().optional(),
+  createdAt: zod.string(),
+  updatedAt: zod.string().optional(),
+});
+
+/**
  * @summary Confirm delivery completed - sends WhatsApp proof to admin
  */
 export const ConfirmDeliveredParams = zod.object({

@@ -36,6 +36,7 @@ import type {
   ListDeliveriesParams,
   ListTripsParams,
   PendingDispatch,
+  RefuseDeliveryBody,
   Trip,
   TripStats,
   UpdateDelivererBody,
@@ -582,6 +583,93 @@ export const useAcceptDelivery = <
   TContext
 > => {
   return useMutation(getAcceptDeliveryMutationOptions(options));
+};
+
+/**
+ * @summary Livreur refuses a dispatched delivery - triggers immediate cascade
+ */
+export const getRefuseDeliveryUrl = (id: number) => {
+  return `/api/deliveries/${id}/refuse`;
+};
+
+export const refuseDelivery = async (
+  id: number,
+  refuseDeliveryBody: RefuseDeliveryBody,
+  options?: RequestInit,
+): Promise<Delivery> => {
+  return customFetch<Delivery>(getRefuseDeliveryUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(refuseDeliveryBody),
+  });
+};
+
+export const getRefuseDeliveryMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof refuseDelivery>>,
+    TError,
+    { id: number; data: BodyType<RefuseDeliveryBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof refuseDelivery>>,
+  TError,
+  { id: number; data: BodyType<RefuseDeliveryBody> },
+  TContext
+> => {
+  const mutationKey = ["refuseDelivery"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof refuseDelivery>>,
+    { id: number; data: BodyType<RefuseDeliveryBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return refuseDelivery(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RefuseDeliveryMutationResult = NonNullable<
+  Awaited<ReturnType<typeof refuseDelivery>>
+>;
+export type RefuseDeliveryMutationBody = BodyType<RefuseDeliveryBody>;
+export type RefuseDeliveryMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Livreur refuses a dispatched delivery - triggers immediate cascade
+ */
+export const useRefuseDelivery = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof refuseDelivery>>,
+    TError,
+    { id: number; data: BodyType<RefuseDeliveryBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof refuseDelivery>>,
+  TError,
+  { id: number; data: BodyType<RefuseDeliveryBody> },
+  TContext
+> => {
+  return useMutation(getRefuseDeliveryMutationOptions(options));
 };
 
 /**

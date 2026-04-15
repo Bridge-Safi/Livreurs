@@ -289,6 +289,10 @@ export interface AcceptDeliveryBody {
   delivererId: number;
 }
 
+export interface RefuseDeliveryBody {
+  delivererId: number;
+}
+
 export interface ConfirmDeliveredBody {
   delivererId: number;
   proofNote?: string;

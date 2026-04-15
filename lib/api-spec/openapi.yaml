@@ -139,6 +139,31 @@ paths:
               schema:
                 $ref: "#/components/schemas/Delivery"
 
+  /deliveries/{id}/refuse:
+    post:
+      operationId: refuseDelivery
+      tags: [deliveries]
+      summary: Livreur refuses a dispatched delivery - triggers immediate cascade
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefuseDeliveryBody"
+      responses:
+        "200":
+          description: Delivery refused - cascaded to all deliverers
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Delivery"
+
   /deliveries/{id}/confirm-delivered:
     post:
       operationId: confirmDelivered
@@ -882,6 +907,14 @@ components:
         - message
 
     AcceptDeliveryBody:
+      type: object
+      properties:
+        delivererId:
+          type: integer
+      required:
+        - delivererId
+
+    RefuseDeliveryBody:
       type: object
       properties:
         delivererId:
