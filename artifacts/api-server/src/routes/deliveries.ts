@@ -1,0 +1,118 @@
+import { Router, type IRouter } from "express";
+import { eq, and, sql } from "drizzle-orm";
+import { db, deliveriesTable } from "@workspace/db";
+import {
+  CreateDeliveryBody,
+  UpdateDeliveryBody,
+  UpdateDeliveryParams,
+  GetDeliveryParams,
+  GetDeliveryResponse,
+  UpdateDeliveryResponse,
+  ListDeliveriesResponse,
+  ListDeliveriesQueryParams,
+  GetDeliveryStatsResponse,
+  GetDeliveryStatsQueryParams,
+} from "@workspace/api-zod";
+
+const router: IRouter = Router();
+
+router.get("/deliveries/stats", async (req, res): Promise<void> => {
+  const queryParams = GetDeliveryStatsQueryParams.safeParse(req.query);
+  const delivererId = queryParams.success ? queryParams.data.delivererId : undefined;
+
+  const whereClause = delivererId ? eq(deliveriesTable.delivererId, delivererId) : undefined;
+
+  const all = whereClause
+    ? await db.select().from(deliveriesTable).where(whereClause)
+    : await db.select().from(deliveriesTable);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const todayDeliveries = all.filter(d => new Date(d.createdAt) >= today);
+  const completed = todayDeliveries.filter(d => d.status === "delivered");
+  const inProgress = all.filter(d => d.status === "in_progress");
+  const pending = all.filter(d => d.status === "pending");
+  const cancelled = todayDeliveries.filter(d => d.status === "cancelled");
+
+  const earningsToday = completed.length * 8.5;
+  const earningsWeek = all.filter(d => d.status === "delivered").length * 8.5;
+
+  const stats = {
+    totalToday: todayDeliveries.length,
+    completedToday: completed.length,
+    inProgress: inProgress.length,
+    pending: pending.length,
+    cancelled: cancelled.length,
+    earningsToday,
+    earningsWeek,
+    averageDeliveryTime: 25,
+  };
+
+  res.json(GetDeliveryStatsResponse.parse(stats));
+});
+
+router.get("/deliveries", async (req, res): Promise<void> => {
+  const queryParams = ListDeliveriesQueryParams.safeParse(req.query);
+  const status = queryParams.success ? queryParams.data.status : undefined;
+  const delivererId = queryParams.success ? queryParams.data.delivererId : undefined;
+
+  let conditions: ReturnType<typeof eq>[] = [];
+  if (status) conditions.push(eq(deliveriesTable.status, status));
+  if (delivererId) conditions.push(eq(deliveriesTable.delivererId, delivererId));
+
+  const deliveries = conditions.length > 0
+    ? await db.select().from(deliveriesTable).where(and(...conditions)).orderBy(deliveriesTable.createdAt)
+    : await db.select().from(deliveriesTable).orderBy(deliveriesTable.createdAt);
+
+  res.json(ListDeliveriesResponse.parse(deliveries));
+});
+
+router.post("/deliveries", async (req, res): Promise<void> => {
+  const parsed = CreateDeliveryBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const [delivery] = await db.insert(deliveriesTable).values(parsed.data).returning();
+  res.status(201).json(GetDeliveryResponse.parse(delivery));
+});
+
+router.get("/deliveries/:id", async (req, res): Promise<void> => {
+  const params = GetDeliveryParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  const [delivery] = await db.select().from(deliveriesTable).where(eq(deliveriesTable.id, params.data.id));
+  if (!delivery) {
+    res.status(404).json({ error: "Delivery not found" });
+    return;
+  }
+  res.json(GetDeliveryResponse.parse(delivery));
+});
+
+router.patch("/deliveries/:id", async (req, res): Promise<void> => {
+  const params = UpdateDeliveryParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  const parsed = UpdateDeliveryBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const [delivery] = await db
+    .update(deliveriesTable)
+    .set({ ...parsed.data, updatedAt: new Date() })
+    .where(eq(deliveriesTable.id, params.data.id))
+    .returning();
+  if (!delivery) {
+    res.status(404).json({ error: "Delivery not found" });
+    return;
+  }
+  res.json(UpdateDeliveryResponse.parse(delivery));
+});
+
+export default router;

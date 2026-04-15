@@ -3,13 +3,21 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Driver and Delivery App API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: deliveries
+    description: Delivery management for Bridge deliverers
+  - name: trips
+    description: Trip management for drivers
+  - name: drivers
+    description: Driver profile and stats
+  - name: deliverers
+    description: Deliverer profile and stats
 paths:
   /healthz:
     get:
@@ -24,6 +32,359 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /deliveries:
+    get:
+      operationId: listDeliveries
+      tags: [deliveries]
+      summary: List all deliveries
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, in_progress, delivered, cancelled]
+        - name: delivererId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of deliveries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Delivery"
+    post:
+      operationId: createDelivery
+      tags: [deliveries]
+      summary: Create a new delivery
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDeliveryBody"
+      responses:
+        "201":
+          description: Delivery created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Delivery"
+
+  /deliveries/{id}:
+    get:
+      operationId: getDelivery
+      tags: [deliveries]
+      summary: Get a delivery by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Delivery
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Delivery"
+    patch:
+      operationId: updateDelivery
+      tags: [deliveries]
+      summary: Update delivery status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateDeliveryBody"
+      responses:
+        "200":
+          description: Updated delivery
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Delivery"
+
+  /deliveries/stats:
+    get:
+      operationId: getDeliveryStats
+      tags: [deliveries]
+      summary: Get delivery statistics summary
+      parameters:
+        - name: delivererId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Delivery stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeliveryStats"
+
+  /deliverers:
+    get:
+      operationId: listDeliverers
+      tags: [deliverers]
+      summary: List deliverers
+      responses:
+        "200":
+          description: List of deliverers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Deliverer"
+    post:
+      operationId: createDeliverer
+      tags: [deliverers]
+      summary: Create a deliverer profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDelivererBody"
+      responses:
+        "201":
+          description: Deliverer created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Deliverer"
+
+  /deliverers/{id}:
+    get:
+      operationId: getDeliverer
+      tags: [deliverers]
+      summary: Get a deliverer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deliverer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Deliverer"
+    patch:
+      operationId: updateDeliverer
+      tags: [deliverers]
+      summary: Update deliverer availability
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateDelivererBody"
+      responses:
+        "200":
+          description: Updated deliverer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Deliverer"
+
+  /trips:
+    get:
+      operationId: listTrips
+      tags: [trips]
+      summary: List all trips
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [scheduled, in_progress, completed, cancelled]
+        - name: driverId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of trips
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Trip"
+    post:
+      operationId: createTrip
+      tags: [trips]
+      summary: Create a new trip
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTripBody"
+      responses:
+        "201":
+          description: Trip created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+
+  /trips/{id}:
+    get:
+      operationId: getTrip
+      tags: [trips]
+      summary: Get a trip by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Trip
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+    patch:
+      operationId: updateTrip
+      tags: [trips]
+      summary: Update trip status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTripBody"
+      responses:
+        "200":
+          description: Updated trip
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+
+  /trips/stats:
+    get:
+      operationId: getTripStats
+      tags: [trips]
+      summary: Get trip statistics for a driver
+      parameters:
+        - name: driverId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Trip stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TripStats"
+
+  /drivers:
+    get:
+      operationId: listDrivers
+      tags: [drivers]
+      summary: List drivers
+      responses:
+        "200":
+          description: List of drivers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Driver"
+    post:
+      operationId: createDriver
+      tags: [drivers]
+      summary: Create a driver profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDriverBody"
+      responses:
+        "201":
+          description: Driver created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Driver"
+
+  /drivers/{id}:
+    get:
+      operationId: getDriver
+      tags: [drivers]
+      summary: Get a driver
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Driver
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Driver"
+    patch:
+      operationId: updateDriver
+      tags: [drivers]
+      summary: Update driver availability or status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateDriverBody"
+      responses:
+        "200":
+          description: Updated driver
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Driver"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +395,356 @@ components:
       required:
         - status
 
+    Delivery:
+      type: object
+      properties:
+        id:
+          type: integer
+        trackingNumber:
+          type: string
+        customerName:
+          type: string
+        customerPhone:
+          type: string
+        pickupAddress:
+          type: string
+        deliveryAddress:
+          type: string
+        status:
+          type: string
+          enum: [pending, in_progress, delivered, cancelled]
+        priority:
+          type: string
+          enum: [low, normal, urgent]
+        weight:
+          type: number
+        notes:
+          type: string
+        delivererId:
+          type: integer
+        estimatedDeliveryTime:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - trackingNumber
+        - customerName
+        - pickupAddress
+        - deliveryAddress
+        - status
+        - priority
+        - createdAt
+
+    CreateDeliveryBody:
+      type: object
+      properties:
+        trackingNumber:
+          type: string
+        customerName:
+          type: string
+        customerPhone:
+          type: string
+        pickupAddress:
+          type: string
+        deliveryAddress:
+          type: string
+        priority:
+          type: string
+          enum: [low, normal, urgent]
+        weight:
+          type: number
+        notes:
+          type: string
+        delivererId:
+          type: integer
+        estimatedDeliveryTime:
+          type: string
+      required:
+        - trackingNumber
+        - customerName
+        - pickupAddress
+        - deliveryAddress
+        - priority
+
+    UpdateDeliveryBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [pending, in_progress, delivered, cancelled]
+        notes:
+          type: string
+        delivererId:
+          type: integer
+
+    DeliveryStats:
+      type: object
+      properties:
+        totalToday:
+          type: integer
+        completedToday:
+          type: integer
+        inProgress:
+          type: integer
+        pending:
+          type: integer
+        cancelled:
+          type: integer
+        earningsToday:
+          type: number
+        earningsWeek:
+          type: number
+        averageDeliveryTime:
+          type: number
+      required:
+        - totalToday
+        - completedToday
+        - inProgress
+        - pending
+        - cancelled
+        - earningsToday
+        - earningsWeek
+        - averageDeliveryTime
+
+    Deliverer:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        vehicleType:
+          type: string
+          enum: [bicycle, motorcycle, car, van]
+        status:
+          type: string
+          enum: [available, busy, offline]
+        zone:
+          type: string
+        totalDeliveries:
+          type: integer
+        rating:
+          type: number
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - phone
+        - vehicleType
+        - status
+        - totalDeliveries
+        - rating
+
+    CreateDelivererBody:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        vehicleType:
+          type: string
+          enum: [bicycle, motorcycle, car, van]
+        zone:
+          type: string
+      required:
+        - name
+        - phone
+        - vehicleType
+
+    UpdateDelivererBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [available, busy, offline]
+        zone:
+          type: string
+
+    Trip:
+      type: object
+      properties:
+        id:
+          type: integer
+        passengerName:
+          type: string
+        passengerPhone:
+          type: string
+        pickupAddress:
+          type: string
+        dropoffAddress:
+          type: string
+        status:
+          type: string
+          enum: [scheduled, in_progress, completed, cancelled]
+        fare:
+          type: number
+        distance:
+          type: number
+        duration:
+          type: integer
+        driverId:
+          type: integer
+        scheduledAt:
+          type: string
+        startedAt:
+          type: string
+        completedAt:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - passengerName
+        - pickupAddress
+        - dropoffAddress
+        - status
+        - fare
+        - createdAt
+
+    CreateTripBody:
+      type: object
+      properties:
+        passengerName:
+          type: string
+        passengerPhone:
+          type: string
+        pickupAddress:
+          type: string
+        dropoffAddress:
+          type: string
+        fare:
+          type: number
+        distance:
+          type: number
+        driverId:
+          type: integer
+        scheduledAt:
+          type: string
+      required:
+        - passengerName
+        - pickupAddress
+        - dropoffAddress
+        - fare
+
+    UpdateTripBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [scheduled, in_progress, completed, cancelled]
+        startedAt:
+          type: string
+        completedAt:
+          type: string
+        fare:
+          type: number
+
+    TripStats:
+      type: object
+      properties:
+        totalToday:
+          type: integer
+        completedToday:
+          type: integer
+        inProgress:
+          type: integer
+        cancelled:
+          type: integer
+        earningsToday:
+          type: number
+        earningsWeek:
+          type: number
+        totalKmToday:
+          type: number
+        averageFare:
+          type: number
+      required:
+        - totalToday
+        - completedToday
+        - inProgress
+        - cancelled
+        - earningsToday
+        - earningsWeek
+        - totalKmToday
+        - averageFare
+
+    Driver:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        licenseNumber:
+          type: string
+        vehicleModel:
+          type: string
+        vehiclePlate:
+          type: string
+        status:
+          type: string
+          enum: [available, busy, offline]
+        totalTrips:
+          type: integer
+        rating:
+          type: number
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - phone
+        - licenseNumber
+        - vehicleModel
+        - vehiclePlate
+        - status
+        - totalTrips
+        - rating
+
+    CreateDriverBody:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        licenseNumber:
+          type: string
+        vehicleModel:
+          type: string
+        vehiclePlate:
+          type: string
+      required:
+        - name
+        - phone
+        - licenseNumber
+        - vehicleModel
+        - vehiclePlate
+
+    UpdateDriverBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [available, busy, offline]
+        vehicleModel:
+          type: string
+        vehiclePlate:
+          type: string
