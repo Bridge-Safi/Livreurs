@@ -9,6 +9,7 @@ import authRouter from "./auth";
 import pushRouter from "./push";
 import webhookRouter from "./webhook";
 import trackingRouter from "./tracking";
+import assignRouter from "./assign";
 
 const router: IRouter = Router();
 
@@ -21,6 +22,7 @@ router.use(deliveriesRouter);
 router.use(driversRouter);
 router.use(tripsRouter);
 router.use(webhookRouter);
+router.use(assignRouter);
 router.use("/", trackingRouter);
 
 export default router;

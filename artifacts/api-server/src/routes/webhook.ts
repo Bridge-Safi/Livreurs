@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
-import { db, deliveriesTable } from "@workspace/db";
+import { db, deliveriesTable, deliverersTable } from "@workspace/db";
 import { sendPushToAllDeliverers } from "./push";
+import { signAssignToken } from "./assign";
 
 const router: IRouter = Router();
 
@@ -24,7 +25,6 @@ async function dispatchWithDelay(
   source: string,
   logger: any,
 ): Promise<void> {
-  // Attendre 2 secondes après réception de la commande
   await sleep(2000);
 
   const pushBody = [
@@ -63,7 +63,7 @@ router.post("/orders/inbound", async (req, res): Promise<void> => {
     items,
     total,
     notes,
-    source, // "bridge_eats" | "bridge_tabac" | undefined
+    source,
   } = req.body;
 
   if (!customerName || !deliveryAddress) {
@@ -108,15 +108,30 @@ router.post("/orders/inbound", async (req, res): Promise<void> => {
     "Inbound order — dispatch scheduled in 2s"
   );
 
-  // ✅ Répondre immédiatement à Bridge Eats / Bridge Tabac
+  // Build base URL from the incoming request
+  const proto = req.headers["x-forwarded-proto"] || req.protocol || "https";
+  const host = req.headers["x-forwarded-host"] || req.headers.host || "";
+  const baseUrl = `${proto}://${host}`;
+
+  // Fetch all deliverers and generate a signed quick-assign link for each
+  const deliverers = await db.select().from(deliverersTable).orderBy(deliverersTable.id);
+  const assignLinks = deliverers.map(d => ({
+    id: d.id,
+    name: d.name,
+    phone: d.phone,
+    url: `${baseUrl}/api/assign/${delivery.id}/${d.id}/${signAssignToken(delivery.id, d.id)}`,
+  }));
+
+  // ✅ Respond immediately with assign links
   res.json({
     success: true,
     deliveryId: delivery.id,
     trackingNumber,
     message: "Commande reçue — les livreurs seront alertés dans 2 secondes",
+    assignLinks,
   });
 
-  // 🔔 Déclencher la sonnette 2 secondes plus tard (sans bloquer la réponse)
+  // 🔔 Trigger push after 2s (without blocking response)
   dispatchWithDelay(
     delivery.id,
     String(customerName),

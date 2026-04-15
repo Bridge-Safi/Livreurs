@@ -127,4 +127,18 @@ export async function sendPushToAllDeliverers(payload: {
   await sendPushBatch(subs, payload);
 }
 
+export async function sendPushToDeliverer(delivererId: number, payload: {
+  title: string;
+  body: string;
+  url?: string;
+  urgent?: boolean;
+}) {
+  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) return;
+  const subs = await db
+    .select()
+    .from(pushSubscriptionsTable)
+    .where(eq(pushSubscriptionsTable.delivererId, delivererId));
+  await sendPushBatch(subs, payload);
+}
+
 export default router;
