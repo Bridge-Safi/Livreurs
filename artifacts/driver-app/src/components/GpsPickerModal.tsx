@@ -21,50 +21,52 @@ interface GpsOption {
   color: string;
   bg: string;
   logo: string;
-  buildUrl: (encoded: string) => string;
 }
 
 const GPS_OPTIONS: GpsOption[] = [
-  {
-    id: "google",
-    name: "Google Maps",
-    color: "#1A73E8",
-    bg: "#EAF1FB",
-    logo: "🗺",
-    buildUrl: (enc) => `https://www.google.com/maps/dir/?api=1&destination=${enc}`,
-  },
-  {
-    id: "waze",
-    name: "Waze",
-    color: "#05C7F2",
-    bg: "#E0F9FD",
-    logo: "🚗",
-    buildUrl: (enc) => `https://waze.com/ul?q=${enc}&navigate=yes`,
-  },
-  {
-    id: "apple",
-    name: "Apple Plans",
-    color: "#555",
-    bg: "#F0F0F0",
-    logo: "🧭",
-    buildUrl: (enc) => `http://maps.apple.com/?daddr=${enc}&dirflg=d`,
-  },
+  { id: "apple",  name: "Apple Plans",  color: "#555",      bg: "#F0F0F0", logo: "🧭" },
+  { id: "google", name: "Google Maps",  color: "#1A73E8",   bg: "#EAF1FB", logo: "🗺" },
+  { id: "waze",   name: "Waze",         color: "#05C7F2",   bg: "#E0F9FD", logo: "🚗" },
 ];
+
+// Detect iOS (iPhone, iPad, iPod) — used to pick native URL schemes
+const isIOS = typeof navigator !== "undefined" &&
+  /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+/**
+ * Build a navigation URL for a given GPS app.
+ * On iOS:  use native schemes (maps://, comgooglemaps://, waze://)
+ *          → the OS intercepts them before the PWA webview can navigate away
+ * On other: use HTTPS web URLs that open in the browser
+ */
+function buildNavUrl(id: string, encoded: string): string {
+  if (isIOS) {
+    if (id === "apple")  return `maps://?daddr=${encoded}&dirflg=d`;
+    if (id === "google") return `comgooglemaps://?daddr=${encoded}&directionsmode=driving`;
+    if (id === "waze")   return `waze://?q=${encoded}&navigate=yes`;
+  }
+  if (id === "apple")  return `https://maps.apple.com/?daddr=${encoded}&dirflg=d`;
+  if (id === "google") return `https://www.google.com/maps/dir/?api=1&destination=${encoded}`;
+  if (id === "waze")   return `https://waze.com/ul?q=${encoded}&navigate=yes`;
+  return `https://www.google.com/maps/dir/?api=1&destination=${encoded}`;
+}
 
 export function GpsPickerModal({ address, label, onClose }: GpsPickerModalProps) {
   const { t } = useI18n();
   const encoded = encodeURIComponent(address + ", Safi, Maroc");
 
-  const handleOpen = (option: GpsOption) => {
-    // 1. Close modal and let wouter navigate to the delivery page first
+  const handleOpen = (opt: GpsOption) => {
+    // 1. Close modal first so wouter navigates to the delivery page
     onClose();
-    // 2. Then open GPS — on iOS PWA, window.open("_blank") creates a blank Safari tab,
-    //    so we use location.href. iOS intercepts map URLs and opens the native app,
-    //    leaving the PWA at the delivery page when the user returns.
-    const url = option.buildUrl(encoded);
+
+    // 2. Open GPS after a tiny delay so the navigation state settles
+    //    On iOS: native schemes (maps://, comgooglemaps://, waze://) are intercepted
+    //    by the OS at the system level → the GPS app opens, PWA stays on screen
+    //    On Android/desktop: opens in browser tab
+    const url = buildNavUrl(opt.id, encoded);
     setTimeout(() => {
       window.location.href = url;
-    }, 50);
+    }, 80);
   };
 
   return (
