@@ -56,6 +56,21 @@
   --color-sidebar-accent-border: var(--sidebar-accent-border);
   --color-sidebar-ring: hsl(var(--sidebar-ring));
 
+  /* Moroccan custom colors */
+  --color-terracotta: #C14B2A;
+  --color-terracotta-light: #FDEEE9;
+  --color-gold: #D4880C;
+  --color-gold-light: #FEF6E4;
+  --color-moroccan-green: #2A7A48;
+  --color-moroccan-green-light: #E4F5EC;
+  --color-sand: #FAF6EF;
+  --color-sand-100: #F5EFE4;
+  --color-sand-200: #EDE3D4;
+  --color-sand-300: #DDD0BC;
+  --color-brown-dark: #2C1810;
+  --color-brown-mid: #6B4033;
+  --color-brown-light: #9B7060;
+
   --font-sans: var(--app-font-sans);
   --font-serif: var(--app-font-serif);
   --font-mono: var(--app-font-mono);
@@ -67,102 +82,64 @@
 }
 
 :root {
-  --button-outline: rgba(0,0,0, .10);
-  --badge-outline: rgba(0,0,0, .05);
-  --opaque-button-border-intensity: -8;
-  --elevate-1: rgba(0,0,0, .03);
-  --elevate-2: rgba(0,0,0, .08);
+  --button-outline: rgba(193, 75, 42, 0.15);
+  --badge-outline: rgba(193, 75, 42, 0.08);
+  --opaque-button-border-intensity: -6;
+  --elevate-1: rgba(44, 24, 16, 0.03);
+  --elevate-2: rgba(44, 24, 16, 0.07);
 
-  --background: 240 10% 3.9%;
-  --foreground: 0 0% 98%;
+  /* Moroccan warm light theme */
+  --background: 37 45% 96%;
+  --foreground: 16 53% 13%;
 
-  --card: 240 10% 3.9%;
-  --card-foreground: 0 0% 98%;
-  --card-border: 240 3.7% 15.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 16 53% 13%;
+  --card-border: 30 28% 84%;
 
-  --popover: 240 10% 3.9%;
-  --popover-foreground: 0 0% 98%;
-  --popover-border: 240 3.7% 15.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 16 53% 13%;
+  --popover-border: 30 28% 84%;
 
-  --primary: 0 0% 98%;
-  --primary-foreground: 240 5.9% 10%;
+  /* Terracotta as primary */
+  --primary: 14 67% 46%;
+  --primary-foreground: 0 0% 100%;
 
-  --secondary: 240 3.7% 15.9%;
-  --secondary-foreground: 0 0% 98%;
+  --secondary: 37 35% 90%;
+  --secondary-foreground: 16 40% 20%;
 
-  --muted: 240 3.7% 15.9%;
-  --muted-foreground: 240 5% 64.9%;
+  --muted: 37 30% 92%;
+  --muted-foreground: 20 22% 50%;
 
-  --accent: 240 3.7% 15.9%;
-  --accent-foreground: 0 0% 98%;
+  /* Gold as accent */
+  --accent: 38 92% 44%;
+  --accent-foreground: 0 0% 100%;
 
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 0 0% 98%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
 
-  --border: 240 3.7% 15.9%;
-  --input: 240 3.7% 15.9%;
-  --ring: 240 4.9% 83.9%;
+  --border: 30 28% 84%;
+  --input: 30 25% 88%;
+  --ring: 14 67% 46%;
 
-  --sidebar: 240 10% 3.9%;
-  --sidebar-foreground: 240 4.8% 95.9%;
-  --sidebar-border: 240 3.7% 15.9%;
-  --sidebar-primary: 224.3 76.3% 48%;
+  --sidebar: 37 38% 93%;
+  --sidebar-foreground: 16 53% 13%;
+  --sidebar-border: 30 28% 84%;
+  --sidebar-primary: 14 67% 46%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 240 3.7% 15.9%;
-  --sidebar-accent-foreground: 240 4.8% 95.9%;
-  --sidebar-ring: 217.2 91.2% 59.8%;
+  --sidebar-accent: 37 35% 88%;
+  --sidebar-accent-foreground: 16 40% 20%;
+  --sidebar-ring: 14 67% 46%;
 
-  --app-font-sans: 'Inter', sans-serif;
+  --app-font-sans: 'Inter', 'Noto Sans Arabic', sans-serif;
   --app-font-serif: Georgia, serif;
   --app-font-mono: Menlo, monospace;
-  --radius: 0.5rem;
-}
+  --radius: 0.75rem;
 
-.dark {
-  --button-outline: rgba(255,255,255, .10);
-  --badge-outline: rgba(255,255,255, .05);
-  --opaque-button-border-intensity: 9;
-  --elevate-1: rgba(255,255,255, .04);
-  --elevate-2: rgba(255,255,255, .09);
-
-  --background: 240 10% 3.9%;
-  --foreground: 0 0% 98%;
-
-  --card: 240 10% 3.9%;
-  --card-foreground: 0 0% 98%;
-  --card-border: 240 3.7% 15.9%;
-
-  --popover: 240 10% 3.9%;
-  --popover-foreground: 0 0% 98%;
-  --popover-border: 240 3.7% 15.9%;
-
-  --primary: 0 0% 98%;
-  --primary-foreground: 240 5.9% 10%;
-
-  --secondary: 240 3.7% 15.9%;
-  --secondary-foreground: 0 0% 98%;
-
-  --muted: 240 3.7% 15.9%;
-  --muted-foreground: 240 5% 64.9%;
-
-  --accent: 240 3.7% 15.9%;
-  --accent-foreground: 0 0% 98%;
-
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 0 0% 98%;
-
-  --border: 240 3.7% 15.9%;
-  --input: 240 3.7% 15.9%;
-  --ring: 240 4.9% 83.9%;
-
-  --sidebar: 240 10% 3.9%;
-  --sidebar-foreground: 240 4.8% 95.9%;
-  --sidebar-border: 240 3.7% 15.9%;
-  --sidebar-primary: 224.3 76.3% 48%;
-  --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 240 3.7% 15.9%;
-  --sidebar-accent-foreground: 240 4.8% 95.9%;
-  --sidebar-ring: 217.2 91.2% 59.8%;
+  --chart-1: 14 67% 46%;
+  --chart-2: 38 92% 44%;
+  --chart-3: 148 49% 32%;
+  --chart-4: 220 70% 50%;
+  --chart-5: 280 60% 50%;
 }
 
 @layer base {
@@ -171,8 +148,43 @@
   }
   body {
     @apply font-sans antialiased bg-background text-foreground;
+    background-color: #FAF6EF;
   }
-  html.dark {
-    color-scheme: dark;
-  }
+}
+
+/* Zellige geometric pattern for decorative use */
+.zellige-pattern {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cpath d='M30 5 L35 15 L45 15 L38 22 L41 32 L30 27 L19 32 L22 22 L15 15 L25 15 Z' fill='none' stroke='rgba(193,75,42,0.07)' stroke-width='1'/%3E%3Cpath d='M0 30 L10 30 M50 30 L60 30 M30 0 L30 10 M30 50 L30 60' stroke='rgba(212,136,12,0.06)' stroke-width='1'/%3E%3Ccircle cx='30' cy='30' r='3' fill='none' stroke='rgba(193,75,42,0.05)' stroke-width='1'/%3E%3C/svg%3E");
+}
+
+/* Arabic / RTL support */
+[dir="rtl"] .sidebar-nav {
+  border-right: none;
+  border-left: 1px solid;
+}
+
+/* Tifinagh script support */
+[lang="tzm"], .tifinagh {
+  font-family: 'Noto Sans Tifinagh', 'Segoe UI', sans-serif;
+}
+
+/* Apply Noto Sans Tifinagh for Tifinagh Unicode range */
+@font-face {
+  font-family: 'NotoTifinagh';
+  src: url('https://fonts.gstatic.com/s/notosanstifinagh/v17/I_uzMoCed6Yxu5Pd-FqOJkgcmLQ4V53.woff2') format('woff2');
+  unicode-range: U+2D30-2D7F, U+2D80-2D9F;
+}
+
+body {
+  font-family: 'Inter', 'Noto Sans Arabic', 'NotoTifinagh', sans-serif;
+}
+
+/* Moroccan arch decorative element */
+.moroccan-arch {
+  clip-path: polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%);
+}
+
+/* Star pattern header */
+.star-header {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cpath d='M40 8 L44 28 L62 22 L52 38 L68 48 L48 48 L48 68 L40 52 L32 68 L32 48 L12 48 L28 38 L18 22 L36 28 Z' fill='none' stroke='rgba(255,255,255,0.08)' stroke-width='1.5'/%3E%3C/svg%3E");
 }

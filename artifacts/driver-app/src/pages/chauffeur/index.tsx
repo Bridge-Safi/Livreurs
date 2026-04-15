@@ -1,17 +1,24 @@
 import { ChauffeurLayout } from "@/components/layout/ChauffeurLayout";
 import { useGetTripStats, getGetTripStatsQueryKey, useListTrips, getListTripsQueryKey, useUpdateTrip } from "@workspace/api-client-react";
 import { MapPin, Navigation, CheckCircle2, DollarSign, Activity, Route } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
+import { useI18n } from "@/lib/i18n";
 
 const DRIVER_ID = 1;
+const GOLD = "#D4880C";
+const GREEN = "#2A7A48";
+const TC = "#C14B2A";
+const BORDER = "#E8DDD0";
+const BROWN = "#2C1810";
+const BROWN_MID = "#6B4033";
+const BROWN_LIGHT = "#9B7060";
 
 export default function ChauffeurDashboard() {
   const queryClient = useQueryClient();
+  const { t } = useI18n();
+
   const { data: stats, isLoading: statsLoading } = useGetTripStats({ driverId: DRIVER_ID }, {
     query: { queryKey: getGetTripStatsQueryKey({ driverId: DRIVER_ID }) }
   });
@@ -31,138 +38,136 @@ export default function ChauffeurDashboard() {
     });
   };
 
+  const statCards = [
+    { icon: Route,      label: "Courses",  value: stats?.completedToday || 0,         color: GOLD,  bg: "#FEF6E4" },
+    { icon: DollarSign, label: "Recettes", value: `${stats?.earningsToday || 0} €`,   color: GREEN, bg: "#E4F5EC" },
+    { icon: Navigation, label: "Distance", value: `${stats?.totalKmToday || 0} km`,   color: "#2563EB", bg: "#EFF6FF" },
+    { icon: Activity,   label: "Moyenne",  value: `${stats?.averageFare || 0} €`,     color: TC,    bg: "#FDEEE9" },
+  ];
+
   return (
     <ChauffeurLayout>
-      <div className="flex-1 p-6 md:p-8 space-y-8 animate-in fade-in zoom-in-95 duration-300">
-        
+      <div className="flex-1 p-5 md:p-8 space-y-7 animate-in fade-in duration-300">
+
+        {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-zinc-100">Tableau de bord</h1>
-          <p className="text-zinc-400 mt-1">Bonjour, voici votre activité de la journée.</p>
+          <h1 className="text-2xl font-bold tracking-tight" style={{ color: BROWN }}>{t("nav_dashboard")}</h1>
+          <p className="mt-1 text-sm" style={{ color: BROWN_LIGHT }}>{t("greeting")}, voici votre activité de la journée.</p>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="bg-zinc-950 border-zinc-800">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-2 text-orange-400">
-                <Route className="h-5 w-5" />
-                <h3 className="font-medium text-sm text-zinc-400">Courses</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {statCards.map((card, i) => (
+            <div
+              key={i}
+              className="rounded-2xl border p-4"
+              style={{ background: "white", borderColor: BORDER, boxShadow: "0 1px 8px rgba(44,24,16,0.05)" }}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: card.bg }}>
+                  <card.icon className="h-4 w-4" style={{ color: card.color }} />
+                </div>
+                <span className="text-xs font-medium" style={{ color: BROWN_LIGHT }}>{card.label}</span>
               </div>
-              <div className="text-3xl font-bold text-zinc-100">
-                {statsLoading ? <Skeleton className="h-9 w-16 bg-zinc-800" /> : stats?.completedToday || 0}
+              <div className="text-2xl font-bold" style={{ color: BROWN }}>
+                {statsLoading ? <Skeleton className="h-7 w-16" style={{ background: "#F5EFE4" }} /> : card.value}
               </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-zinc-950 border-zinc-800">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-2 text-yellow-400">
-                <DollarSign className="h-5 w-5" />
-                <h3 className="font-medium text-sm text-zinc-400">Recettes</h3>
-              </div>
-              <div className="text-3xl font-bold text-zinc-100">
-                {statsLoading ? <Skeleton className="h-9 w-24 bg-zinc-800" /> : `${stats?.earningsToday || 0} €`}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-zinc-950 border-zinc-800">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-2 text-blue-400">
-                <Navigation className="h-5 w-5" />
-                <h3 className="font-medium text-sm text-zinc-400">Distance</h3>
-              </div>
-              <div className="text-3xl font-bold text-zinc-100">
-                {statsLoading ? <Skeleton className="h-9 w-16 bg-zinc-800" /> : `${stats?.totalKmToday || 0} km`}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-zinc-950 border-zinc-800">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-2 text-green-400">
-                <Activity className="h-5 w-5" />
-                <h3 className="font-medium text-sm text-zinc-400">Moyenne</h3>
-              </div>
-              <div className="text-3xl font-bold text-zinc-100">
-                {statsLoading ? <Skeleton className="h-9 w-16 bg-zinc-800" /> : `${stats?.averageFare || 0} €`}
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+          ))}
         </div>
 
         {/* Active Trips */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-zinc-100">Course en cours</h2>
-            <Link href="/chauffeur/trajets" className="text-sm text-orange-400 hover:text-orange-300 transition-colors">
-              Historique
+            <h2 className="text-lg font-bold" style={{ color: BROWN }}>Course en cours</h2>
+            <Link href="/chauffeur/trajets">
+              <span className="text-sm font-semibold" style={{ color: GOLD }}>Historique →</span>
             </Link>
           </div>
 
           {tripsLoading ? (
-            <Skeleton className="h-48 w-full max-w-2xl bg-zinc-800 rounded-xl" />
+            <Skeleton className="h-48 w-full max-w-2xl rounded-xl" style={{ background: "#F5EFE4" }} />
           ) : trips && trips.length > 0 ? (
             <div className="grid grid-cols-1 gap-4 max-w-2xl">
               {trips.map(trip => (
-                <Card key={trip.id} className="bg-zinc-950 border-zinc-800 hover:border-orange-500/30 transition-colors overflow-hidden flex flex-col">
-                  <CardContent className="p-0 flex flex-col">
-                    <div className="p-6 border-b border-zinc-800/50">
-                      <div className="flex justify-between items-start mb-6">
-                        <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-300 font-bold">
-                            {trip.passengerName.charAt(0)}
-                          </div>
-                          <div>
-                            <h3 className="text-lg font-semibold text-zinc-100">{trip.passengerName}</h3>
-                            <p className="text-sm text-zinc-400 font-mono">{trip.passengerPhone}</p>
-                          </div>
+                <div
+                  key={trip.id}
+                  className="rounded-2xl border overflow-hidden"
+                  style={{ background: "white", borderColor: BORDER, boxShadow: "0 1px 8px rgba(44,24,16,0.05)" }}
+                >
+                  <div className="h-0.5 w-full" style={{ background: GOLD }} />
+
+                  <div className="p-5">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm"
+                          style={{ background: "#FEF6E4", color: GOLD }}
+                        >
+                          {trip.passengerName.charAt(0)}
                         </div>
-                        <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/20 px-3 py-1">
-                          Course active
-                        </Badge>
-                      </div>
-                      
-                      <div className="space-y-4 relative before:absolute before:inset-y-3 before:left-3 before:w-0.5 before:bg-gradient-to-b before:from-zinc-800 before:to-zinc-800">
-                        <div className="relative flex items-center gap-4">
-                          <div className="h-6 w-6 rounded-full bg-zinc-900 border-2 border-zinc-700 flex items-center justify-center z-10 shrink-0" />
-                          <p className="text-base text-zinc-300 font-medium">{trip.pickupAddress}</p>
-                        </div>
-                        <div className="relative flex items-center gap-4">
-                          <div className="h-6 w-6 rounded-full bg-orange-950 border-2 border-orange-500 flex items-center justify-center z-10 shrink-0">
-                            <div className="h-2 w-2 rounded-full bg-orange-400" />
-                          </div>
-                          <p className="text-base text-zinc-100 font-medium">{trip.dropoffAddress}</p>
+                        <div>
+                          <h3 className="text-base font-bold" style={{ color: BROWN }}>{trip.passengerName}</h3>
+                          <p className="text-xs font-mono" style={{ color: BROWN_LIGHT }}>{trip.passengerPhone}</p>
                         </div>
                       </div>
-                    </div>
-                    
-                    <div className="p-4 bg-zinc-900/50 flex gap-3">
-                      <Link href={`/chauffeur/trajet/${trip.id}`} className="flex-1">
-                        <Button variant="outline" className="w-full bg-zinc-950 border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800">
-                          Carte & Détails
-                        </Button>
-                      </Link>
-                      <Button 
-                        onClick={() => handleUpdateStatus(trip.id, "completed")}
-                        disabled={updateTrip.isPending}
-                        className="flex-1 bg-green-500 hover:bg-green-600 text-zinc-950 font-semibold"
+                      <span
+                        className="text-xs font-bold px-2 py-1 rounded-full"
+                        style={{ background: "#EFF6FF", color: "#2563EB" }}
                       >
-                        <CheckCircle2 className="mr-2 h-4 w-4" />
-                        Terminer
-                      </Button>
+                        En cours
+                      </span>
                     </div>
-                  </CardContent>
-                </Card>
+
+                    <div className="space-y-2.5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-4 h-4 rounded-full border-2 flex-shrink-0" style={{ borderColor: BROWN_LIGHT }} />
+                        <p className="text-sm" style={{ color: BROWN_MID }}>{trip.pickupAddress}</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-4 h-4 rounded-full border-2 flex-shrink-0" style={{ borderColor: GOLD, background: "#FEF6E4" }}>
+                          <div className="w-1.5 h-1.5 rounded-full mx-auto mt-0.5" style={{ background: GOLD }} />
+                        </div>
+                        <p className="text-sm font-medium" style={{ color: BROWN }}>{trip.dropoffAddress}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="px-5 pb-4 flex gap-3">
+                    <Link href={`/chauffeur/trajet/${trip.id}`} className="flex-1">
+                      <button
+                        className="w-full py-2 rounded-xl border text-sm font-semibold"
+                        style={{ borderColor: BORDER, color: BROWN_MID, background: "#FAF6EF" }}
+                      >
+                        Détails
+                      </button>
+                    </Link>
+                    <button
+                      onClick={() => handleUpdateStatus(trip.id, "completed")}
+                      disabled={updateTrip.isPending}
+                      className="flex-1 py-2 rounded-xl text-sm font-bold flex items-center justify-center gap-1.5 disabled:opacity-50"
+                      style={{ background: GREEN, color: "white" }}
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                      Terminer
+                    </button>
+                  </div>
+                </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-16 max-w-2xl rounded-2xl border border-zinc-800 bg-zinc-950/50 border-dashed">
-              <div className="h-16 w-16 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto mb-4">
-                <Navigation className="h-8 w-8 text-zinc-600" />
+            <div
+              className="text-center py-12 max-w-2xl rounded-2xl border border-dashed"
+              style={{ borderColor: BORDER, background: "#FAF6EF" }}
+            >
+              <div
+                className="h-14 w-14 rounded-full flex items-center justify-center mx-auto mb-3"
+                style={{ background: "#FEF6E4" }}
+              >
+                <Navigation className="h-7 w-7" style={{ color: GOLD }} />
               </div>
-              <h3 className="text-xl font-medium text-zinc-300">Aucune course en cours</h3>
-              <p className="text-zinc-500 mt-2">Vous êtes en ligne. En attente de nouvelles demandes de trajet.</p>
+              <h3 className="text-base font-semibold" style={{ color: BROWN_MID }}>Aucune course en cours</h3>
+              <p className="text-sm mt-1" style={{ color: BROWN_LIGHT }}>En attente de nouvelles demandes.</p>
             </div>
           )}
         </div>

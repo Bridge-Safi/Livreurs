@@ -1,0 +1,285 @@
+import { createContext, useContext, useState, ReactNode, useEffect } from "react";
+
+export type Lang = "fr" | "en" | "ar" | "tzm";
+
+export const LANGUAGES: { code: Lang; label: string; native: string; rtl?: boolean }[] = [
+  { code: "fr", label: "Français", native: "FR" },
+  { code: "ar", label: "العربية", native: "ع", rtl: true },
+  { code: "en", label: "English", native: "EN" },
+  { code: "tzm", label: "ⵜⴰⵎⴰⵣⵉⵖⵜ", native: "ⵣ" },
+];
+
+const T = {
+  fr: {
+    app_name: "Bridge",
+    app_subtitle: "Plateforme Logistique Maroc",
+    role_livreur: "Livreur Bridge",
+    role_livreur_desc: "Gestion des livraisons et colis",
+    role_chauffeur: "Chauffeur VTC",
+    role_chauffeur_desc: "Courses passagers et trajets",
+    nav_dashboard: "Tableau de bord",
+    nav_deliveries: "Livraisons",
+    nav_trips: "Courses",
+    nav_profile: "Profil",
+    nav_switch: "Changer de rôle",
+    greeting: "Bonjour",
+    day_summary: "Voici un résumé de votre journée.",
+    dispatch_primary: "Nouvelle commande pour vous",
+    dispatch_primary_sub: "Vous avez été sélectionné en priorité",
+    dispatch_cascade: "Commande disponible — Tous les livreurs",
+    dispatch_cascade_sub: "Le livreur prioritaire a refusé",
+    dispatch_accept: "Accepter",
+    dispatch_refuse: "Refuser",
+    dispatch_accepted_title: "Livraison acceptée !",
+    dispatch_accepted_sub: "La commande est maintenant en cours.",
+    dispatch_refused_title: "Livraison refusée",
+    dispatch_refused_sub: "Envoyée aux autres livreurs.",
+    pickup: "Ramassage",
+    delivery_addr: "Livraison",
+    status_pending: "En attente",
+    status_in_progress: "En cours",
+    status_delivered: "Livré",
+    status_cancelled: "Annulé",
+    priority_urgent: "URGENT",
+    priority_normal: "Normal",
+    priority_low: "Faible",
+    est_time: "Heure estimée",
+    free: "Libre",
+    total_today: "Total du jour",
+    completed: "Terminées",
+    in_progress: "En cours",
+    earnings: "Gains",
+    active_deliveries: "Livraisons en cours",
+    no_active: "Aucune livraison en cours",
+    start_delivery: "Démarrer",
+    mark_delivered: "Marquer livré",
+    confirm_delivered: "Confirmer la livraison",
+    start_trip: "Démarrer la course",
+    loading: "Chargement…",
+    back: "Retour",
+    navigate: "Naviguer",
+    phone: "Téléphone",
+    notes: "Notes",
+    kg: "kg",
+    not_found: "Non trouvé",
+    change_role: "Changer de rôle",
+    livreur_title: "Bridge Livreur",
+    chauffeur_title: "Bridge Chauffeur",
+  },
+  en: {
+    app_name: "Bridge",
+    app_subtitle: "Morocco Logistics Platform",
+    role_livreur: "Bridge Delivery",
+    role_livreur_desc: "Manage deliveries and packages",
+    role_chauffeur: "VTC Driver",
+    role_chauffeur_desc: "Passenger rides and trips",
+    nav_dashboard: "Dashboard",
+    nav_deliveries: "Deliveries",
+    nav_trips: "Trips",
+    nav_profile: "Profile",
+    nav_switch: "Switch role",
+    greeting: "Hello",
+    day_summary: "Here is your day summary.",
+    dispatch_primary: "New delivery for you",
+    dispatch_primary_sub: "You were selected as priority",
+    dispatch_cascade: "Order available — All deliverers",
+    dispatch_cascade_sub: "The priority driver refused",
+    dispatch_accept: "Accept",
+    dispatch_refuse: "Refuse",
+    dispatch_accepted_title: "Delivery accepted!",
+    dispatch_accepted_sub: "The order is now in progress.",
+    dispatch_refused_title: "Delivery refused",
+    dispatch_refused_sub: "Sent to other deliverers.",
+    pickup: "Pickup",
+    delivery_addr: "Delivery",
+    status_pending: "Pending",
+    status_in_progress: "In progress",
+    status_delivered: "Delivered",
+    status_cancelled: "Cancelled",
+    priority_urgent: "URGENT",
+    priority_normal: "Normal",
+    priority_low: "Low",
+    est_time: "Est. time",
+    free: "Open",
+    total_today: "Today total",
+    completed: "Completed",
+    in_progress: "In progress",
+    earnings: "Earnings",
+    active_deliveries: "Active deliveries",
+    no_active: "No active deliveries",
+    start_delivery: "Start",
+    mark_delivered: "Mark delivered",
+    confirm_delivered: "Confirm delivery",
+    start_trip: "Start trip",
+    loading: "Loading…",
+    back: "Back",
+    navigate: "Navigate",
+    phone: "Phone",
+    notes: "Notes",
+    kg: "kg",
+    not_found: "Not found",
+    change_role: "Switch role",
+    livreur_title: "Bridge Delivery",
+    chauffeur_title: "Bridge Driver",
+  },
+  ar: {
+    app_name: "Bridge",
+    app_subtitle: "منصة لوجستية بالمغرب",
+    role_livreur: "مندوب التوصيل",
+    role_livreur_desc: "إدارة التوصيلات والطرود",
+    role_chauffeur: "سائق VTC",
+    role_chauffeur_desc: "رحلات الركاب والمسارات",
+    nav_dashboard: "لوحة التحكم",
+    nav_deliveries: "التوصيلات",
+    nav_trips: "الرحلات",
+    nav_profile: "الملف الشخصي",
+    nav_switch: "تغيير الدور",
+    greeting: "مرحباً",
+    day_summary: "ملخص يومك.",
+    dispatch_primary: "طلب توصيل جديد لك",
+    dispatch_primary_sub: "تم اختيارك كأولوية",
+    dispatch_cascade: "طلب متاح — جميع المندوبين",
+    dispatch_cascade_sub: "رفض المندوب الأول التوصيل",
+    dispatch_accept: "قبول",
+    dispatch_refuse: "رفض",
+    dispatch_accepted_title: "تم قبول التوصيل!",
+    dispatch_accepted_sub: "الطلب قيد التنفيذ الآن.",
+    dispatch_refused_title: "تم رفض التوصيل",
+    dispatch_refused_sub: "أُرسل إلى المندوبين الآخرين.",
+    pickup: "نقطة الاستلام",
+    delivery_addr: "نقطة التسليم",
+    status_pending: "في الانتظار",
+    status_in_progress: "جارٍ",
+    status_delivered: "تم التسليم",
+    status_cancelled: "ملغى",
+    priority_urgent: "عاجل",
+    priority_normal: "عادي",
+    priority_low: "منخفض",
+    est_time: "الوقت المقدر",
+    free: "متاح",
+    total_today: "إجمالي اليوم",
+    completed: "منجزة",
+    in_progress: "جاري",
+    earnings: "الأرباح",
+    active_deliveries: "التوصيلات الجارية",
+    no_active: "لا توصيلات نشطة",
+    start_delivery: "ابدأ",
+    mark_delivered: "سُلِّم",
+    confirm_delivered: "تأكيد التسليم",
+    start_trip: "ابدأ الرحلة",
+    loading: "جاري التحميل…",
+    back: "رجوع",
+    navigate: "ملاحة",
+    phone: "هاتف",
+    notes: "ملاحظات",
+    kg: "كغ",
+    not_found: "غير موجود",
+    change_role: "تغيير الدور",
+    livreur_title: "Bridge مندوب",
+    chauffeur_title: "Bridge سائق",
+  },
+  tzm: {
+    app_name: "Bridge",
+    app_subtitle: "ⴰⵙⵢⴰⵍ ⵏ ⵓⵏⵓⵔ ⵏ ⵍⵎⵖⵔⵉⴱ",
+    role_livreur: "ⴰⵎⵙⵓⴼⵖ Bridge",
+    role_livreur_desc: "ⴰⵙⴳⵎⵉ ⵏ ⵜⵉⴷⴷⵓⴽⴽⵍⵉⵏ",
+    role_chauffeur: "ⴰⵏⵔⵔⴰⵔ VTC",
+    role_chauffeur_desc: "ⵜⵉⵡⵍⴰⴼⵉⵏ ⴷ ⵜⵉⵔⵉⵎⵉⵏ",
+    nav_dashboard: "ⵜⴰⵙⵏⵉⵡⵜ",
+    nav_deliveries: "ⵜⵉⴷⴷⵓⴽⴽⵍⵉⵏ",
+    nav_trips: "ⵜⵉⵡⵍⴰⴼⵉⵏ",
+    nav_profile: "ⴰⵏⴰⵡ",
+    nav_switch: "ⵙⵏⴼⵍ ⵜⴰⵎⵙⴽⵉⵡⵜ",
+    greeting: "ⴰⵣⵓⵍ",
+    day_summary: "ⴰⵎⵥⵉⵡⵏ ⵏ ⵓⴰⵙⵙ.",
+    dispatch_primary: "ⴰⵙⵏⵓⴱⴱⵓ ⴰⵎⴰⵢⵏⵓ",
+    dispatch_primary_sub: "ⵜⵜⵡⴰⵙⵜⴰⵢⴷ ⴷ ⴰⵎⵣⵡⴰⵔⵓ",
+    dispatch_cascade: "ⴰⵙⵏⵓⴱⴱⵓ ⵉⵍⵍⴰ — ⵎⴰⵕⵕⴰ",
+    dispatch_cascade_sub: "ⵉⵔⴼⴹ ⵡⴰⵎⵣⵡⴰⵔⵓ",
+    dispatch_accept: "ⵇⴱⵍ",
+    dispatch_refuse: "ⵔⴼⴹ",
+    dispatch_accepted_title: "ⵉⵜⵜⵡⴰⵇⴱⵍ!",
+    dispatch_accepted_sub: "ⴰⵙⵏⵓⴱⴱⵓ ⴷⴰ ⵉⵜⵜⵓⵙⴽⴰⵔ.",
+    dispatch_refused_title: "ⵉⵜⵜⵡⴰⵔⴼⴹ",
+    dispatch_refused_sub: "ⵢⵓⵙⵙ ⵙ ⵉⵎⴷⴷⴰⴽⴽⵍⵏ.",
+    pickup: "ⴰⵙⵙⵓⵎⵔ",
+    delivery_addr: "ⴰⵙⵓⴼⵖ",
+    status_pending: "ⵉⵜⵜⴳⴳⴰⴷ",
+    status_in_progress: "ⴷⴰ ⵉⵜⵜⵓⵙⴽⴰⵔ",
+    status_delivered: "ⵢⵓⵙⵉ",
+    status_cancelled: "ⵉⵔⵙⴰ",
+    priority_urgent: "ⴰⵣⵢⴰⵏ",
+    priority_normal: "ⴰⵎⴰⵜⴰⵢ",
+    priority_low: "ⴰⵎⵓⵔ",
+    est_time: "ⴰⴽⵓⴷ",
+    free: "ⵉⵍⵍⴰ",
+    total_today: "ⴰⵢⵓⵔ",
+    completed: "ⵜⴽⵎⵍ",
+    in_progress: "ⴷⴰ ⵉⵜⵜⵓⵙⴽⴰⵔ",
+    earnings: "ⵜⵉⵎⵙⴽⴰⵔ",
+    active_deliveries: "ⵜⵉⴷⴷⵓⴽⴽⵍⵉⵏ",
+    no_active: "ⵓⵍⴰ ⵢⴰⵜ",
+    start_delivery: "ⴱⴷⵓ",
+    mark_delivered: "ⵢⵓⵙⵉ",
+    confirm_delivered: "ⵙⵎⵔⵙ",
+    start_trip: "ⴱⴷⵓ",
+    loading: "ⵜⴰⵍⵖⴰ…",
+    back: "ⴰⵔⴰ",
+    navigate: "ⵏⴰⵡⵉⴳⵉ",
+    phone: "ⵉⵙⵙⴰⵔⵡⴰ",
+    notes: "ⵜⵉⵎⵔⵙⵉⵏ",
+    kg: "kg",
+    not_found: "ⵓⵔ ⵉⵍⵍⵉ",
+    change_role: "ⵙⵏⴼⵍ",
+    livreur_title: "Bridge ⴰⵎⵙⵓⴼⵖ",
+    chauffeur_title: "Bridge ⴰⵏⵔⵔⴰⵔ",
+  },
+} as const;
+
+export type TranslationKey = keyof typeof T.fr;
+
+interface I18nContextValue {
+  lang: Lang;
+  setLang: (l: Lang) => void;
+  t: (key: TranslationKey) => string;
+  isRTL: boolean;
+}
+
+const I18nContext = createContext<I18nContextValue>({
+  lang: "fr",
+  setLang: () => {},
+  t: (k) => k,
+  isRTL: false,
+});
+
+export function I18nProvider({ children }: { children: ReactNode }) {
+  const [lang, setLangState] = useState<Lang>(() => {
+    return (localStorage.getItem("bridge_lang") as Lang) || "fr";
+  });
+
+  const isRTL = lang === "ar";
+
+  const setLang = (l: Lang) => {
+    setLangState(l);
+    localStorage.setItem("bridge_lang", l);
+  };
+
+  const t = (key: TranslationKey): string => {
+    return (T[lang] as Record<string, string>)[key] ?? (T.fr as Record<string, string>)[key] ?? key;
+  };
+
+  useEffect(() => {
+    document.documentElement.dir = isRTL ? "rtl" : "ltr";
+    document.documentElement.lang = lang;
+  }, [lang, isRTL]);
+
+  return (
+    <I18nContext.Provider value={{ lang, setLang, t, isRTL }}>
+      {children}
+    </I18nContext.Provider>
+  );
+}
+
+export function useI18n() {
+  return useContext(I18nContext);
+}

@@ -1,17 +1,24 @@
 import { LivreurLayout } from "@/components/layout/LivreurLayout";
 import { useGetDeliveryStats, getGetDeliveryStatsQueryKey, useListDeliveries, getListDeliveriesQueryKey, useUpdateDelivery } from "@workspace/api-client-react";
 import { Package, Clock, CheckCircle2, DollarSign, Activity } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
+import { useI18n } from "@/lib/i18n";
 
 const LIVREUR_ID = 1;
+const TC = "#C14B2A";
+const GREEN = "#2A7A48";
+const GOLD = "#D4880C";
+const BORDER = "#E8DDD0";
+const BROWN = "#2C1810";
+const BROWN_MID = "#6B4033";
+const BROWN_LIGHT = "#9B7060";
 
 export default function LivreurDashboard() {
   const queryClient = useQueryClient();
+  const { t } = useI18n();
+
   const { data: stats, isLoading: statsLoading } = useGetDeliveryStats({ delivererId: LIVREUR_ID }, {
     query: { queryKey: getGetDeliveryStatsQueryKey({ delivererId: LIVREUR_ID }) }
   });
@@ -31,138 +38,124 @@ export default function LivreurDashboard() {
     });
   };
 
+  const statCards = [
+    { icon: Package, label: t("total_today"), value: stats?.totalToday || 0, color: TC, bg: "#FDEEE9" },
+    { icon: Activity, label: t("in_progress"), value: stats?.inProgress || 0, color: "#2563EB", bg: "#EFF6FF" },
+    { icon: CheckCircle2, label: t("completed"), value: stats?.completedToday || 0, color: GREEN, bg: "#E4F5EC" },
+    { icon: DollarSign, label: t("earnings"), value: `${stats?.earningsToday || 0} €`, color: GOLD, bg: "#FEF6E4" },
+  ];
+
   return (
     <LivreurLayout>
-      <div className="flex-1 p-6 md:p-8 space-y-8 animate-in fade-in zoom-in-95 duration-300">
-        
+      <div className="flex-1 p-5 md:p-8 space-y-7 animate-in fade-in duration-300">
+
+        {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-zinc-100">Tableau de bord</h1>
-          <p className="text-zinc-400 mt-1">Bonjour, voici un résumé de votre journée.</p>
+          <h1 className="text-2xl font-bold tracking-tight" style={{ color: BROWN }}>{t("nav_dashboard")}</h1>
+          <p className="mt-1 text-sm" style={{ color: BROWN_LIGHT }}>{t("greeting")}, {t("day_summary")}</p>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="bg-zinc-950 border-zinc-800">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-2 text-cyan-400">
-                <Package className="h-5 w-5" />
-                <h3 className="font-medium text-sm text-zinc-400">Total du jour</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {statCards.map((card, i) => (
+            <div
+              key={i}
+              className="rounded-2xl border p-4"
+              style={{ background: "white", borderColor: BORDER, boxShadow: "0 1px 8px rgba(44,24,16,0.05)" }}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: card.bg }}>
+                  <card.icon className="h-4 w-4" style={{ color: card.color }} />
+                </div>
+                <span className="text-xs font-medium" style={{ color: BROWN_LIGHT }}>{card.label}</span>
               </div>
-              <div className="text-3xl font-bold text-zinc-100">
-                {statsLoading ? <Skeleton className="h-9 w-16 bg-zinc-800" /> : stats?.totalToday || 0}
+              <div className="text-2xl font-bold" style={{ color: BROWN }}>
+                {statsLoading ? <Skeleton className="h-7 w-16" style={{ background: "#F5EFE4" }} /> : card.value}
               </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-zinc-950 border-zinc-800">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-2 text-blue-400">
-                <Activity className="h-5 w-5" />
-                <h3 className="font-medium text-sm text-zinc-400">En cours</h3>
-              </div>
-              <div className="text-3xl font-bold text-zinc-100">
-                {statsLoading ? <Skeleton className="h-9 w-16 bg-zinc-800" /> : stats?.inProgress || 0}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-zinc-950 border-zinc-800">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-2 text-green-400">
-                <CheckCircle2 className="h-5 w-5" />
-                <h3 className="font-medium text-sm text-zinc-400">Complétées</h3>
-              </div>
-              <div className="text-3xl font-bold text-zinc-100">
-                {statsLoading ? <Skeleton className="h-9 w-16 bg-zinc-800" /> : stats?.completedToday || 0}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-zinc-950 border-zinc-800">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-2 text-yellow-400">
-                <DollarSign className="h-5 w-5" />
-                <h3 className="font-medium text-sm text-zinc-400">Gains</h3>
-              </div>
-              <div className="text-3xl font-bold text-zinc-100">
-                {statsLoading ? <Skeleton className="h-9 w-24 bg-zinc-800" /> : `${stats?.earningsToday || 0} €`}
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+          ))}
         </div>
 
         {/* Active Deliveries */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-zinc-100">Livraisons en cours</h2>
-            <Link href="/livreur/livraisons" className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors">
-              Voir tout
+            <h2 className="text-lg font-bold" style={{ color: BROWN }}>{t("active_deliveries")}</h2>
+            <Link href="/livreur/livraisons">
+              <span className="text-sm font-semibold" style={{ color: TC }}>Voir tout →</span>
             </Link>
           </div>
 
           {deliveriesLoading ? (
             <div className="space-y-3">
-              <Skeleton className="h-32 w-full bg-zinc-800 rounded-xl" />
-              <Skeleton className="h-32 w-full bg-zinc-800 rounded-xl" />
+              <Skeleton className="h-28 w-full rounded-xl" style={{ background: "#F5EFE4" }} />
+              <Skeleton className="h-28 w-full rounded-xl" style={{ background: "#F5EFE4" }} />
             </div>
           ) : deliveries && deliveries.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {deliveries.map(delivery => (
-                <Card key={delivery.id} className="bg-zinc-950 border-zinc-800 hover:border-cyan-500/30 transition-colors overflow-hidden flex flex-col">
-                  <CardContent className="p-0 flex-1 flex flex-col">
-                    <div className="p-5 border-b border-zinc-800/50 flex-1">
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/20 rounded-md font-mono text-xs">
-                            {delivery.trackingNumber}
-                          </Badge>
-                          <h3 className="text-lg font-semibold text-zinc-100 mt-2">{delivery.customerName}</h3>
-                        </div>
-                        <Badge variant="outline" className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20">
-                          En cours
-                        </Badge>
+                <div
+                  key={delivery.id}
+                  className="rounded-2xl border overflow-hidden"
+                  style={{ background: "white", borderColor: BORDER, boxShadow: "0 1px 8px rgba(44,24,16,0.05)" }}
+                >
+                  {/* Top accent */}
+                  <div className="h-0.5 w-full" style={{ background: TC }} />
+
+                  <div className="p-4">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <span className="font-mono text-xs" style={{ color: BROWN_LIGHT }}>{delivery.trackingNumber}</span>
+                        <h3 className="text-base font-semibold mt-0.5" style={{ color: BROWN }}>{delivery.customerName}</h3>
                       </div>
-                      
-                      <div className="space-y-3 relative before:absolute before:inset-0 before:ml-[11px] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-zinc-800 before:to-transparent">
-                        <div className="relative flex items-center gap-4">
-                          <div className="h-6 w-6 rounded-full bg-zinc-900 border-2 border-zinc-700 flex items-center justify-center z-10 shrink-0">
-                            <div className="h-2 w-2 rounded-full bg-zinc-500" />
-                          </div>
-                          <p className="text-sm text-zinc-400 truncate">{delivery.pickupAddress}</p>
-                        </div>
-                        <div className="relative flex items-center gap-4">
-                          <div className="h-6 w-6 rounded-full bg-cyan-950 border-2 border-cyan-500 flex items-center justify-center z-10 shrink-0">
-                            <div className="h-2 w-2 rounded-full bg-cyan-400" />
-                          </div>
-                          <p className="text-sm text-zinc-100 font-medium truncate">{delivery.deliveryAddress}</p>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="p-3 bg-zinc-900/50 flex gap-2">
-                      <Link href={`/livreur/livraison/${delivery.id}`} className="flex-1">
-                        <Button variant="outline" className="w-full bg-zinc-950 border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800">
-                          Détails
-                        </Button>
-                      </Link>
-                      <Button 
-                        onClick={() => handleUpdateStatus(delivery.id, "delivered")}
-                        disabled={updateDelivery.isPending}
-                        className="flex-1 bg-green-500 hover:bg-green-600 text-zinc-950 font-semibold"
+                      <span
+                        className="text-xs font-bold px-2 py-1 rounded-full"
+                        style={{ background: "#FDEEE9", color: TC }}
                       >
-                        <CheckCircle2 className="mr-2 h-4 w-4" />
-                        Livré
-                      </Button>
+                        {t("status_in_progress")}
+                      </span>
                     </div>
-                  </CardContent>
-                </Card>
+
+                    <div className="space-y-2 text-sm" style={{ color: BROWN_MID }}>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: BROWN_LIGHT }} />
+                        <span className="truncate">{delivery.pickupAddress}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: TC }} />
+                        <span className="truncate font-medium" style={{ color: BROWN }}>{delivery.deliveryAddress}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="px-4 pb-4 flex gap-2 pt-1">
+                    <Link href={`/livreur/livraison/${delivery.id}`} className="flex-1">
+                      <button
+                        className="w-full py-2 rounded-xl border text-sm font-semibold transition-all"
+                        style={{ borderColor: BORDER, color: BROWN_MID, background: "#FAF6EF" }}
+                      >
+                        Détails
+                      </button>
+                    </Link>
+                    <button
+                      onClick={() => handleUpdateStatus(delivery.id, "delivered")}
+                      disabled={updateDelivery.isPending}
+                      className="flex-1 py-2 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
+                      style={{ background: GREEN, color: "white" }}
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                      {t("mark_delivered")}
+                    </button>
+                  </div>
+                </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 rounded-2xl border border-zinc-800 bg-zinc-950/50 border-dashed">
-              <Package className="mx-auto h-12 w-12 text-zinc-700 mb-3" />
-              <h3 className="text-lg font-medium text-zinc-300">Aucune livraison en cours</h3>
-              <p className="text-zinc-500 text-sm mt-1">Vous n'avez pas de livraison assignée pour le moment.</p>
+            <div
+              className="text-center py-12 rounded-2xl border border-dashed"
+              style={{ borderColor: BORDER, background: "#FAF6EF" }}
+            >
+              <Package className="mx-auto h-10 w-10 mb-3" style={{ color: "#D0BEB0" }} />
+              <h3 className="text-base font-semibold" style={{ color: BROWN_MID }}>{t("no_active")}</h3>
             </div>
           )}
         </div>
