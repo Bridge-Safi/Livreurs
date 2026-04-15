@@ -12,10 +12,11 @@ import {
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { GpsPickerModal } from "@/components/GpsPickerModal";
+import { stopContinuousAlarm } from "@/lib/alarm";
 
 const TC = "#C14B2A";
 const GREEN = "#2A7A48";
@@ -116,6 +117,14 @@ export default function LivreurLivraisonDetail() {
   const LIVREUR_ID = livreur?.id ?? 0;
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [gpsTarget, setGpsTarget] = useState<{ address: string; label: string } | null>(null);
+
+  // Pause the dispatch alarm while the delivery confirmation modal is open
+  useEffect(() => {
+    if (confirmOpen) {
+      stopContinuousAlarm();
+    }
+    // When confirmOpen closes, DispatchAlert's polling interval (every 2s) will restart the alarm
+  }, [confirmOpen]);
 
   const { data: delivery, isLoading } = useGetDelivery(id, {
     query: { enabled: !!id, queryKey: getGetDeliveryQueryKey(id) },
@@ -447,8 +456,8 @@ export default function LivreurLivraisonDetail() {
         {/* ── Confirm delivery modal ── */}
         {confirmOpen && (
           <div
-            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
-            style={{ background: "rgba(44,24,16,0.6)", backdropFilter: "blur(6px)" }}
+            className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center"
+            style={{ background: "rgba(44,24,16,0.7)", backdropFilter: "blur(8px)" }}
           >
             <div
               className="rounded-t-3xl sm:rounded-3xl w-full sm:max-w-sm mx-0 sm:mx-4 overflow-hidden border animate-in slide-in-from-bottom-4 duration-300"

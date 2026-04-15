@@ -11,7 +11,7 @@ import {
 } from "@workspace/api-client-react";
 import { Bell, Package, Clock, CheckCircle2, XCircle, Layers } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
-import { startContinuousAlarm, stopContinuousAlarm } from "@/lib/alarm";
+import { startContinuousAlarm, stopContinuousAlarm, isAlarmRunning } from "@/lib/alarm";
 import { GpsPickerModal } from "./GpsPickerModal";
 import { useLocation } from "wouter";
 
@@ -86,7 +86,8 @@ export function DispatchAlert({ delivererId }: DispatchAlertProps) {
 
   useEffect(() => {
     if (showAlert) {
-      if (!alarmStartedRef.current) {
+      // Start alarm — or restart if it was externally paused (e.g. during delivery confirmation)
+      if (!alarmStartedRef.current || !isAlarmRunning()) {
         alarmStartedRef.current = true;
         startContinuousAlarm();
       }
@@ -96,6 +97,17 @@ export function DispatchAlert({ delivererId }: DispatchAlertProps) {
         stopContinuousAlarm();
       }
     }
+  }, [showAlert]);
+
+  // Poll every 2s: if dispatch is active but alarm was externally stopped, restart it
+  useEffect(() => {
+    if (!showAlert) return;
+    const id = setInterval(() => {
+      if (alarmStartedRef.current && !isAlarmRunning()) {
+        startContinuousAlarm();
+      }
+    }, 2000);
+    return () => clearInterval(id);
   }, [showAlert]);
 
   useEffect(() => () => stopContinuousAlarm(), []);

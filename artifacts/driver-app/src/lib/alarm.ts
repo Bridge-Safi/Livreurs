@@ -43,8 +43,15 @@ function playOneAlarmCycle(ctx: AudioContext): number {
   return t - now;
 }
 
+export function isAlarmRunning(): boolean {
+  return isContinuousRunning;
+}
+
 export function startContinuousAlarm(): () => void {
-  if (isContinuousRunning) return stopContinuousAlarm;
+  // If already running, stop first then restart fresh
+  if (isContinuousRunning) {
+    stopContinuousAlarm();
+  }
   isContinuousRunning = true;
 
   function loop() {

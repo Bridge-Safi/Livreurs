@@ -62,7 +62,7 @@ export function GpsPickerModal({ address, label, onClose }: GpsPickerModalProps)
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center"
+      className="fixed inset-0 z-[90] flex items-end sm:items-center justify-center"
       style={{ background: "rgba(44,24,16,0.65)", backdropFilter: "blur(6px)" }}
       onClick={onClose}
     >
