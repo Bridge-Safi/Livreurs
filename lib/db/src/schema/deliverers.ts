@@ -13,7 +13,7 @@ export const deliverersTable = pgTable("deliverers", {
   totalDeliveries: integer("total_deliveries").notNull().default(0),
   rating: real("rating").notNull().default(5.0),
   averageDeliveryTime: real("average_delivery_time").notNull().default(30),
-  pin: text("pin").notNull().default("1234"),
+  pin: text("pin").notNull().default("1612"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
