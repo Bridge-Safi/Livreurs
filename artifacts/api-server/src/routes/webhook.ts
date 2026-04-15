@@ -12,6 +12,42 @@ function generateTrackingNumber(): string {
   return `BRG-${ts}-${rnd}`;
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function dispatchWithDelay(
+  deliveryId: number,
+  customerName: string,
+  deliveryAddress: string,
+  itemsSummary: string,
+  source: string,
+  logger: any,
+): Promise<void> {
+  // Attendre 2 secondes après réception de la commande
+  await sleep(2000);
+
+  const pushBody = [
+    `📍 ${deliveryAddress}`,
+    itemsSummary ? `🍽️ ${itemsSummary}` : "",
+    `⏱️ 5 min pour accepter`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  try {
+    await sendPushToAllDeliverers({
+      title: `🔔 Nouvelle commande — ${customerName}`,
+      body: pushBody,
+      url: "/livreur",
+      urgent: true,
+    });
+    logger.info({ deliveryId, source }, "[DISPATCH] 🔔 Push envoyé aux livreurs (+2s)");
+  } catch (err) {
+    logger.error({ deliveryId, err }, "[DISPATCH] ❌ Push échoué");
+  }
+}
+
 router.post("/orders/inbound", async (req, res): Promise<void> => {
   const secret = req.headers["x-bridge-secret"] || req.body?.secret;
   if (WEBHOOK_SECRET && secret !== WEBHOOK_SECRET) {
@@ -27,6 +63,7 @@ router.post("/orders/inbound", async (req, res): Promise<void> => {
     items,
     total,
     notes,
+    source, // "bridge_eats" | "bridge_tabac" | undefined
   } = req.body;
 
   if (!customerName || !deliveryAddress) {
@@ -36,6 +73,7 @@ router.post("/orders/inbound", async (req, res): Promise<void> => {
 
   const pickup = pickupAddress || "Bridge Eats — Safi";
   const trackingNumber = generateTrackingNumber();
+  const orderSource = source || "bridge_eats";
 
   const itemsSummary = Array.isArray(items)
     ? items.map((i: any) => `${i.quantity || 1}× ${i.name || i.title || "article"}`).join(", ")
@@ -65,29 +103,28 @@ router.post("/orders/inbound", async (req, res): Promise<void> => {
     })
     .returning();
 
-  req.log.info({ deliveryId: delivery.id, trackingNumber }, "Inbound order from Bridge Eats");
+  req.log.info(
+    { deliveryId: delivery.id, trackingNumber, source: orderSource },
+    "Inbound order — dispatch scheduled in 2s"
+  );
 
-  const pushBody = [
-    `📍 ${deliveryAddress}`,
-    itemsSummary ? `🍽️ ${itemsSummary}` : "",
-    `⏱️ 5 min pour accepter`,
-  ]
-    .filter(Boolean)
-    .join("\n");
-
-  sendPushToAllDeliverers({
-    title: `🔔 Nouvelle commande — ${customerName}`,
-    body: pushBody,
-    url: "/livreur",
-    urgent: true,
-  }).catch(() => {});
-
+  // ✅ Répondre immédiatement à Bridge Eats / Bridge Tabac
   res.json({
     success: true,
     deliveryId: delivery.id,
     trackingNumber,
-    message: "Commande reçue et dispatché aux livreurs",
+    message: "Commande reçue — les livreurs seront alertés dans 2 secondes",
   });
+
+  // 🔔 Déclencher la sonnette 2 secondes plus tard (sans bloquer la réponse)
+  dispatchWithDelay(
+    delivery.id,
+    String(customerName),
+    String(deliveryAddress),
+    itemsSummary,
+    orderSource,
+    req.log,
+  );
 });
 
 export default router;
