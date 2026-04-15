@@ -12,7 +12,8 @@ export function useDispatchPoller(delivererId: number): PendingDispatch | null {
     {
       query: {
         queryKey: getGetMyPendingDispatchQueryKey({ delivererId }),
-        refetchInterval: 4000,
+        refetchInterval: delivererId > 0 ? 4000 : false,
+        enabled: delivererId > 0,
       },
     }
   );

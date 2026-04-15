@@ -2,10 +2,9 @@ import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { Home, Package, User, LogOut } from "lucide-react";
 import { useI18n, LANGUAGES, type Lang } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth";
 import { DispatchAlert } from "@/components/DispatchAlert";
 import { useDispatchPoller } from "@/hooks/useDispatchPoller";
-
-const LIVREUR_ID = 1;
 
 const TC = "#C14B2A";
 const SAND = "#FAF6EF";
@@ -17,7 +16,9 @@ const BROWN_LIGHT = "#9B7060";
 export function LivreurLayout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
   const { t, lang, setLang } = useI18n();
-  const pendingDispatch = useDispatchPoller(LIVREUR_ID);
+  const { livreur, logoutLivreur } = useAuth();
+  const livreurId = livreur?.id ?? 0;
+  const pendingDispatch = useDispatchPoller(livreurId);
 
   const navItems = [
     { href: "/livreur", icon: Home, label: t("nav_dashboard") },
@@ -31,7 +32,7 @@ export function LivreurLayout({ children }: { children: ReactNode }) {
     <div className="min-h-screen flex flex-col md:flex-row" style={{ backgroundColor: SAND }}>
 
       {pendingDispatch && (
-        <DispatchAlert delivererId={LIVREUR_ID} deliveryId={pendingDispatch.deliveryId} />
+        <DispatchAlert delivererId={livreurId} deliveryId={pendingDispatch.deliveryId} />
       )}
 
       {/* Sidebar — desktop */}
@@ -110,15 +111,14 @@ export function LivreurLayout({ children }: { children: ReactNode }) {
         </div>
 
         <div className="p-3 pb-5 border-t" style={{ borderColor: BORDER }}>
-          <Link href="/" className="block">
-            <div
-              className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-medium"
-              style={{ color: BROWN_MID }}
-            >
-              <LogOut className="h-5 w-5" />
-              <span>{t("nav_switch")}</span>
-            </div>
-          </Link>
+          <button
+            onClick={() => { logoutLivreur(); }}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-medium"
+            style={{ color: BROWN_MID }}
+          >
+            <LogOut className="h-5 w-5" />
+            <span>{t("nav_switch")}</span>
+          </button>
         </div>
       </aside>
 

@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { Home, MapPin, User, LogOut } from "lucide-react";
 import { useI18n, LANGUAGES, type Lang } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth";
 
 const GOLD = "#D4880C";
 const SAND = "#FAF6EF";
@@ -13,6 +14,7 @@ const BROWN_LIGHT = "#9B7060";
 export function ChauffeurLayout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
   const { t, lang, setLang } = useI18n();
+  const { logoutChauffeur } = useAuth();
 
   const navItems = [
     { href: "/chauffeur", icon: Home, label: t("nav_dashboard") },
@@ -101,15 +103,14 @@ export function ChauffeurLayout({ children }: { children: ReactNode }) {
         </div>
 
         <div className="p-3 pb-5 border-t" style={{ borderColor: BORDER }}>
-          <Link href="/" className="block">
-            <div
-              className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-medium"
-              style={{ color: BROWN_MID }}
-            >
-              <LogOut className="h-5 w-5" />
-              <span>{t("nav_switch")}</span>
-            </div>
-          </Link>
+          <button
+            onClick={() => { logoutChauffeur(); }}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-medium"
+            style={{ color: BROWN_MID }}
+          >
+            <LogOut className="h-5 w-5" />
+            <span>{t("nav_switch")}</span>
+          </button>
         </div>
       </aside>
 

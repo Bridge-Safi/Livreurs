@@ -5,10 +5,12 @@ import deliveriesRouter from "./deliveries";
 import driversRouter from "./drivers";
 import tripsRouter from "./trips";
 import dispatchRouter from "./dispatch";
+import authRouter from "./auth";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(authRouter);
 router.use(dispatchRouter);
 router.use(deliverersRouter);
 router.use(deliveriesRouter);

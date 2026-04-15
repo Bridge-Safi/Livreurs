@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, ne, asc, desc } from "drizzle-orm";
+import { eq, and, ne } from "drizzle-orm";
 import { db, deliveriesTable, deliverersTable } from "@workspace/db";
 import {
   DispatchDeliveryParams,
@@ -18,7 +18,7 @@ import { serializeDelivery } from "../lib/serializers";
 
 const router: IRouter = Router();
 
-const DISPATCH_TIMEOUT_MS = 60 * 1000;
+const DISPATCH_TIMEOUT_MS = 7 * 60 * 1000;
 
 router.get("/deliveries/pending-dispatch", async (req, res): Promise<void> => {
   const rawDelivererId = parseInt(req.query.delivererId as string, 10);
@@ -26,7 +26,6 @@ router.get("/deliveries/pending-dispatch", async (req, res): Promise<void> => {
     res.status(400).json({ error: "delivererId est requis" });
     return;
   }
-  const delivererId = rawDelivererId;
 
   const allDispatching = await db
     .select()
@@ -44,29 +43,23 @@ router.get("/deliveries/pending-dispatch", async (req, res): Promise<void> => {
     const dispatchedTime = delivery.dispatchedAt ? new Date(delivery.dispatchedAt).getTime() : 0;
     const elapsed = now - dispatchedTime;
 
-    let phase = delivery.dispatchPhase;
-    if (elapsed >= DISPATCH_TIMEOUT_MS && phase === "primary") {
+    if (elapsed >= DISPATCH_TIMEOUT_MS) {
       await db
         .update(deliveriesTable)
-        .set({ dispatchPhase: "cascade", updatedAt: new Date() })
+        .set({ dispatchPhase: "none", updatedAt: new Date() })
         .where(eq(deliveriesTable.id, delivery.id));
-      phase = "cascade";
+      continue;
     }
 
-    const isForThisDeliverer = delivery.delivererId === delivererId || phase === "cascade";
-    if (isForThisDeliverer) {
-      const dispatchedTimeMs = delivery.dispatchedAt ? new Date(delivery.dispatchedAt).getTime() : 0;
-      const elapsed2 = now - dispatchedTimeMs;
-      const secondsLeft = Math.max(0, Math.floor((DISPATCH_TIMEOUT_MS - elapsed2) / 1000));
-      found = {
-        hasPending: true,
-        delivery: GetDeliveryResponse.parse(serializeDelivery(delivery)),
-        expiresAt: new Date(dispatchedTimeMs + DISPATCH_TIMEOUT_MS).toISOString(),
-        secondsLeft: phase === "cascade" ? 0 : secondsLeft,
-        phase,
-      };
-      break;
-    }
+    const secondsLeft = Math.max(0, Math.floor((DISPATCH_TIMEOUT_MS - elapsed) / 1000));
+    found = {
+      hasPending: true,
+      delivery: GetDeliveryResponse.parse(serializeDelivery(delivery)),
+      expiresAt: new Date(dispatchedTime + DISPATCH_TIMEOUT_MS).toISOString(),
+      secondsLeft,
+      phase: "cascade",
+    };
+    break;
   }
 
   if (!found) {
@@ -93,36 +86,31 @@ router.post("/deliveries/:id/dispatch", async (req, res): Promise<void> => {
   const availableDeliverers = await db
     .select()
     .from(deliverersTable)
-    .where(eq(deliverersTable.status, "available"))
-    .orderBy(desc(deliverersTable.rating), asc(deliverersTable.averageDeliveryTime));
+    .where(eq(deliverersTable.status, "available"));
 
   if (availableDeliverers.length === 0) {
     res.status(409).json({ error: "Aucun livreur disponible pour le moment" });
     return;
   }
 
-  const best = availableDeliverers[0];
-
   const [updated] = await db
     .update(deliveriesTable)
     .set({
-      delivererId: best.id,
+      delivererId: null,
       status: "pending",
-      dispatchPhase: "primary",
+      dispatchPhase: "cascade",
       dispatchedAt: new Date(),
       updatedAt: new Date(),
     })
     .where(eq(deliveriesTable.id, params.data.id))
     .returning();
 
-  req.log.info({ deliveryId: params.data.id, delivererId: best.id, phase: "primary" }, "Delivery dispatched to primary deliverer");
+  req.log.info({ deliveryId: params.data.id, phase: "cascade" }, "Delivery broadcast to all deliverers");
 
   res.json({
     delivery: GetDeliveryResponse.parse(serializeDelivery(updated)),
-    assignedDelivererId: best.id,
-    assignedDelivererName: best.name,
-    phase: "primary",
-    message: `Commande envoyée à ${best.name} — 60 secondes pour accepter`,
+    phase: "cascade",
+    message: `Commande envoyée à tous les livreurs disponibles — 7 minutes pour accepter`,
   });
 });
 
@@ -144,20 +132,9 @@ router.post("/deliveries/:id/accept", async (req, res): Promise<void> => {
     return;
   }
 
-  if (delivery.dispatchPhase === "none") {
-    res.status(409).json({ error: "Cette livraison n'est pas en cours de dispatch" });
+  if (delivery.dispatchPhase === "none" || delivery.dispatchPhase === "accepted") {
+    res.status(409).json({ error: "Cette livraison n'est plus disponible" });
     return;
-  }
-
-  const now = Date.now();
-  const dispatchedTime = delivery.dispatchedAt ? new Date(delivery.dispatchedAt).getTime() : 0;
-  const elapsed = now - dispatchedTime;
-
-  if (delivery.dispatchPhase === "primary" && delivery.delivererId !== body.data.delivererId) {
-    if (elapsed < DISPATCH_TIMEOUT_MS) {
-      res.status(409).json({ error: "Cette livraison a déjà été assignée à un autre livreur" });
-      return;
-    }
   }
 
   const [updated] = await db
@@ -176,7 +153,7 @@ router.post("/deliveries/:id/accept", async (req, res): Promise<void> => {
     .set({ status: "busy" })
     .where(eq(deliverersTable.id, body.data.delivererId));
 
-  req.log.info({ deliveryId: params.data.id, delivererId: body.data.delivererId }, "Delivery accepted by deliverer");
+  req.log.info({ deliveryId: params.data.id, delivererId: body.data.delivererId }, "Delivery accepted");
 
   res.json(GetDeliveryResponse.parse(serializeDelivery(updated)));
 });
@@ -199,20 +176,9 @@ router.post("/deliveries/:id/refuse", async (req, res): Promise<void> => {
     return;
   }
 
-  if (delivery.dispatchPhase !== "primary" && delivery.dispatchPhase !== "cascade") {
-    res.status(409).json({ error: "Cette livraison n'est pas en cours de dispatch" });
-    return;
-  }
+  req.log.info({ deliveryId: params.data.id, delivererId: body.data.delivererId }, "Delivery refused (local only)");
 
-  const [updated] = await db
-    .update(deliveriesTable)
-    .set({ dispatchPhase: "cascade", updatedAt: new Date() })
-    .where(eq(deliveriesTable.id, params.data.id))
-    .returning();
-
-  req.log.info({ deliveryId: params.data.id, delivererId: body.data.delivererId }, "Delivery refused - cascaded");
-
-  res.json(GetDeliveryResponse.parse(serializeDelivery(updated)));
+  res.json(GetDeliveryResponse.parse(serializeDelivery(delivery)));
 });
 
 router.post("/deliveries/:id/confirm-delivered", async (req, res): Promise<void> => {
@@ -283,7 +249,6 @@ router.get("/deliveries/:id/pending-dispatch", async (req, res): Promise<void> =
     return;
   }
 
-  const delivererId = query.data.delivererId;
   const [delivery] = await db.select().from(deliveriesTable).where(eq(deliveriesTable.id, params.data.id));
 
   if (!delivery) {
@@ -291,7 +256,7 @@ router.get("/deliveries/:id/pending-dispatch", async (req, res): Promise<void> =
     return;
   }
 
-  if (delivery.dispatchPhase !== "primary" && delivery.dispatchPhase !== "cascade") {
+  if (delivery.dispatchPhase !== "cascade") {
     res.json({ hasPending: false });
     return;
   }
@@ -300,26 +265,11 @@ router.get("/deliveries/:id/pending-dispatch", async (req, res): Promise<void> =
   const dispatchedTime = delivery.dispatchedAt ? new Date(delivery.dispatchedAt).getTime() : 0;
   const elapsed = now - dispatchedTime;
 
-  if (elapsed >= DISPATCH_TIMEOUT_MS && delivery.dispatchPhase === "primary") {
+  if (elapsed >= DISPATCH_TIMEOUT_MS) {
     await db
       .update(deliveriesTable)
-      .set({ dispatchPhase: "cascade", updatedAt: new Date() })
+      .set({ dispatchPhase: "none", updatedAt: new Date() })
       .where(eq(deliveriesTable.id, params.data.id));
-
-    res.json({
-      hasPending: true,
-      delivery: GetDeliveryResponse.parse(serializeDelivery(delivery)),
-      expiresAt: new Date(dispatchedTime + DISPATCH_TIMEOUT_MS * 2).toISOString(),
-      secondsLeft: Math.max(0, Math.floor((DISPATCH_TIMEOUT_MS - elapsed) / 1000)),
-      phase: "cascade",
-    });
-    return;
-  }
-
-  const isForThisDeliverer =
-    delivery.delivererId === delivererId || delivery.dispatchPhase === "cascade";
-
-  if (!isForThisDeliverer) {
     res.json({ hasPending: false });
     return;
   }
@@ -331,7 +281,7 @@ router.get("/deliveries/:id/pending-dispatch", async (req, res): Promise<void> =
     delivery: GetDeliveryResponse.parse(serializeDelivery(delivery)),
     expiresAt: new Date(dispatchedTime + DISPATCH_TIMEOUT_MS).toISOString(),
     secondsLeft,
-    phase: delivery.dispatchPhase,
+    phase: "cascade",
   });
 });
 

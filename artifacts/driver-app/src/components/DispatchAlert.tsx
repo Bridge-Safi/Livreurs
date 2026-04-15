@@ -42,7 +42,7 @@ function createAlertSound(): () => void {
       oscillator.stop(audioCtx.currentTime + 0.4);
 
       oscillator.onended = () => {
-        if (!stopped) setTimeout(play, 900);
+        if (!stopped) setTimeout(play, 1200);
       };
     } catch {}
   };
@@ -54,19 +54,41 @@ function createAlertSound(): () => void {
   };
 }
 
+const LS_REFUSED = "bridge_refused_deliveries";
+
+function getRefused(): number[] {
+  try {
+    return JSON.parse(localStorage.getItem(LS_REFUSED) || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function addRefused(id: number) {
+  const list = getRefused().filter((x) => x !== id);
+  list.push(id);
+  localStorage.setItem(LS_REFUSED, JSON.stringify(list.slice(-50)));
+}
+
 type AlertState = "idle" | "accepted" | "refused";
 
 const TC = "#C14B2A";
-const GOLD = "#D4880C";
 const GREEN = "#2A7A48";
 const BORDER = "#E8DDD0";
 const BROWN = "#2C1810";
 const BROWN_MID = "#6B4033";
 
+function formatTime(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
 export function DispatchAlert({ delivererId, deliveryId }: DispatchAlertProps) {
   const queryClient = useQueryClient();
   const stopSoundRef = useRef<(() => void) | null>(null);
   const [alertState, setAlertState] = useState<AlertState>("idle");
+  const [dismissed, setDismissed] = useState(false);
   const { t } = useI18n();
 
   const { data: pending } = useGetMyPendingDispatch(
@@ -74,7 +96,7 @@ export function DispatchAlert({ delivererId, deliveryId }: DispatchAlertProps) {
     {
       query: {
         queryKey: getGetMyPendingDispatchQueryKey({ delivererId }),
-        refetchInterval: alertState === "idle" ? 3000 : false,
+        refetchInterval: alertState === "idle" ? 4000 : false,
       },
     }
   );
@@ -82,13 +104,11 @@ export function DispatchAlert({ delivererId, deliveryId }: DispatchAlertProps) {
   const acceptMutation = useAcceptDelivery();
   const refuseMutation = useRefuseDelivery();
 
-  const secondsLeft = pending?.secondsLeft ?? 60;
-  const phase = pending?.phase ?? "primary";
+  const secondsLeft = pending?.secondsLeft ?? 420;
   const delivery = pending?.delivery;
-  const isCascade = phase === "cascade";
 
-  const accentColor = isCascade ? GOLD : TC;
-  const accentLight = isCascade ? "#FEF6E4" : "#FDEEE9";
+  const isRefused = delivery ? getRefused().includes(delivery.id) : false;
+  const showAlert = pending?.hasPending && !dismissed && !isRefused && alertState === "idle";
 
   const stopSound = () => {
     stopSoundRef.current?.();
@@ -102,7 +122,7 @@ export function DispatchAlert({ delivererId, deliveryId }: DispatchAlertProps) {
   }, [queryClient, delivererId]);
 
   useEffect(() => {
-    if (!pending?.hasPending || alertState !== "idle") {
+    if (!showAlert) {
       stopSound();
       return;
     }
@@ -110,7 +130,7 @@ export function DispatchAlert({ delivererId, deliveryId }: DispatchAlertProps) {
       stopSoundRef.current = createAlertSound();
     }
     return () => stopSound();
-  }, [pending?.hasPending, alertState]);
+  }, [showAlert]);
 
   useEffect(() => () => stopSound(), []);
 
@@ -132,13 +152,14 @@ export function DispatchAlert({ delivererId, deliveryId }: DispatchAlertProps) {
   const handleRefuse = useCallback(() => {
     if (!delivery) return;
     stopSound();
+    addRefused(delivery.id);
     refuseMutation.mutate(
       { id: delivery.id, data: { delivererId } },
       {
         onSuccess: () => {
           setAlertState("refused");
           invalidateAll();
-          setTimeout(() => setAlertState("idle"), 3000);
+          setTimeout(() => { setAlertState("idle"); setDismissed(false); }, 3000);
         },
       }
     );
@@ -180,9 +201,10 @@ export function DispatchAlert({ delivererId, deliveryId }: DispatchAlertProps) {
     );
   }
 
-  if (!pending?.hasPending || alertState !== "idle") return null;
+  if (!showAlert) return null;
 
   const isPending = acceptMutation.isPending || refuseMutation.isPending;
+  const isLowTime = secondsLeft <= 60;
 
   const priorityLabel =
     delivery?.priority === "urgent"
@@ -198,46 +220,46 @@ export function DispatchAlert({ delivererId, deliveryId }: DispatchAlertProps) {
     >
       <div
         className="rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md mx-0 sm:mx-4 overflow-hidden animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300 border"
-        style={{ background: "white", borderColor: accentColor + "60" }}
+        style={{ background: "white", borderColor: TC + "60" }}
       >
         {/* Zellige top stripe */}
         <div
           className="h-1 w-full"
           style={{
-            backgroundImage: `repeating-linear-gradient(90deg,${accentColor} 0,${accentColor} 20px,${accentColor}55 20px,${accentColor}55 40px)`,
+            backgroundImage: `repeating-linear-gradient(90deg,#C14B2A 0,#C14B2A 20px,#D4880C 20px,#D4880C 40px,#2A7A48 40px,#2A7A48 60px,#D4880C 60px,#D4880C 80px)`,
           }}
         />
 
         {/* ── Header ── */}
         <div
           className="px-5 py-4 flex items-center gap-3 border-b"
-          style={{ background: accentLight, borderColor: accentColor + "30" }}
+          style={{ background: "#FDEEE9", borderColor: TC + "30" }}
         >
           <div
-            className="relative flex h-10 w-10 items-center justify-center rounded-full"
-            style={{ background: accentColor + "20" }}
+            className="relative flex h-10 w-10 items-center justify-center rounded-full flex-shrink-0"
+            style={{ background: TC + "20" }}
           >
-            <Bell className="h-5 w-5 animate-bounce" style={{ color: accentColor }} />
+            <Bell className="h-5 w-5 animate-bounce" style={{ color: TC }} />
             <span className="absolute top-0 right-0 h-3 w-3 rounded-full border-2 border-white" style={{ background: "#E53E3E" }} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold uppercase tracking-wider truncate" style={{ color: accentColor }}>
-              {isCascade ? t("dispatch_cascade") : t("dispatch_primary")}
+            <p className="text-xs font-bold uppercase tracking-wider" style={{ color: TC }}>
+              {t("dispatch_new_order")}
             </p>
             <p className="text-xs mt-0.5" style={{ color: BROWN_MID }}>
-              {isCascade ? t("dispatch_cascade_sub") : t("dispatch_primary_sub")}
+              {t("dispatch_new_order_sub")}
             </p>
           </div>
           <div
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold tabular-nums flex-shrink-0"
             style={{
-              background: (!isCascade && secondsLeft <= 10) ? "#FDEEE9" : accentLight,
-              color: (!isCascade && secondsLeft <= 10) ? "#E53E3E" : accentColor,
-              border: `1px solid ${accentColor}40`,
+              background: isLowTime ? "#FDEEE9" : "#FAF6EF",
+              color: isLowTime ? "#E53E3E" : TC,
+              border: `1px solid ${TC}40`,
             }}
           >
             <Clock className="h-3.5 w-3.5" />
-            {isCascade ? t("free") : `${secondsLeft}s`}
+            {formatTime(secondsLeft)}
           </div>
         </div>
 
@@ -256,7 +278,7 @@ export function DispatchAlert({ delivererId, deliveryId }: DispatchAlertProps) {
                     delivery.priority === "urgent"
                       ? { background: "#FDEEE9", color: TC }
                       : delivery.priority === "normal"
-                      ? { background: "#FEF6E4", color: GOLD }
+                      ? { background: "#FEF6E4", color: "#D4880C" }
                       : { background: "#F5EFE4", color: "#9B7060" }
                   }
                 >
@@ -269,7 +291,6 @@ export function DispatchAlert({ delivererId, deliveryId }: DispatchAlertProps) {
                 <div className="space-y-2.5 relative">
                   <div className="absolute left-[9px] top-0 bottom-0 w-0.5" style={{ background: BORDER }} />
 
-                  {/* Pickup */}
                   <div className="relative flex items-start gap-3">
                     <div
                       className="mt-0.5 h-5 w-5 rounded-full border-2 flex items-center justify-center z-10 shrink-0"
@@ -283,17 +304,16 @@ export function DispatchAlert({ delivererId, deliveryId }: DispatchAlertProps) {
                     </div>
                   </div>
 
-                  {/* Delivery */}
                   <div className="relative flex items-start gap-3">
                     <div
                       className="mt-0.5 h-5 w-5 rounded-full border-2 flex items-center justify-center z-10 shrink-0"
-                      style={{ background: accentLight, borderColor: accentColor }}
+                      style={{ background: "#FDEEE9", borderColor: TC }}
                     >
-                      <div className="h-1.5 w-1.5 rounded-full" style={{ background: accentColor }} />
+                      <div className="h-1.5 w-1.5 rounded-full" style={{ background: TC }} />
                     </div>
                     <div>
                       <p className="text-xs uppercase tracking-wide font-semibold" style={{ color: "#9B7060" }}>{t("delivery_addr")}</p>
-                      <p className="text-sm font-medium" style={{ color: accentColor }}>{delivery.deliveryAddress}</p>
+                      <p className="text-sm font-medium" style={{ color: TC }}>{delivery.deliveryAddress}</p>
                     </div>
                   </div>
                 </div>
@@ -324,7 +344,7 @@ export function DispatchAlert({ delivererId, deliveryId }: DispatchAlertProps) {
             onClick={handleAccept}
             disabled={isPending}
             className="flex items-center justify-center gap-2 font-bold h-12 rounded-xl transition-all disabled:opacity-50"
-            style={{ background: accentColor, color: "white" }}
+            style={{ background: TC, color: "white" }}
           >
             <CheckCircle2 className="h-4 w-4" />
             {t("dispatch_accept")}
