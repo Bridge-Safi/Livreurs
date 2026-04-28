@@ -14,6 +14,7 @@ import {
   GetDeliveryStatsQueryParams,
 } from "@workspace/api-zod";
 import { serializeDelivery } from "../lib/serializers";
+import { sendPushToAllDeliverers } from "./push";
 
 const router: IRouter = Router();
 
@@ -75,8 +76,27 @@ router.post("/deliveries", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const [delivery] = await db.insert(deliveriesTable).values(parsed.data).returning();
+
+  const [delivery] = await db
+    .insert(deliveriesTable)
+    .values({
+      ...parsed.data,
+      dispatchPhase: "cascade",
+      dispatchedAt: new Date(),
+    })
+    .returning();
+
+  req.log.info({ deliveryId: delivery.id }, "Delivery created — auto-dispatched to all deliverers");
+
   res.status(201).json(GetDeliveryResponse.parse(serializeDelivery(delivery)));
+
+  // Push après la réponse pour ne pas bloquer le client
+  sendPushToAllDeliverers({
+    title: `🔔 Nouvelle commande — ${delivery.customerName}`,
+    body: `📍 ${delivery.deliveryAddress}\n⏱️ 5 min pour accepter`,
+    url: "/livreur",
+    urgent: true,
+  }).catch(() => {});
 });
 
 router.get("/deliveries/:id", async (req, res): Promise<void> => {
