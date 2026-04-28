@@ -20,7 +20,7 @@ export const HealthCheckResponse = zod.object({
  */
 export const ListDeliveriesQueryParams = zod.object({
   status: zod
-    .enum(["pending", "in_progress", "delivered", "cancelled"])
+    .enum(["pending", "assigned", "in_progress", "delivered", "cancelled"])
     .optional(),
   delivererId: zod.coerce.number().optional(),
 });
@@ -32,7 +32,7 @@ export const ListDeliveriesResponseItem = zod.object({
   customerPhone: zod.string().optional(),
   pickupAddress: zod.string(),
   deliveryAddress: zod.string(),
-  status: zod.enum(["pending", "in_progress", "delivered", "cancelled"]),
+  status: zod.enum(["pending", "assigned", "in_progress", "delivered", "cancelled"]),
   priority: zod.enum(["low", "normal", "urgent"]),
   weight: zod.number().optional(),
   notes: zod.string().optional(),
@@ -76,7 +76,7 @@ export const GetMyPendingDispatchResponse = zod.object({
       customerPhone: zod.string().optional(),
       pickupAddress: zod.string(),
       deliveryAddress: zod.string(),
-      status: zod.enum(["pending", "in_progress", "delivered", "cancelled"]),
+      status: zod.enum(["pending", "assigned", "in_progress", "delivered", "cancelled"]),
       priority: zod.enum(["low", "normal", "urgent"]),
       weight: zod.number().optional(),
       notes: zod.string().optional(),
@@ -107,7 +107,7 @@ export const DispatchDeliveryResponse = zod.object({
     customerPhone: zod.string().optional(),
     pickupAddress: zod.string(),
     deliveryAddress: zod.string(),
-    status: zod.enum(["pending", "in_progress", "delivered", "cancelled"]),
+    status: zod.enum(["pending", "assigned", "in_progress", "delivered", "cancelled"]),
     priority: zod.enum(["low", "normal", "urgent"]),
     weight: zod.number().optional(),
     notes: zod.string().optional(),
@@ -140,7 +140,7 @@ export const AcceptDeliveryResponse = zod.object({
   customerPhone: zod.string().optional(),
   pickupAddress: zod.string(),
   deliveryAddress: zod.string(),
-  status: zod.enum(["pending", "in_progress", "delivered", "cancelled"]),
+  status: zod.enum(["pending", "assigned", "in_progress", "delivered", "cancelled"]),
   priority: zod.enum(["low", "normal", "urgent"]),
   weight: zod.number().optional(),
   notes: zod.string().optional(),
@@ -168,7 +168,7 @@ export const RefuseDeliveryResponse = zod.object({
   customerPhone: zod.string().optional(),
   pickupAddress: zod.string(),
   deliveryAddress: zod.string(),
-  status: zod.enum(["pending", "in_progress", "delivered", "cancelled"]),
+  status: zod.enum(["pending", "assigned", "in_progress", "delivered", "cancelled"]),
   priority: zod.enum(["low", "normal", "urgent"]),
   weight: zod.number().optional(),
   notes: zod.string().optional(),
@@ -197,7 +197,7 @@ export const ConfirmDeliveredResponse = zod.object({
   customerPhone: zod.string().optional(),
   pickupAddress: zod.string(),
   deliveryAddress: zod.string(),
-  status: zod.enum(["pending", "in_progress", "delivered", "cancelled"]),
+  status: zod.enum(["pending", "assigned", "in_progress", "delivered", "cancelled"]),
   priority: zod.enum(["low", "normal", "urgent"]),
   weight: zod.number().optional(),
   notes: zod.string().optional(),
@@ -228,7 +228,7 @@ export const GetPendingDispatchResponse = zod.object({
       customerPhone: zod.string().optional(),
       pickupAddress: zod.string(),
       deliveryAddress: zod.string(),
-      status: zod.enum(["pending", "in_progress", "delivered", "cancelled"]),
+      status: zod.enum(["pending", "assigned", "in_progress", "delivered", "cancelled"]),
       priority: zod.enum(["low", "normal", "urgent"]),
       weight: zod.number().optional(),
       notes: zod.string().optional(),
@@ -257,7 +257,7 @@ export const GetDeliveryResponse = zod.object({
   customerPhone: zod.string().optional(),
   pickupAddress: zod.string(),
   deliveryAddress: zod.string(),
-  status: zod.enum(["pending", "in_progress", "delivered", "cancelled"]),
+  status: zod.enum(["pending", "assigned", "in_progress", "delivered", "cancelled"]),
   priority: zod.enum(["low", "normal", "urgent"]),
   weight: zod.number().optional(),
   notes: zod.string().optional(),
@@ -276,7 +276,7 @@ export const UpdateDeliveryParams = zod.object({
 
 export const UpdateDeliveryBody = zod.object({
   status: zod
-    .enum(["pending", "in_progress", "delivered", "cancelled"])
+    .enum(["pending", "assigned", "in_progress", "delivered", "cancelled"])
     .optional(),
   notes: zod.string().optional(),
   delivererId: zod.number().optional(),
@@ -289,7 +289,7 @@ export const UpdateDeliveryResponse = zod.object({
   customerPhone: zod.string().optional(),
   pickupAddress: zod.string(),
   deliveryAddress: zod.string(),
-  status: zod.enum(["pending", "in_progress", "delivered", "cancelled"]),
+  status: zod.enum(["pending", "assigned", "in_progress", "delivered", "cancelled"]),
   priority: zod.enum(["low", "normal", "urgent"]),
   weight: zod.number().optional(),
   notes: zod.string().optional(),

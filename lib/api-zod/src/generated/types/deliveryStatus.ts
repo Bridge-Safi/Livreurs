@@ -11,6 +11,7 @@ export type DeliveryStatus =
 
 export const DeliveryStatus = {
   pending: "pending",
+  assigned: "assigned",
   in_progress: "in_progress",
   delivered: "delivered",
   cancelled: "cancelled",
