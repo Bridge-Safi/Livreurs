@@ -130,8 +130,14 @@ router.get("/assign/:deliveryId/:delivererId/:token", async (req, res): Promise<
 
   await db
     .update(deliveriesTable)
-    .set({ delivererId: lId, status: "assigned", dispatchPhase: "direct" })
+    .set({ delivererId: lId, status: "in_progress", dispatchPhase: "accepted" })
     .where(eq(deliveriesTable.id, dId));
+
+  // Mark deliverer as busy
+  await db
+    .update(deliverersTable)
+    .set({ status: "busy" })
+    .where(eq(deliverersTable.id, lId));
 
   await sendPushToDeliverer(lId, {
     title: `🎯 Commande pour toi — ${delivery.customerName}`,
