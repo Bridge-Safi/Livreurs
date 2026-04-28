@@ -186,7 +186,7 @@ export function DispatchAlert({ delivererId }: DispatchAlertProps) {
   /* ── Accepté ── */
   if (alertState === "accepted") {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(44,24,16,0.6)", backdropFilter: "blur(4px)" }}>
+      <div className="fixed inset-0 z-[60] flex items-center justify-center" style={{ background: "rgba(44,24,16,0.6)", backdropFilter: "blur(4px)" }}>
         <div className="rounded-2xl p-8 max-w-sm w-full mx-4 text-center animate-in zoom-in-95 duration-300 border" style={{ background: "white", borderColor: "#A8DFC1" }}>
           <div className="flex items-center justify-center w-16 h-16 rounded-full border mx-auto mb-4" style={{ background: "#E4F5EC", borderColor: "#A8DFC1" }}>
             <CheckCircle2 className="h-8 w-8" style={{ color: GREEN }} />
@@ -201,7 +201,7 @@ export function DispatchAlert({ delivererId }: DispatchAlertProps) {
   /* ── Refusé ── */
   if (alertState === "refused") {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(44,24,16,0.6)", backdropFilter: "blur(4px)" }}>
+      <div className="fixed inset-0 z-[60] flex items-center justify-center" style={{ background: "rgba(44,24,16,0.6)", backdropFilter: "blur(4px)" }}>
         <div className="rounded-2xl p-8 max-w-sm w-full mx-4 text-center animate-in zoom-in-95 duration-300 border" style={{ background: "white", borderColor: BORDER }}>
           <div className="flex items-center justify-center w-16 h-16 rounded-full border mx-auto mb-4" style={{ background: "#FAF6EF", borderColor: BORDER }}>
             <XCircle className="h-8 w-8" style={{ color: "#9B7060" }} />
@@ -217,7 +217,7 @@ export function DispatchAlert({ delivererId }: DispatchAlertProps) {
   if (alertState === "batch_confirm" && delivery) {
     const isPending = acceptMutation.isPending;
     return (
-      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" style={{ background: "rgba(44,24,16,0.6)", backdropFilter: "blur(4px)" }}>
+      <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center" style={{ background: "rgba(44,24,16,0.6)", backdropFilter: "blur(4px)" }}>
         <div className="rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md mx-0 sm:mx-4 overflow-hidden animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300 border" style={{ background: "white", borderColor: TC + "60" }}>
           <div className="h-1 w-full" style={{ backgroundImage: `repeating-linear-gradient(90deg,${TC} 0,${TC} 20px,#D4880C 20px,#D4880C 40px,#2A7A48 40px,#2A7A48 60px,#D4880C 60px,#D4880C 80px)` }} />
           <div className="p-6 text-center">
@@ -278,7 +278,7 @@ export function DispatchAlert({ delivererId }: DispatchAlertProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+      className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center"
       style={{ background: "rgba(44,24,16,0.55)", backdropFilter: "blur(4px)" }}
     >
       {/* Card — max 85vh so buttons are always reachable */}
