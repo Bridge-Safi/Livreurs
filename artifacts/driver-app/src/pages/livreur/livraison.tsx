@@ -9,6 +9,7 @@ import {
 import {
   ArrowLeft, MapPin, Phone, UtensilsCrossed, Navigation,
   CheckCircle2, Clock, Star, Bike, ShoppingBag, ChevronRight, Share2,
+  Package, AlertCircle,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQueryClient } from "@tanstack/react-query";
@@ -51,7 +52,6 @@ function parseOrderNotes(notes: string | null): ParsedOrder {
   return { items, total, extra };
 }
 
-
 function StatusPill({ status }: { status?: string }) {
   const { t } = useI18n();
   const config: Record<string, { label: string; color: string; bg: string }> = {
@@ -75,9 +75,9 @@ function StatusPill({ status }: { status?: string }) {
 function StepTimeline({ status }: { status?: string }) {
   const { t } = useI18n();
   const steps = [
-    { key: "pending",     label: t("timeline_accepted") },
-    { key: "in_progress", label: t("timeline_pickup") },
-    { key: "delivered",   label: t("timeline_done") },
+    { key: "pending",     label: t("timeline_accepted"),  icon: "✅" },
+    { key: "in_progress", label: t("timeline_pickup"),    icon: "🛵" },
+    { key: "delivered",   label: t("timeline_done"),      icon: "🏠" },
   ];
   const idx = status === "delivered" ? 2 : status === "in_progress" ? 1 : 0;
   return (
@@ -86,15 +86,15 @@ function StepTimeline({ status }: { status?: string }) {
         <div key={s.key} className="flex items-center flex-1 last:flex-none">
           <div className="flex flex-col items-center">
             <div
-              className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
+              className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold"
               style={{
                 background: i <= idx ? TC : "#E8DDD0",
                 color: i <= idx ? "white" : "#9B7060",
               }}
             >
-              {i < idx ? <CheckCircle2 className="w-3 h-3" /> : i + 1}
+              {i < idx ? <CheckCircle2 className="w-3.5 h-3.5" /> : i + 1}
             </div>
-            <span className="text-[10px] mt-1 text-center w-14" style={{ color: i <= idx ? TC : BROWN_LIGHT }}>
+            <span className="text-[10px] mt-1 text-center w-16" style={{ color: i <= idx ? TC : BROWN_LIGHT }}>
               {s.label}
             </span>
           </div>
@@ -115,16 +115,17 @@ export default function LivreurLivraisonDetail() {
   const { t } = useI18n();
   const { livreur } = useAuth();
   const LIVREUR_ID = livreur?.id ?? 0;
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [gpsTarget, setGpsTarget] = useState<{ address: string; label: string } | null>(null);
 
-  // Pause the dispatch alarm while the delivery confirmation modal is open
+  const [pickupConfirmOpen, setPickupConfirmOpen] = useState(false);
+  const [deliveryConfirmOpen, setDeliveryConfirmOpen] = useState(false);
+  const [gpsTarget, setGpsTarget] = useState<{ address: string; label: string } | null>(null);
+  const [showGpsAfterPickup, setShowGpsAfterPickup] = useState(false);
+
   useEffect(() => {
-    if (confirmOpen) {
+    if (pickupConfirmOpen || deliveryConfirmOpen) {
       stopContinuousAlarm();
     }
-    // When confirmOpen closes, DispatchAlert's polling interval (every 2s) will restart the alarm
-  }, [confirmOpen]);
+  }, [pickupConfirmOpen, deliveryConfirmOpen]);
 
   const { data: delivery, isLoading } = useGetDelivery(id, {
     query: { enabled: !!id, queryKey: getGetDeliveryQueryKey(id) },
@@ -138,11 +139,13 @@ export default function LivreurLivraisonDetail() {
   const confirmDelivered = useConfirmDelivered();
   const isPending = updateDelivery.isPending || confirmDelivered.isPending;
 
-  const handleStart = () => {
+  const handlePickupConfirm = () => {
     updateDelivery.mutate({ id, data: { status: "in_progress" } }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getGetDeliveryQueryKey(id) });
         queryClient.invalidateQueries({ queryKey: getListDeliveriesQueryKey({ delivererId: LIVREUR_ID }) });
+        setPickupConfirmOpen(false);
+        setShowGpsAfterPickup(true);
       },
     });
   };
@@ -153,13 +156,33 @@ export default function LivreurLivraisonDetail() {
         queryClient.invalidateQueries({ queryKey: getGetDeliveryQueryKey(id) });
         queryClient.invalidateQueries({ queryKey: getListDeliveriesQueryKey({ delivererId: LIVREUR_ID }) });
         queryClient.invalidateQueries({ queryKey: getGetDeliveryStatsQueryKey({ delivererId: LIVREUR_ID }) });
-        setConfirmOpen(false);
+        setDeliveryConfirmOpen(false);
         navigate("/livreur");
       },
     });
   };
 
   const order = parseOrderNotes(delivery?.notes ?? null);
+
+  if (showGpsAfterPickup && delivery) {
+    return (
+      <GpsPickerModal
+        address={delivery.deliveryAddress}
+        label={t("gps_delivery")}
+        onClose={() => setShowGpsAfterPickup(false)}
+      />
+    );
+  }
+
+  if (gpsTarget) {
+    return (
+      <GpsPickerModal
+        address={gpsTarget.address}
+        label={gpsTarget.label}
+        onClose={() => setGpsTarget(null)}
+      />
+    );
+  }
 
   if (isLoading) {
     return (
@@ -232,7 +255,37 @@ export default function LivreurLivraisonDetail() {
           {/* ── Timeline ── */}
           <StepTimeline status={delivery.status} />
 
-          {/* ── Livreur ID card (shown when in_progress or delivered) ── */}
+          {/* ── Status banner ── */}
+          {delivery.status === "pending" && (
+            <div
+              className="rounded-2xl border p-4 flex items-center gap-3"
+              style={{ background: "#FEF6E4", borderColor: "#D4880C40" }}
+            >
+              <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "#D4880C20" }}>
+                <Bike className="h-5 w-5" style={{ color: GOLD }} />
+              </div>
+              <div>
+                <p className="text-sm font-bold" style={{ color: BROWN }}>{t("pickup_heading")}</p>
+                <p className="text-xs mt-0.5" style={{ color: BROWN_MID }}>{delivery.pickupAddress}</p>
+              </div>
+            </div>
+          )}
+          {delivery.status === "in_progress" && (
+            <div
+              className="rounded-2xl border p-4 flex items-center gap-3"
+              style={{ background: "#FDEEE9", borderColor: TC + "40" }}
+            >
+              <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: TC + "20" }}>
+                <Package className="h-5 w-5 animate-pulse" style={{ color: TC }} />
+              </div>
+              <div>
+                <p className="text-sm font-bold" style={{ color: BROWN }}>{t("delivering_heading")}</p>
+                <p className="text-xs mt-0.5" style={{ color: BROWN_MID }}>{delivery.deliveryAddress}</p>
+              </div>
+            </div>
+          )}
+
+          {/* ── Livreur card ── */}
           {(delivery.status === "in_progress" || delivery.status === "delivered") && profile && (
             <div
               className="rounded-2xl border overflow-hidden"
@@ -270,17 +323,11 @@ export default function LivreurLivraisonDetail() {
                     </span>
                   </div>
                 </div>
-                <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center"
-                  style={{ background: "#E4F5EC" }}
-                >
-                  <Bike className="h-5 w-5" style={{ color: GREEN }} />
-                </div>
               </div>
             </div>
           )}
 
-          {/* ── Order items (if from Bridge Eats) ── */}
+          {/* ── Order items ── */}
           {(order.items.length > 0 || order.total) && (
             <div
               className="rounded-2xl border overflow-hidden"
@@ -316,7 +363,6 @@ export default function LivreurLivraisonDetail() {
             </div>
           )}
 
-          {/* ── Delivery notes (if no Bridge Eats items) ── */}
           {order.items.length === 0 && delivery.notes && !order.total && (
             <div className="rounded-2xl border p-4" style={{ background: "white", borderColor: BORDER }}>
               <p className="text-sm font-semibold mb-1" style={{ color: BROWN_MID }}>{t("delivery_notes")}</p>
@@ -334,7 +380,13 @@ export default function LivreurLivraisonDetail() {
               {/* Pickup */}
               <div className="flex gap-3">
                 <div className="flex flex-col items-center pt-1">
-                  <div className="w-4 h-4 rounded-full border-2 flex-shrink-0" style={{ borderColor: BROWN_LIGHT, background: SAND }} />
+                  <div
+                    className="w-4 h-4 rounded-full border-2 flex-shrink-0"
+                    style={{
+                      borderColor: delivery.status === "pending" ? GOLD : BROWN_LIGHT,
+                      background: delivery.status === "pending" ? "#FEF6E4" : "#E4F5EC",
+                    }}
+                  />
                   <div className="w-0.5 flex-1 my-1" style={{ background: BORDER, minHeight: 24 }} />
                 </div>
                 <div className="flex-1 pb-4 min-w-0">
@@ -445,18 +497,18 @@ export default function LivreurLivraisonDetail() {
           >
             {delivery.status === "pending" ? (
               <button
-                onClick={handleStart}
+                onClick={() => setPickupConfirmOpen(true)}
                 disabled={isPending}
                 className="w-full h-14 rounded-2xl font-bold text-base text-white shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-60"
-                style={{ background: TC }}
+                style={{ background: GOLD }}
               >
-                <Bike className="h-5 w-5" />
+                <Package className="h-5 w-5" />
                 {t("start_delivery_btn")}
                 <ChevronRight className="h-5 w-5" />
               </button>
             ) : delivery.status === "in_progress" ? (
               <button
-                onClick={() => setConfirmOpen(true)}
+                onClick={() => setDeliveryConfirmOpen(true)}
                 disabled={isPending}
                 className="w-full h-14 rounded-2xl font-bold text-base text-white shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-60"
                 style={{ background: GREEN }}
@@ -468,8 +520,71 @@ export default function LivreurLivraisonDetail() {
           </div>
         )}
 
-        {/* ── Confirm delivery modal ── */}
-        {confirmOpen && (
+        {/* ── PICKUP confirmation modal ── */}
+        {pickupConfirmOpen && (
+          <div
+            className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center"
+            style={{ background: "rgba(44,24,16,0.7)", backdropFilter: "blur(8px)" }}
+          >
+            <div
+              className="rounded-t-3xl sm:rounded-3xl w-full sm:max-w-sm mx-0 sm:mx-4 overflow-hidden border animate-in slide-in-from-bottom-4 duration-300"
+              style={{ background: "white", borderColor: GOLD + "60" }}
+            >
+              <div className="h-1.5 w-full" style={{ background: `linear-gradient(90deg, ${GOLD}, ${TC})` }} />
+              <div className="p-6 text-center">
+                <div
+                  className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+                  style={{ background: "#FEF6E4" }}
+                >
+                  <Package className="h-8 w-8" style={{ color: GOLD }} />
+                </div>
+                <h3 className="text-xl font-bold mb-2" style={{ color: BROWN }}>{t("pickup_confirm_title")}</h3>
+                <p className="text-sm mb-2" style={{ color: BROWN_MID }}>{delivery.customerName}</p>
+                <div
+                  className="rounded-xl p-3 mb-5 border text-left"
+                  style={{ background: SAND, borderColor: BORDER }}
+                >
+                  <div className="flex items-start gap-2">
+                    <div className="w-5 h-5 rounded-full border-2 flex-shrink-0 mt-0.5" style={{ borderColor: GOLD, background: "#FEF6E4" }} />
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-wide" style={{ color: BROWN_LIGHT }}>Restaurant</p>
+                      <p className="text-sm font-medium" style={{ color: BROWN }}>{delivery.pickupAddress}</p>
+                    </div>
+                  </div>
+                  <div className="ml-2.5 w-0.5 h-4 my-1" style={{ background: BORDER }} />
+                  <div className="flex items-start gap-2">
+                    <div className="w-5 h-5 rounded-full flex-shrink-0 mt-0.5" style={{ background: TC }} />
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-wide" style={{ color: BROWN_LIGHT }}>{t("destination")}</p>
+                      <p className="text-sm font-medium" style={{ color: BROWN }}>{delivery.deliveryAddress}</p>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-xs mb-5" style={{ color: BROWN_LIGHT }}>{t("pickup_confirm_sub")}</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => setPickupConfirmOpen(false)}
+                    className="h-12 rounded-xl font-semibold border"
+                    style={{ borderColor: BORDER, color: BROWN_MID, background: SAND }}
+                  >
+                    {t("back")}
+                  </button>
+                  <button
+                    onClick={handlePickupConfirm}
+                    disabled={isPending}
+                    className="h-12 rounded-xl font-bold text-white disabled:opacity-60"
+                    style={{ background: GOLD }}
+                  >
+                    {isPending ? "…" : t("pickup_confirm_btn")}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── DELIVERY confirmation modal ── */}
+        {deliveryConfirmOpen && (
           <div
             className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center"
             style={{ background: "rgba(44,24,16,0.7)", backdropFilter: "blur(8px)" }}
@@ -478,7 +593,7 @@ export default function LivreurLivraisonDetail() {
               className="rounded-t-3xl sm:rounded-3xl w-full sm:max-w-sm mx-0 sm:mx-4 overflow-hidden border animate-in slide-in-from-bottom-4 duration-300"
               style={{ background: "white", borderColor: GREEN + "40" }}
             >
-              <div className="h-1 w-full" style={{ background: GREEN }} />
+              <div className="h-1.5 w-full" style={{ background: GREEN }} />
               <div className="p-6 text-center">
                 <div
                   className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
@@ -486,12 +601,19 @@ export default function LivreurLivraisonDetail() {
                 >
                   <CheckCircle2 className="h-8 w-8" style={{ color: GREEN }} />
                 </div>
-                <h3 className="text-xl font-bold mb-1" style={{ color: BROWN }}>{t("confirm_delivery_title")}</h3>
+                <h3 className="text-xl font-bold mb-2" style={{ color: BROWN }}>{t("confirm_delivery_title")}</h3>
                 <p className="text-sm mb-2" style={{ color: BROWN_MID }}>{delivery.customerName}</p>
-                <p className="text-sm mb-6" style={{ color: BROWN_LIGHT }}>{delivery.deliveryAddress}</p>
+                <div
+                  className="rounded-xl p-3 mb-2 border"
+                  style={{ background: SAND, borderColor: BORDER }}
+                >
+                  <p className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: BROWN_LIGHT }}>{t("destination")}</p>
+                  <p className="text-sm font-medium" style={{ color: BROWN }}>{delivery.deliveryAddress}</p>
+                </div>
+                <p className="text-xs mb-5" style={{ color: BROWN_LIGHT }}>{t("confirm_delivery_sub")}</p>
                 {profile && (
                   <div
-                    className="flex items-center gap-3 p-3 rounded-xl border mb-6"
+                    className="flex items-center gap-3 p-3 rounded-xl border mb-5"
                     style={{ borderColor: BORDER, background: SAND }}
                   >
                     <div
@@ -502,17 +624,14 @@ export default function LivreurLivraisonDetail() {
                     </div>
                     <div className="text-left">
                       <p className="text-sm font-bold" style={{ color: BROWN }}>{profile.name}</p>
-                      <div className="flex items-center gap-1">
-                        <Star className="w-3 h-3" style={{ fill: GOLD, color: GOLD }} />
-                        <span className="text-xs" style={{ color: BROWN_LIGHT }}>{profile.rating.toFixed(1)}</span>
-                      </div>
+                      <p className="text-xs" style={{ color: BROWN_LIGHT }}>{profile.phone}</p>
                     </div>
-                    <Bike className="h-5 w-5 ml-auto" style={{ color: TC }} />
+                    <AlertCircle className="h-4 w-4 ml-auto flex-shrink-0" style={{ color: BROWN_LIGHT }} />
                   </div>
                 )}
                 <div className="grid grid-cols-2 gap-3">
                   <button
-                    onClick={() => setConfirmOpen(false)}
+                    onClick={() => setDeliveryConfirmOpen(false)}
                     className="h-12 rounded-xl font-semibold border"
                     style={{ borderColor: BORDER, color: BROWN_MID, background: SAND }}
                   >
@@ -533,15 +652,6 @@ export default function LivreurLivraisonDetail() {
         )}
 
       </div>
-
-      {gpsTarget && (
-        <GpsPickerModal
-          address={gpsTarget.address}
-          label={gpsTarget.label}
-          onClose={() => setGpsTarget(null)}
-        />
-      )}
-
     </LivreurLayout>
   );
 }
