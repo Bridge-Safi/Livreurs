@@ -22,6 +22,8 @@ const router: IRouter = Router();
 const DISPATCH_TIMEOUT_MS = 5 * 60 * 1000;
 
 router.get("/deliveries/pending-dispatch", async (req, res): Promise<void> => {
+  res.set("Cache-Control", "no-store");
+
   const rawDelivererId = parseInt(req.query.delivererId as string, 10);
   if (!rawDelivererId || isNaN(rawDelivererId)) {
     res.status(400).json({ error: "delivererId est requis" });

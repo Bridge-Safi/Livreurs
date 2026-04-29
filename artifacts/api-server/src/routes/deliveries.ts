@@ -19,6 +19,7 @@ import { sendPushToAllDeliverers } from "./push";
 const router: IRouter = Router();
 
 router.get("/deliveries/stats", async (req, res): Promise<void> => {
+  res.set("Cache-Control", "no-store");
   const queryParams = GetDeliveryStatsQueryParams.safeParse(req.query);
   const delivererId = queryParams.success ? queryParams.data.delivererId : undefined;
 
@@ -55,6 +56,7 @@ router.get("/deliveries/stats", async (req, res): Promise<void> => {
 });
 
 router.get("/deliveries", async (req, res): Promise<void> => {
+  res.set("Cache-Control", "no-store");
   const queryParams = ListDeliveriesQueryParams.safeParse(req.query);
   const status = queryParams.success ? queryParams.data.status : undefined;
   const delivererId = queryParams.success ? queryParams.data.delivererId : undefined;

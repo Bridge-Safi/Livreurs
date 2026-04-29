@@ -15,6 +15,7 @@ import { serializeDeliverer } from "../lib/serializers";
 const router: IRouter = Router();
 
 router.get("/deliverers", async (_req, res): Promise<void> => {
+  res.set("Cache-Control", "no-store");
   const deliverers = await db.select().from(deliverersTable).orderBy(deliverersTable.createdAt);
   res.json(ListDeliverersResponse.parse(deliverers.map(serializeDeliverer)));
 });
@@ -30,6 +31,7 @@ router.post("/deliverers", async (req, res): Promise<void> => {
 });
 
 router.get("/deliverers/:id", async (req, res): Promise<void> => {
+  res.set("Cache-Control", "no-store");
   const params = GetDelivererParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
