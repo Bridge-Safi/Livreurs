@@ -68,4 +68,28 @@ router.patch("/deliverers/:id", async (req, res): Promise<void> => {
   res.json(UpdateDelivererResponse.parse(serializeDeliverer(deliverer)));
 });
 
+// Lightweight endpoint to update deliverer GPS position (called silently by the app)
+router.patch("/deliverers/:id/location", async (req, res): Promise<void> => {
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "id invalide" });
+    return;
+  }
+  const { lat, lng } = req.body as { lat?: unknown; lng?: unknown };
+  if (typeof lat !== "number" || typeof lng !== "number") {
+    res.status(400).json({ error: "lat et lng requis (number)" });
+    return;
+  }
+  const [updated] = await db
+    .update(deliverersTable)
+    .set({ lastLat: lat, lastLng: lng })
+    .where(eq(deliverersTable.id, id))
+    .returning({ id: deliverersTable.id });
+  if (!updated) {
+    res.status(404).json({ error: "Livreur introuvable" });
+    return;
+  }
+  res.json({ ok: true });
+});
+
 export default router;

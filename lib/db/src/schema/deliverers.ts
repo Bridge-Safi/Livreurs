@@ -15,6 +15,8 @@ export const deliverersTable = pgTable("deliverers", {
   averageDeliveryTime: real("average_delivery_time").notNull().default(30),
   pin: text("pin").notNull().default("1612"),
   photoUrl: text("photo_url"),
+  lastLat: real("last_lat"),
+  lastLng: real("last_lng"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

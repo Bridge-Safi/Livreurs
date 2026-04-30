@@ -16,10 +16,20 @@ import {
 import { sendWhatsAppProof } from "../lib/whatsapp";
 import { serializeDelivery } from "../lib/serializers";
 import { sendPushToAll } from "./push";
+import { haversineKm } from "../lib/haversine";
 
 const router: IRouter = Router();
 
 const DISPATCH_TIMEOUT_MS = 5 * 60 * 1000;
+
+// Proximity constants
+// Deliverers within this radius get the delivery immediately (wave 1)
+const PROXIMITY_THRESHOLD_KM = 2.0;
+// Deliverers beyond the threshold must wait this long before seeing the delivery (wave 2)
+const PROXIMITY_DELAY_MS = 60 * 1000;
+// Default Safi city center (used when no GPS is stored for the restaurant)
+const SAFI_CENTER_LAT = 32.2994;
+const SAFI_CENTER_LNG = -9.2372;
 
 router.get("/deliveries/pending-dispatch", async (req, res): Promise<void> => {
   res.set("Cache-Control", "no-store");
@@ -29,6 +39,12 @@ router.get("/deliveries/pending-dispatch", async (req, res): Promise<void> => {
     res.status(400).json({ error: "delivererId est requis" });
     return;
   }
+
+  // Fetch deliverer to get their GPS position
+  const [deliverer] = await db
+    .select()
+    .from(deliverersTable)
+    .where(eq(deliverersTable.id, rawDelivererId));
 
   const allDispatching = await db
     .select()
@@ -46,6 +62,7 @@ router.get("/deliveries/pending-dispatch", async (req, res): Promise<void> => {
     const dispatchedTime = delivery.dispatchedAt ? new Date(delivery.dispatchedAt).getTime() : 0;
     const elapsed = now - dispatchedTime;
 
+    // Expired — clean up
     if (elapsed >= DISPATCH_TIMEOUT_MS) {
       await db
         .update(deliveriesTable)
@@ -53,6 +70,30 @@ router.get("/deliveries/pending-dispatch", async (req, res): Promise<void> => {
         .where(eq(deliveriesTable.id, delivery.id));
       continue;
     }
+
+    // ── Proximity gate ──────────────────────────────────────────
+    // Restaurant coordinates: use stored pickup coords or default to Safi center
+    const restaurantLat = delivery.pickupLat ?? SAFI_CENTER_LAT;
+    const restaurantLng = delivery.pickupLng ?? SAFI_CENTER_LNG;
+
+    if (deliverer?.lastLat != null && deliverer?.lastLng != null) {
+      const distanceKm = haversineKm(
+        deliverer.lastLat, deliverer.lastLng,
+        restaurantLat, restaurantLng
+      );
+
+      const isNearby = distanceKm < PROXIMITY_THRESHOLD_KM;
+
+      if (!isNearby && elapsed < PROXIMITY_DELAY_MS) {
+        // Far deliverer — must wait 60 seconds before seeing this delivery
+        req.log.debug(
+          { delivererId: rawDelivererId, distanceKm: distanceKm.toFixed(2), elapsed },
+          "Proximity delay active — far deliverer"
+        );
+        continue;
+      }
+    }
+    // ── End proximity gate ───────────────────────────────────────
 
     const secondsLeft = Math.max(0, Math.floor((DISPATCH_TIMEOUT_MS - elapsed) / 1000));
     found = {

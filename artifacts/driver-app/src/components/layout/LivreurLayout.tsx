@@ -7,6 +7,7 @@ import { useTheme } from "@/lib/theme";
 import { DispatchAlert } from "@/components/DispatchAlert";
 import { useDispatchPoller } from "@/hooks/useDispatchPoller";
 import { useGetDeliverer, getGetDelivererQueryKey } from "@workspace/api-client-react";
+import { useLocationReporter } from "@/hooks/useLocationReporter";
 
 const TC = "#C14B2A";
 
@@ -17,6 +18,7 @@ export function LivreurLayout({ children }: { children: ReactNode }) {
   const { colors, isDark, toggleTheme } = useTheme();
   const livreurId = livreur?.id ?? 0;
   const pendingDispatch = useDispatchPoller(livreurId);
+  useLocationReporter(livreurId);
 
   const { data: profile } = useGetDeliverer(livreurId, {
     query: { enabled: !!livreurId, queryKey: getGetDelivererQueryKey(livreurId) },
