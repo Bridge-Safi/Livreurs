@@ -15,22 +15,18 @@ import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { useLocation } from "wouter";
+import { useTheme } from "@/lib/theme";
 
 const TC = "#C14B2A";
 const GREEN = "#2A7A48";
 const GOLD = "#D4880C";
-const SAND = "#FAF6EF";
-const BORDER = "#E8DDD0";
-const BROWN = "#2C1810";
-const BROWN_MID = "#6B4033";
-const BROWN_LIGHT = "#9B7060";
 
 type Status = "available" | "busy" | "offline";
 
 const STATUS_CONFIG: Record<Status, { label: string; color: string; bg: string; dot: string }> = {
-  available: { label: "", color: GREEN,      bg: "#E4F5EC", dot: GREEN },
-  busy:      { label: "", color: GOLD,       bg: "#FEF6E4", dot: GOLD },
-  offline:   { label: "", color: BROWN_LIGHT, bg: "#F5EFE4", dot: BROWN_LIGHT },
+  available: { label: "", color: GREEN,   bg: "#E4F5EC", dot: GREEN },
+  busy:      { label: "", color: GOLD,    bg: "#FEF6E4", dot: GOLD },
+  offline:   { label: "", color: "#9B7060", bg: "#F5EFE4", dot: "#9B7060" },
 };
 
 const BONUS_THRESHOLD = 400;
@@ -40,7 +36,7 @@ const BASE_PAY = 7;
 function getLevel(deliveries: number): { name: string; color: string; bg: string; icon: typeof Trophy; next: number } {
   if (deliveries >= BONUS_THRESHOLD) return { name: "Platine", color: "#6D28D9", bg: "#EDE9FE", icon: Trophy, next: BONUS_THRESHOLD };
   if (deliveries >= 200) return { name: "Or",      color: GOLD,       bg: "#FEF6E4", icon: Trophy, next: BONUS_THRESHOLD };
-  if (deliveries >= 50)  return { name: "Argent",  color: BROWN_MID,  bg: "#F5EFE4", icon: Trophy, next: 200 };
+  if (deliveries >= 50)  return { name: "Argent",  color: "#6B4033",  bg: "#F5EFE4", icon: Trophy, next: 200 };
   return { name: "Bronze", color: "#92400E", bg: "#FEF3C7", icon: Trophy, next: 50 };
 }
 
@@ -83,7 +79,9 @@ function getPaymentData(totalDeliveries: number) {
   return { nextPay, currentPeriodDeliveries, currentEarnings, history };
 }
 
-function StarRating({ value }: { value: number }) {
+function StarRating({ value, textColor = "#2C1810", lightColor = "#9B7060", borderColor = "#E8DDD0" }: {
+  value: number; textColor?: string; lightColor?: string; borderColor?: string;
+}) {
   return (
     <div className="flex items-center gap-0.5">
       {[1, 2, 3, 4, 5].map(s => (
@@ -92,12 +90,12 @@ function StarRating({ value }: { value: number }) {
           className="w-4 h-4"
           style={{
             fill: s <= Math.round(value) ? GOLD : "transparent",
-            color: s <= Math.round(value) ? GOLD : BORDER,
+            color: s <= Math.round(value) ? GOLD : borderColor,
           }}
         />
       ))}
-      <span className="ml-1.5 text-sm font-bold" style={{ color: BROWN }}>{value.toFixed(1)}</span>
-      <span className="text-xs ml-0.5" style={{ color: BROWN_LIGHT }}>/5</span>
+      <span className="ml-1.5 text-sm font-bold" style={{ color: textColor }}>{value.toFixed(1)}</span>
+      <span className="text-xs ml-0.5" style={{ color: lightColor }}>/5</span>
     </div>
   );
 }
@@ -107,8 +105,15 @@ export default function LivreurProfil() {
   const { toast } = useToast();
   const { t } = useI18n();
   const { livreur, logoutLivreur } = useAuth();
+  const { colors } = useTheme();
   const [, navigate] = useLocation();
   const LIVREUR_ID = livreur?.id ?? 0;
+
+  const BORDER = colors.border;
+  const BROWN = colors.text;
+  const BROWN_MID = colors.textMid;
+  const BROWN_LIGHT = colors.textLight;
+  const SAND = colors.bg;
   const [isEditing, setIsEditing] = useState(false);
   const [editStatus, setEditStatus] = useState<Status>("available");
 
@@ -180,7 +185,7 @@ export default function LivreurProfil() {
               {/* ── Hero card ── */}
               <div
                 className="rounded-2xl overflow-hidden border"
-                style={{ background: "white", borderColor: BORDER }}
+                style={{ background: colors.bgCard, borderColor: BORDER }}
               >
                 {/* Moroccan zellige top */}
                 <div
@@ -265,7 +270,7 @@ export default function LivreurProfil() {
 
                   {/* Rating */}
                   <div className="mt-3 mb-4">
-                    <StarRating value={profile.rating} />
+                    <StarRating value={profile.rating} textColor={BROWN} lightColor={BROWN_LIGHT} borderColor={BORDER} />
                   </div>
 
                   {/* Status */}
@@ -329,15 +334,15 @@ export default function LivreurProfil() {
 
               {/* ── Stats grid ── */}
               <div className="grid grid-cols-3 gap-3">
-                <div className="rounded-2xl border p-4 text-center" style={{ background: "white", borderColor: BORDER }}>
+                <div className="rounded-2xl border p-4 text-center" style={{ background: colors.bgCard, borderColor: BORDER }}>
                   <div className="text-2xl font-bold" style={{ color: TC }}>{profile.totalDeliveries}</div>
                   <div className="text-xs mt-1" style={{ color: BROWN_LIGHT }}>{t("total_deliveries")}</div>
                 </div>
-                <div className="rounded-2xl border p-4 text-center" style={{ background: "white", borderColor: BORDER }}>
+                <div className="rounded-2xl border p-4 text-center" style={{ background: colors.bgCard, borderColor: BORDER }}>
                   <div className="text-2xl font-bold" style={{ color: GOLD }}>{profile.rating.toFixed(1)}</div>
                   <div className="text-xs mt-1" style={{ color: BROWN_LIGHT }}>{t("rating_global")}</div>
                 </div>
-                <div className="rounded-2xl border p-4 text-center" style={{ background: "white", borderColor: BORDER }}>
+                <div className="rounded-2xl border p-4 text-center" style={{ background: colors.bgCard, borderColor: BORDER }}>
                   <div className="text-2xl font-bold" style={{ color: GREEN }}>98%</div>
                   <div className="text-xs mt-1" style={{ color: BROWN_LIGHT }}>{t("success_rate")}</div>
                 </div>
@@ -429,7 +434,7 @@ export default function LivreurProfil() {
               </div>
 
               {/* ── Paiements ── */}
-              <div className="rounded-2xl border overflow-hidden" style={{ background: "white", borderColor: BORDER }}>
+              <div className="rounded-2xl border overflow-hidden" style={{ background: colors.bgCard, borderColor: BORDER }}>
 
                 {/* Header */}
                 <div className="px-4 py-3 flex items-center gap-2 border-b" style={{ borderColor: BORDER }}>
@@ -539,7 +544,7 @@ export default function LivreurProfil() {
               </div>
 
               {/* ── Performance ── */}
-              <div className="rounded-2xl border overflow-hidden" style={{ background: "white", borderColor: BORDER }}>
+              <div className="rounded-2xl border overflow-hidden" style={{ background: colors.bgCard, borderColor: BORDER }}>
                 <div className="px-4 py-3 flex items-center gap-2 border-b" style={{ borderColor: BORDER }}>
                   <TrendingUp className="h-4 w-4" style={{ color: TC }} />
                   <span className="text-sm font-bold" style={{ color: BROWN }}>{t("performance_global")}</span>
@@ -558,7 +563,7 @@ export default function LivreurProfil() {
 
               {/* ── Vehicle ── */}
               {profile.vehicleType && (
-                <div className="rounded-2xl border p-4 flex items-center gap-4" style={{ background: "white", borderColor: BORDER }}>
+                <div className="rounded-2xl border p-4 flex items-center gap-4" style={{ background: colors.bgCard, borderColor: BORDER }}>
                   <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: "#FDEEE9" }}>
                     <Bike className="h-6 w-6" style={{ color: TC }} />
                   </div>
