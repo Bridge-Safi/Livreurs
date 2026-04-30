@@ -46,11 +46,7 @@ export default function RoleSelection() {
 
         {/* Logo & Title */}
         <div className="relative z-10 flex flex-col items-center gap-4">
-          <div
-            className="w-20 h-20 rounded-2xl overflow-hidden shadow-xl border border-white/20"
-          >
-            <img src="/bridge-logo.png" alt="Bridge" className="w-full h-full object-cover" />
-          </div>
+          <img src="/bridge-logo.png" alt="Bridge" className="w-24 h-24 object-contain drop-shadow-2xl" />
           <div className="text-center">
             <h1 className="text-4xl font-black text-white tracking-tight" style={{ fontFamily: "Georgia, serif" }}>
               {t("app_name")}

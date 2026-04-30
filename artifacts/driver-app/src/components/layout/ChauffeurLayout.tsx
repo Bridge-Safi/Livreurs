@@ -41,9 +41,7 @@ export function ChauffeurLayout({ children }: { children: ReactNode }) {
       >
         {/* Brand header with Moroccan gold */}
         <div className="p-5 border-b flex items-center gap-3" style={{ borderColor: colors.sidebarBorder, background: GOLD }}>
-          <div className="h-9 w-9 rounded-xl overflow-hidden flex-shrink-0">
-            <img src="/bridge-logo.png" alt="Bridge" className="w-full h-full object-cover" />
-          </div>
+          <img src="/bridge-logo.png" alt="Bridge" className="h-9 w-9 object-contain flex-shrink-0" />
           <span className="font-bold text-white text-base tracking-tight">{t("chauffeur_title")}</span>
         </div>
 
@@ -135,9 +133,7 @@ export function ChauffeurLayout({ children }: { children: ReactNode }) {
           style={{ background: colors.topBar, borderColor: colors.border }}
         >
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg overflow-hidden flex-shrink-0">
-              <img src="/bridge-logo.png" alt="Bridge" className="w-full h-full object-cover" />
-            </div>
+            <img src="/bridge-logo.png" alt="Bridge" className="w-7 h-7 object-contain flex-shrink-0" />
             <span className="font-bold text-sm" style={{ color: colors.text }}>{t("chauffeur_title")}</span>
           </div>
 

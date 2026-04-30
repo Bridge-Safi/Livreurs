@@ -116,9 +116,7 @@ export default function ChauffeurLogin() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex w-16 h-16 rounded-2xl mb-3 overflow-hidden shadow-lg">
-            <img src="/bridge-logo.png" alt="Bridge" className="w-full h-full object-cover" />
-          </div>
+          <img src="/bridge-logo.png" alt="Bridge" className="w-20 h-20 object-contain drop-shadow-xl mb-3" />
           <h1 className="text-2xl font-bold" style={{ color: BROWN }}>{t("chauffeur_title")}</h1>
           <p className="text-sm mt-1" style={{ color: BROWN_LIGHT }}>
             {selected ? t("login_enter_pin") : t("login_select_name")}
