@@ -5,6 +5,8 @@ import { useI18n, LANGUAGES, type Lang } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { useTheme } from "@/lib/theme";
 import { useGetDriver, getGetDriverQueryKey } from "@workspace/api-client-react";
+import { useRidePoller } from "@/hooks/useRidePoller";
+import { RideAlert } from "@/components/RideAlert";
 
 const GOLD = "#D4880C";
 
@@ -19,6 +21,7 @@ export function ChauffeurLayout({ children }: { children: ReactNode }) {
     query: { enabled: !!driverId, queryKey: getGetDriverQueryKey(driverId) },
   });
   const hasPhoto = !!profile?.photoUrl;
+  const pendingRide = useRidePoller(driverId);
 
   const navItems = [
     { href: "/chauffeur", icon: Home, label: t("nav_dashboard") },
@@ -222,6 +225,14 @@ export function ChauffeurLayout({ children }: { children: ReactNode }) {
           );
         })}
       </nav>
+
+      {/* Ride dispatch alert — shown to all connected chauffeurs */}
+      {pendingRide && (
+        <RideAlert
+          driverId={driverId}
+          tripId={pendingRide.tripId}
+        />
+      )}
     </div>
   );
 }

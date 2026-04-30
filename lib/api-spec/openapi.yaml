@@ -389,6 +389,94 @@ paths:
               schema:
                 $ref: "#/components/schemas/Trip"
 
+  /trips/pending-dispatch:
+    get:
+      operationId: getMyPendingRide
+      tags: [trips]
+      summary: Get pending ride dispatch for a driver
+      parameters:
+        - name: driverId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Pending ride or empty
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PendingRideDispatch"
+
+  /trips/{id}/dispatch:
+    post:
+      operationId: dispatchRide
+      tags: [trips]
+      summary: Broadcast trip to all available drivers
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Trip dispatched
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+
+  /trips/{id}/accept:
+    post:
+      operationId: acceptRide
+      tags: [trips]
+      summary: Driver accepts a trip
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AcceptRideBody"
+      responses:
+        "200":
+          description: Trip accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+
+  /trips/{id}/refuse:
+    post:
+      operationId: refuseRide
+      tags: [trips]
+      summary: Driver refuses a trip
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefuseRideBody"
+      responses:
+        "200":
+          description: Trip refused
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+
   /trips/{id}:
     get:
       operationId: getTrip
@@ -743,6 +831,10 @@ components:
           type: string
         completedAt:
           type: string
+        dispatchPhase:
+          type: string
+        dispatchedAt:
+          type: string
         createdAt:
           type: string
       required:
@@ -753,6 +845,38 @@ components:
         - status
         - fare
         - createdAt
+
+    PendingRideDispatch:
+      type: object
+      properties:
+        hasPending:
+          type: boolean
+        trip:
+          $ref: "#/components/schemas/Trip"
+        expiresAt:
+          type: string
+        secondsLeft:
+          type: integer
+        phase:
+          type: string
+      required:
+        - hasPending
+
+    AcceptRideBody:
+      type: object
+      properties:
+        driverId:
+          type: integer
+      required:
+        - driverId
+
+    RefuseRideBody:
+      type: object
+      properties:
+        driverId:
+          type: integer
+      required:
+        - driverId
 
     CreateTripBody:
       type: object

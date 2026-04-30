@@ -21,5 +21,7 @@ export interface Trip {
   scheduledAt?: string;
   startedAt?: string;
   completedAt?: string;
+  dispatchPhase?: string;
+  dispatchedAt?: string;
   createdAt: string;
 }

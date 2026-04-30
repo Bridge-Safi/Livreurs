@@ -183,7 +183,25 @@ export interface Trip {
   scheduledAt?: string;
   startedAt?: string;
   completedAt?: string;
+  dispatchPhase?: string;
+  dispatchedAt?: string;
   createdAt: string;
+}
+
+export interface PendingRideDispatch {
+  hasPending: boolean;
+  trip?: Trip;
+  expiresAt?: string;
+  secondsLeft?: number;
+  phase?: string;
+}
+
+export interface AcceptRideBody {
+  driverId: number;
+}
+
+export interface RefuseRideBody {
+  driverId: number;
 }
 
 export interface CreateTripBody {
@@ -351,6 +369,10 @@ export const ListTripsStatus = {
   completed: "completed",
   cancelled: "cancelled",
 } as const;
+
+export type GetMyPendingRideParams = {
+  driverId: number;
+};
 
 export type GetTripStatsParams = {
   driverId?: number;

@@ -7,6 +7,7 @@
  */
 
 export * from "./acceptDeliveryBody";
+export * from "./acceptRideBody";
 export * from "./confirmDeliveredBody";
 export * from "./createDelivererBody";
 export * from "./createDelivererBodyVehicleType";
@@ -27,6 +28,7 @@ export * from "./driver";
 export * from "./driverStatus";
 export * from "./getDeliveryStatsParams";
 export * from "./getMyPendingDispatchParams";
+export * from "./getMyPendingRideParams";
 export * from "./getPendingDispatchParams";
 export * from "./getTripStatsParams";
 export * from "./healthStatus";
@@ -35,7 +37,9 @@ export * from "./listDeliveriesStatus";
 export * from "./listTripsParams";
 export * from "./listTripsStatus";
 export * from "./pendingDispatch";
+export * from "./pendingRideDispatch";
 export * from "./refuseDeliveryBody";
+export * from "./refuseRideBody";
 export * from "./trip";
 export * from "./tripStats";
 export * from "./tripStatus";

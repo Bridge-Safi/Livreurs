@@ -77,6 +77,8 @@ export function serializeTrip(t: Trip) {
     scheduledAt: t.scheduledAt ?? undefined,
     startedAt: t.startedAt ?? undefined,
     completedAt: t.completedAt ?? undefined,
+    dispatchPhase: t.dispatchPhase ?? "none",
+    dispatchedAt: t.dispatchedAt ? t.dispatchedAt.toISOString() : undefined,
     createdAt: requiredDate(t.createdAt),
   };
 }

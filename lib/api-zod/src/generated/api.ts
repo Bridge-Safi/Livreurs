@@ -418,6 +418,8 @@ export const ListTripsResponseItem = zod.object({
   scheduledAt: zod.string().optional(),
   startedAt: zod.string().optional(),
   completedAt: zod.string().optional(),
+  dispatchPhase: zod.string().optional(),
+  dispatchedAt: zod.string().optional(),
   createdAt: zod.string(),
 });
 export const ListTripsResponse = zod.array(ListTripsResponseItem);
@@ -434,6 +436,126 @@ export const CreateTripBody = zod.object({
   distance: zod.number().optional(),
   driverId: zod.number().optional(),
   scheduledAt: zod.string().optional(),
+});
+
+/**
+ * @summary Get pending ride dispatch for a driver
+ */
+export const GetMyPendingRideQueryParams = zod.object({
+  driverId: zod.coerce.number(),
+});
+
+export const GetMyPendingRideResponse = zod.object({
+  hasPending: zod.boolean(),
+  trip: zod
+    .object({
+      id: zod.number(),
+      passengerName: zod.string(),
+      passengerPhone: zod.string().optional(),
+      pickupAddress: zod.string(),
+      dropoffAddress: zod.string(),
+      status: zod.enum(["scheduled", "in_progress", "completed", "cancelled"]),
+      fare: zod.number(),
+      distance: zod.number().optional(),
+      duration: zod.number().optional(),
+      driverId: zod.number().optional(),
+      scheduledAt: zod.string().optional(),
+      startedAt: zod.string().optional(),
+      completedAt: zod.string().optional(),
+      dispatchPhase: zod.string().optional(),
+      dispatchedAt: zod.string().optional(),
+      createdAt: zod.string(),
+    })
+    .optional(),
+  expiresAt: zod.string().optional(),
+  secondsLeft: zod.number().optional(),
+  phase: zod.string().optional(),
+});
+
+/**
+ * @summary Broadcast trip to all available drivers
+ */
+export const DispatchRideParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const DispatchRideResponse = zod.object({
+  id: zod.number(),
+  passengerName: zod.string(),
+  passengerPhone: zod.string().optional(),
+  pickupAddress: zod.string(),
+  dropoffAddress: zod.string(),
+  status: zod.enum(["scheduled", "in_progress", "completed", "cancelled"]),
+  fare: zod.number(),
+  distance: zod.number().optional(),
+  duration: zod.number().optional(),
+  driverId: zod.number().optional(),
+  scheduledAt: zod.string().optional(),
+  startedAt: zod.string().optional(),
+  completedAt: zod.string().optional(),
+  dispatchPhase: zod.string().optional(),
+  dispatchedAt: zod.string().optional(),
+  createdAt: zod.string(),
+});
+
+/**
+ * @summary Driver accepts a trip
+ */
+export const AcceptRideParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const AcceptRideBody = zod.object({
+  driverId: zod.number(),
+});
+
+export const AcceptRideResponse = zod.object({
+  id: zod.number(),
+  passengerName: zod.string(),
+  passengerPhone: zod.string().optional(),
+  pickupAddress: zod.string(),
+  dropoffAddress: zod.string(),
+  status: zod.enum(["scheduled", "in_progress", "completed", "cancelled"]),
+  fare: zod.number(),
+  distance: zod.number().optional(),
+  duration: zod.number().optional(),
+  driverId: zod.number().optional(),
+  scheduledAt: zod.string().optional(),
+  startedAt: zod.string().optional(),
+  completedAt: zod.string().optional(),
+  dispatchPhase: zod.string().optional(),
+  dispatchedAt: zod.string().optional(),
+  createdAt: zod.string(),
+});
+
+/**
+ * @summary Driver refuses a trip
+ */
+export const RefuseRideParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const RefuseRideBody = zod.object({
+  driverId: zod.number(),
+});
+
+export const RefuseRideResponse = zod.object({
+  id: zod.number(),
+  passengerName: zod.string(),
+  passengerPhone: zod.string().optional(),
+  pickupAddress: zod.string(),
+  dropoffAddress: zod.string(),
+  status: zod.enum(["scheduled", "in_progress", "completed", "cancelled"]),
+  fare: zod.number(),
+  distance: zod.number().optional(),
+  duration: zod.number().optional(),
+  driverId: zod.number().optional(),
+  scheduledAt: zod.string().optional(),
+  startedAt: zod.string().optional(),
+  completedAt: zod.string().optional(),
+  dispatchPhase: zod.string().optional(),
+  dispatchedAt: zod.string().optional(),
+  createdAt: zod.string(),
 });
 
 /**
@@ -457,6 +579,8 @@ export const GetTripResponse = zod.object({
   scheduledAt: zod.string().optional(),
   startedAt: zod.string().optional(),
   completedAt: zod.string().optional(),
+  dispatchPhase: zod.string().optional(),
+  dispatchedAt: zod.string().optional(),
   createdAt: zod.string(),
 });
 
@@ -490,6 +614,8 @@ export const UpdateTripResponse = zod.object({
   scheduledAt: zod.string().optional(),
   startedAt: zod.string().optional(),
   completedAt: zod.string().optional(),
+  dispatchPhase: zod.string().optional(),
+  dispatchedAt: zod.string().optional(),
   createdAt: zod.string(),
 });
 

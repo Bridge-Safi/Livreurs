@@ -16,9 +16,12 @@ export const tripsTable = pgTable("trips", {
   scheduledAt: text("scheduled_at"),
   startedAt: text("started_at"),
   completedAt: text("completed_at"),
+  dispatchPhase: text("dispatch_phase").default("none"),
+  dispatchedAt: timestamp("dispatched_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
 
-export const insertTripSchema = createInsertSchema(tripsTable).omit({ id: true, createdAt: true });
+export const insertTripSchema = createInsertSchema(tripsTable).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertTrip = z.infer<typeof insertTripSchema>;
 export type Trip = typeof tripsTable.$inferSelect;

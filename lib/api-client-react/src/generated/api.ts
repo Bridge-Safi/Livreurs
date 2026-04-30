@@ -18,6 +18,7 @@ import type {
 
 import type {
   AcceptDeliveryBody,
+  AcceptRideBody,
   ConfirmDeliveredBody,
   CreateDelivererBody,
   CreateDeliveryBody,
@@ -30,13 +31,16 @@ import type {
   Driver,
   GetDeliveryStatsParams,
   GetMyPendingDispatchParams,
+  GetMyPendingRideParams,
   GetPendingDispatchParams,
   GetTripStatsParams,
   HealthStatus,
   ListDeliveriesParams,
   ListTripsParams,
   PendingDispatch,
+  PendingRideDispatch,
   RefuseDeliveryBody,
+  RefuseRideBody,
   Trip,
   TripStats,
   UpdateDelivererBody,
@@ -1656,6 +1660,361 @@ export const useCreateTrip = <
   TContext
 > => {
   return useMutation(getCreateTripMutationOptions(options));
+};
+
+/**
+ * @summary Get pending ride dispatch for a driver
+ */
+export const getGetMyPendingRideUrl = (params: GetMyPendingRideParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/trips/pending-dispatch?${stringifiedParams}`
+    : `/api/trips/pending-dispatch`;
+};
+
+export const getMyPendingRide = async (
+  params: GetMyPendingRideParams,
+  options?: RequestInit,
+): Promise<PendingRideDispatch> => {
+  return customFetch<PendingRideDispatch>(getGetMyPendingRideUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetMyPendingRideQueryKey = (
+  params?: GetMyPendingRideParams,
+) => {
+  return [`/api/trips/pending-dispatch`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetMyPendingRideQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMyPendingRide>>,
+  TError = ErrorType<unknown>,
+>(
+  params: GetMyPendingRideParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getMyPendingRide>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetMyPendingRideQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getMyPendingRide>>
+  > = ({ signal }) => getMyPendingRide(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMyPendingRide>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetMyPendingRideQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMyPendingRide>>
+>;
+export type GetMyPendingRideQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get pending ride dispatch for a driver
+ */
+
+export function useGetMyPendingRide<
+  TData = Awaited<ReturnType<typeof getMyPendingRide>>,
+  TError = ErrorType<unknown>,
+>(
+  params: GetMyPendingRideParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getMyPendingRide>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMyPendingRideQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Broadcast trip to all available drivers
+ */
+export const getDispatchRideUrl = (id: number) => {
+  return `/api/trips/${id}/dispatch`;
+};
+
+export const dispatchRide = async (
+  id: number,
+  options?: RequestInit,
+): Promise<Trip> => {
+  return customFetch<Trip>(getDispatchRideUrl(id), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getDispatchRideMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof dispatchRide>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof dispatchRide>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["dispatchRide"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof dispatchRide>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return dispatchRide(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DispatchRideMutationResult = NonNullable<
+  Awaited<ReturnType<typeof dispatchRide>>
+>;
+
+export type DispatchRideMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Broadcast trip to all available drivers
+ */
+export const useDispatchRide = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof dispatchRide>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof dispatchRide>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDispatchRideMutationOptions(options));
+};
+
+/**
+ * @summary Driver accepts a trip
+ */
+export const getAcceptRideUrl = (id: number) => {
+  return `/api/trips/${id}/accept`;
+};
+
+export const acceptRide = async (
+  id: number,
+  acceptRideBody: AcceptRideBody,
+  options?: RequestInit,
+): Promise<Trip> => {
+  return customFetch<Trip>(getAcceptRideUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(acceptRideBody),
+  });
+};
+
+export const getAcceptRideMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof acceptRide>>,
+    TError,
+    { id: number; data: BodyType<AcceptRideBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof acceptRide>>,
+  TError,
+  { id: number; data: BodyType<AcceptRideBody> },
+  TContext
+> => {
+  const mutationKey = ["acceptRide"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof acceptRide>>,
+    { id: number; data: BodyType<AcceptRideBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return acceptRide(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AcceptRideMutationResult = NonNullable<
+  Awaited<ReturnType<typeof acceptRide>>
+>;
+export type AcceptRideMutationBody = BodyType<AcceptRideBody>;
+export type AcceptRideMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Driver accepts a trip
+ */
+export const useAcceptRide = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof acceptRide>>,
+    TError,
+    { id: number; data: BodyType<AcceptRideBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof acceptRide>>,
+  TError,
+  { id: number; data: BodyType<AcceptRideBody> },
+  TContext
+> => {
+  return useMutation(getAcceptRideMutationOptions(options));
+};
+
+/**
+ * @summary Driver refuses a trip
+ */
+export const getRefuseRideUrl = (id: number) => {
+  return `/api/trips/${id}/refuse`;
+};
+
+export const refuseRide = async (
+  id: number,
+  refuseRideBody: RefuseRideBody,
+  options?: RequestInit,
+): Promise<Trip> => {
+  return customFetch<Trip>(getRefuseRideUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(refuseRideBody),
+  });
+};
+
+export const getRefuseRideMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof refuseRide>>,
+    TError,
+    { id: number; data: BodyType<RefuseRideBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof refuseRide>>,
+  TError,
+  { id: number; data: BodyType<RefuseRideBody> },
+  TContext
+> => {
+  const mutationKey = ["refuseRide"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof refuseRide>>,
+    { id: number; data: BodyType<RefuseRideBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return refuseRide(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RefuseRideMutationResult = NonNullable<
+  Awaited<ReturnType<typeof refuseRide>>
+>;
+export type RefuseRideMutationBody = BodyType<RefuseRideBody>;
+export type RefuseRideMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Driver refuses a trip
+ */
+export const useRefuseRide = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof refuseRide>>,
+    TError,
+    { id: number; data: BodyType<RefuseRideBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof refuseRide>>,
+  TError,
+  { id: number; data: BodyType<RefuseRideBody> },
+  TContext
+> => {
+  return useMutation(getRefuseRideMutationOptions(options));
 };
 
 /**
