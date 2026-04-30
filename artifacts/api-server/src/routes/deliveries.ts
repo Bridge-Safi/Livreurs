@@ -32,14 +32,21 @@ router.get("/deliveries/stats", async (req, res): Promise<void> => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  // Current 15-day pay period: 1-15 or 16-end of month
+  const now = new Date();
+  const periodStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() <= 15 ? 1 : 16);
+  periodStart.setHours(0, 0, 0, 0);
+
   const todayDeliveries = all.filter(d => new Date(d.createdAt) >= today);
   const completed = todayDeliveries.filter(d => d.status === "delivered");
   const inProgress = all.filter(d => d.status === "in_progress");
   const pending = all.filter(d => d.status === "pending");
   const cancelled = todayDeliveries.filter(d => d.status === "cancelled");
 
+  const periodDeliveries = all.filter(d => d.status === "delivered" && new Date(d.createdAt) >= periodStart);
+
   const earningsToday = completed.length * 7;
-  const earningsWeek = all.filter(d => d.status === "delivered").length * 7;
+  const earningsWeek = periodDeliveries.length * 7;
 
   const stats = {
     totalToday: todayDeliveries.length,

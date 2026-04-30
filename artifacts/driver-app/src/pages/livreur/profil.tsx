@@ -1,5 +1,8 @@
 import { LivreurLayout } from "@/components/layout/LivreurLayout";
-import { useGetDeliverer, getGetDelivererQueryKey, useUpdateDeliverer } from "@workspace/api-client-react";
+import {
+  useGetDeliverer, getGetDelivererQueryKey, useUpdateDeliverer,
+  useGetDeliveryStats, getGetDeliveryStatsQueryKey,
+} from "@workspace/api-client-react";
 import {
   Star, Bike, CheckCircle2, Trophy, TrendingUp,
   Package, Settings, LogOut, MapPin, Coins, Gift, CalendarDays, Banknote, History,
@@ -112,6 +115,11 @@ export default function LivreurProfil() {
     query: { enabled: !!LIVREUR_ID, queryKey: getGetDelivererQueryKey(LIVREUR_ID) },
   });
 
+  const { data: stats } = useGetDeliveryStats(
+    { delivererId: LIVREUR_ID },
+    { query: { enabled: !!LIVREUR_ID, queryKey: getGetDeliveryStatsQueryKey({ delivererId: LIVREUR_ID }), refetchInterval: 8000 } }
+  );
+
   const updateDeliverer = useUpdateDeliverer();
 
   useEffect(() => {
@@ -218,13 +226,26 @@ export default function LivreurProfil() {
                       <h2 className="text-xl font-bold" style={{ color: BROWN }}>{profile.name}</h2>
                       <p className="text-sm font-mono mt-0.5" style={{ color: BROWN_LIGHT }}>{profile.phone}</p>
                     </div>
-                    {/* Level badge */}
-                    <div
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold flex-shrink-0"
-                      style={{ background: level.bg, color: level.color }}
-                    >
-                      <Trophy className="h-3.5 w-3.5" />
-                      {level.name}
+                    {/* Level + period earnings */}
+                    <div className="flex flex-col items-end gap-1.5">
+                      <div
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold"
+                        style={{ background: level.bg, color: level.color }}
+                      >
+                        <Trophy className="h-3.5 w-3.5" />
+                        {level.name}
+                      </div>
+                      {/* Live period earnings counter */}
+                      <div
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-extrabold border"
+                        style={{ background: "#FEFBF0", color: GOLD, borderColor: "#F5D98A" }}
+                      >
+                        <Coins className="h-3.5 w-3.5" />
+                        {stats?.earningsWeek ?? 0} Dh
+                      </div>
+                      <p className="text-[10px] font-medium" style={{ color: BROWN_LIGHT }}>
+                        gains cette période
+                      </p>
                     </div>
                   </div>
 
@@ -410,7 +431,8 @@ export default function LivreurProfil() {
 
                 {/* Prochaine paie */}
                 <div className="p-4 border-b" style={{ borderColor: BORDER }}>
-                  <div className="flex items-center justify-between">
+                  {/* Top row */}
+                  <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "#E4F5EC" }}>
                         <CalendarDays className="h-5 w-5" style={{ color: GREEN }} />
@@ -423,15 +445,49 @@ export default function LivreurProfil() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs" style={{ color: BROWN_LIGHT }}>Période en cours</p>
-                      <p className="text-xl font-extrabold" style={{ color: GREEN }}>
-                        {paymentData.currentEarnings} Dh
+                      <p className="text-xs" style={{ color: BROWN_LIGHT }}>Gains période</p>
+                      <p className="text-2xl font-extrabold tabular-nums" style={{ color: GREEN }}>
+                        {stats?.earningsWeek ?? 0} Dh
                       </p>
                       <p className="text-xs" style={{ color: BROWN_LIGHT }}>
-                        {paymentData.currentPeriodDeliveries} livraisons
+                        {Math.round((stats?.earningsWeek ?? 0) / BASE_PAY)} courses
                       </p>
                     </div>
                   </div>
+
+                  {/* Progress bar — earnings this period toward a target (e.g. 400 Dh = typical month) */}
+                  {(() => {
+                    const earned = stats?.earningsWeek ?? 0;
+                    const target = 200; // 200 Dh per period = ~28 deliveries
+                    const pct = Math.min(100, Math.round((earned / target) * 100));
+                    return (
+                      <div>
+                        <div className="flex justify-between text-[10px] mb-1" style={{ color: BROWN_LIGHT }}>
+                          <span>0 Dh</span>
+                          <span className="font-semibold" style={{ color: pct >= 100 ? GREEN : BROWN_LIGHT }}>
+                            {pct}%
+                          </span>
+                          <span>{target} Dh</span>
+                        </div>
+                        <div className="h-3 w-full rounded-full overflow-hidden" style={{ background: "#F5EFE4" }}>
+                          <div
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{
+                              width: `${pct}%`,
+                              background: pct >= 100
+                                ? `linear-gradient(90deg, ${GREEN}, #1a5c35)`
+                                : `linear-gradient(90deg, ${GOLD}, #E8A020)`,
+                            }}
+                          />
+                        </div>
+                        {earned > 0 && (
+                          <p className="text-[10px] mt-1.5 text-center font-medium" style={{ color: BROWN_LIGHT }}>
+                            +{BASE_PAY} Dh ajouté après chaque livraison
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Historique */}
