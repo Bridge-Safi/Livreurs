@@ -47,10 +47,8 @@ export function LivreurLayout({ children }: { children: ReactNode }) {
       >
         {/* Brand header */}
         <div className="p-5 border-b flex items-center gap-3" style={{ borderColor: colors.sidebarBorder, background: TC }}>
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: "rgba(255,255,255,0.18)" }}>
-            <svg viewBox="0 0 40 40" className="w-5 h-5" fill="none">
-              <path d="M20 4 L23 13 L32 10 L27 18 L34 24 L25 24 L24 33 L20 25 L16 33 L15 24 L6 24 L13 18 L8 10 L17 13 Z" fill="white" opacity="0.92" />
-            </svg>
+          <div className="h-9 w-9 rounded-xl overflow-hidden flex-shrink-0">
+            <img src="/bridge-logo.png" alt="Bridge" className="w-full h-full object-cover" />
           </div>
           <span className="font-bold text-white text-base tracking-tight">{t("livreur_title")}</span>
         </div>
@@ -143,10 +141,8 @@ export function LivreurLayout({ children }: { children: ReactNode }) {
           style={{ background: colors.topBar, borderColor: colors.border }}
         >
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: TC }}>
-              <svg viewBox="0 0 40 40" className="w-4 h-4" fill="none">
-                <path d="M20 4 L23 13 L32 10 L27 18 L34 24 L25 24 L24 33 L20 25 L16 33 L15 24 L6 24 L13 18 L8 10 L17 13 Z" fill="white" />
-              </svg>
+            <div className="w-7 h-7 rounded-lg overflow-hidden flex-shrink-0">
+              <img src="/bridge-logo.png" alt="Bridge" className="w-full h-full object-cover" />
             </div>
             <span className="font-bold text-sm" style={{ color: colors.text }}>{t("livreur_title")}</span>
           </div>

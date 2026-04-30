@@ -47,16 +47,9 @@ export default function RoleSelection() {
         {/* Logo & Title */}
         <div className="relative z-10 flex flex-col items-center gap-4">
           <div
-            className="w-20 h-20 rounded-2xl flex items-center justify-center shadow-xl border border-white/20"
-            style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(8px)" }}
+            className="w-20 h-20 rounded-2xl overflow-hidden shadow-xl border border-white/20"
           >
-            <svg viewBox="0 0 60 60" className="w-11 h-11" fill="none">
-              <path
-                d="M30 6 L34 20 L48 16 L40 28 L52 36 L38 36 L36 50 L30 38 L24 50 L22 36 L8 36 L20 28 L12 16 L26 20 Z"
-                fill="white"
-                opacity="0.92"
-              />
-            </svg>
+            <img src="/bridge-logo.png" alt="Bridge" className="w-full h-full object-cover" />
           </div>
           <div className="text-center">
             <h1 className="text-4xl font-black text-white tracking-tight" style={{ fontFamily: "Georgia, serif" }}>

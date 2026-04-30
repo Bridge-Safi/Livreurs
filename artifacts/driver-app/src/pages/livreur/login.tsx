@@ -117,13 +117,8 @@ export default function LivreurLogin() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div
-            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-3"
-            style={{ background: TC }}
-          >
-            <svg viewBox="0 0 40 40" className="w-8 h-8" fill="none">
-              <path d="M20 4 L23 13 L32 10 L27 18 L34 24 L25 24 L24 33 L20 25 L16 33 L15 24 L6 24 L13 18 L8 10 L17 13 Z" fill="white" opacity="0.92" />
-            </svg>
+          <div className="inline-flex w-16 h-16 rounded-2xl mb-3 overflow-hidden shadow-lg">
+            <img src="/bridge-logo.png" alt="Bridge" className="w-full h-full object-cover" />
           </div>
           <h1 className="text-2xl font-bold" style={{ color: BROWN }}>{t("livreur_title")}</h1>
           <p className="text-sm mt-1" style={{ color: BROWN_LIGHT }}>
