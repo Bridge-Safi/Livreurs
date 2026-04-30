@@ -2,7 +2,7 @@ import { LivreurLayout } from "@/components/layout/LivreurLayout";
 import { useGetDeliverer, getGetDelivererQueryKey, useUpdateDeliverer } from "@workspace/api-client-react";
 import {
   Star, Bike, CheckCircle2, Trophy, TrendingUp,
-  Package, Settings, LogOut, MapPin,
+  Package, Settings, LogOut, MapPin, Coins, Gift,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQueryClient } from "@tanstack/react-query";
@@ -29,9 +29,13 @@ const STATUS_CONFIG: Record<Status, { label: string; color: string; bg: string; 
   offline:   { label: "", color: BROWN_LIGHT, bg: "#F5EFE4", dot: BROWN_LIGHT },
 };
 
+const BONUS_THRESHOLD = 400;
+const BONUS_AMOUNT = 100;
+const BASE_PAY = 7;
+
 function getLevel(deliveries: number): { name: string; color: string; bg: string; icon: typeof Trophy; next: number } {
-  if (deliveries >= 500) return { name: "Platine", color: "#6D28D9", bg: "#EDE9FE", icon: Trophy, next: 500 };
-  if (deliveries >= 200) return { name: "Or",      color: GOLD,       bg: "#FEF6E4", icon: Trophy, next: 500 };
+  if (deliveries >= BONUS_THRESHOLD) return { name: "Platine", color: "#6D28D9", bg: "#EDE9FE", icon: Trophy, next: BONUS_THRESHOLD };
+  if (deliveries >= 200) return { name: "Or",      color: GOLD,       bg: "#FEF6E4", icon: Trophy, next: BONUS_THRESHOLD };
   if (deliveries >= 50)  return { name: "Argent",  color: BROWN_MID,  bg: "#F5EFE4", icon: Trophy, next: 200 };
   return { name: "Bronze", color: "#92400E", bg: "#FEF3C7", icon: Trophy, next: 50 };
 }
@@ -285,6 +289,91 @@ export default function LivreurProfil() {
                 <p className="text-xs mt-2" style={{ color: BROWN_LIGHT }}>
                   {level.next - profile.totalDeliveries} {t("total_deliveries")} {t("level_next")} →
                 </p>
+              </div>
+
+              {/* ── Bonus card ── */}
+              <div
+                className="rounded-2xl border overflow-hidden"
+                style={{
+                  background: profile.totalDeliveries >= BONUS_THRESHOLD
+                    ? "linear-gradient(135deg, #2A7A48 0%, #1a5c35 100%)"
+                    : "white",
+                  borderColor: profile.totalDeliveries >= BONUS_THRESHOLD ? "#2A7A48" : BORDER,
+                }}
+              >
+                <div className="p-4 flex items-start gap-4">
+                  <div
+                    className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
+                    style={{
+                      background: profile.totalDeliveries >= BONUS_THRESHOLD ? "rgba(255,255,255,0.2)" : "#FEF6E4",
+                    }}
+                  >
+                    {profile.totalDeliveries >= BONUS_THRESHOLD
+                      ? <CheckCircle2 className="h-6 w-6 text-white" />
+                      : <Gift className="h-6 w-6" style={{ color: GOLD }} />
+                    }
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <p
+                        className="text-sm font-bold"
+                        style={{ color: profile.totalDeliveries >= BONUS_THRESHOLD ? "white" : BROWN }}
+                      >
+                        {t("bonus_card_title")}
+                      </p>
+                      <span
+                        className="text-lg font-extrabold"
+                        style={{ color: profile.totalDeliveries >= BONUS_THRESHOLD ? "white" : GOLD }}
+                      >
+                        +{BONUS_AMOUNT} Dh
+                      </span>
+                    </div>
+                    <p
+                      className="text-xs mb-3"
+                      style={{ color: profile.totalDeliveries >= BONUS_THRESHOLD ? "rgba(255,255,255,0.8)" : BROWN_LIGHT }}
+                    >
+                      {t("bonus_card_desc")}
+                    </p>
+                    {profile.totalDeliveries < BONUS_THRESHOLD && (
+                      <>
+                        <div className="h-2 w-full rounded-full overflow-hidden" style={{ background: "#F5EFE4" }}>
+                          <div
+                            className="h-full rounded-full transition-all duration-700"
+                            style={{
+                              width: `${Math.min(100, Math.round((profile.totalDeliveries / BONUS_THRESHOLD) * 100))}%`,
+                              background: GOLD,
+                            }}
+                          />
+                        </div>
+                        <p className="text-xs mt-1.5" style={{ color: BROWN_LIGHT }}>
+                          {profile.totalDeliveries}/{BONUS_THRESHOLD} livraisons
+                          {" · "}encore {BONUS_THRESHOLD - profile.totalDeliveries} à faire
+                        </p>
+                      </>
+                    )}
+                    {profile.totalDeliveries >= BONUS_THRESHOLD && (
+                      <p className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.9)" }}>
+                        ✓ Bonus débloqué — en cours de traitement
+                      </p>
+                    )}
+                  </div>
+                </div>
+                {/* Base pay info */}
+                <div
+                  className="px-4 py-2.5 border-t flex items-center gap-2"
+                  style={{
+                    borderColor: profile.totalDeliveries >= BONUS_THRESHOLD ? "rgba(255,255,255,0.2)" : BORDER,
+                    background: profile.totalDeliveries >= BONUS_THRESHOLD ? "rgba(0,0,0,0.1)" : SAND,
+                  }}
+                >
+                  <Coins className="h-3.5 w-3.5 shrink-0" style={{ color: profile.totalDeliveries >= BONUS_THRESHOLD ? "rgba(255,255,255,0.7)" : GOLD }} />
+                  <p
+                    className="text-xs"
+                    style={{ color: profile.totalDeliveries >= BONUS_THRESHOLD ? "rgba(255,255,255,0.7)" : BROWN_LIGHT }}
+                  >
+                    Tarif de base : <strong>{BASE_PAY} Dh</strong> par livraison
+                  </p>
+                </div>
               </div>
 
               {/* ── Performance ── */}

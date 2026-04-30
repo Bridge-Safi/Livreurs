@@ -23,7 +23,7 @@ const BROWN_MID = "#6B4033";
 const BROWN_LIGHT = "#9B7060";
 
 function getLevel(deliveries: number): { name: string; color: string; bg: string } {
-  if (deliveries >= 500) return { name: "Platine", color: "#6D28D9", bg: "#EDE9FE" };
+  if (deliveries >= 400) return { name: "Platine", color: "#6D28D9", bg: "#EDE9FE" };
   if (deliveries >= 200) return { name: "Or",      color: GOLD,       bg: "#FEF6E4" };
   if (deliveries >= 50)  return { name: "Argent",  color: BROWN_MID,  bg: "#F5EFE4" };
   return { name: "Bronze", color: "#92400E", bg: "#FEF3C7" };

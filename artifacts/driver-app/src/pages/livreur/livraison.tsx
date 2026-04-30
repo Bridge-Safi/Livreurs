@@ -9,7 +9,7 @@ import {
 import {
   ArrowLeft, MapPin, Phone, UtensilsCrossed, Navigation,
   CheckCircle2, Clock, Star, Bike, ShoppingBag, ChevronRight, Share2,
-  Package, AlertCircle,
+  Package, AlertCircle, Coins,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQueryClient } from "@tanstack/react-query";
@@ -116,10 +116,12 @@ export default function LivreurLivraisonDetail() {
   const { livreur } = useAuth();
   const LIVREUR_ID = livreur?.id ?? 0;
 
+  const BASE_PAY = 7;
   const [pickupConfirmOpen, setPickupConfirmOpen] = useState(false);
   const [deliveryConfirmOpen, setDeliveryConfirmOpen] = useState(false);
   const [gpsTarget, setGpsTarget] = useState<{ address: string; label: string } | null>(null);
   const [showGpsAfterPickup, setShowGpsAfterPickup] = useState(false);
+  const [showEarnings, setShowEarnings] = useState(false);
 
   useEffect(() => {
     if (pickupConfirmOpen || deliveryConfirmOpen) {
@@ -157,7 +159,8 @@ export default function LivreurLivraisonDetail() {
         queryClient.invalidateQueries({ queryKey: getListDeliveriesQueryKey({ delivererId: LIVREUR_ID }) });
         queryClient.invalidateQueries({ queryKey: getGetDeliveryStatsQueryKey({ delivererId: LIVREUR_ID }) });
         setDeliveryConfirmOpen(false);
-        navigate("/livreur");
+        setShowEarnings(true);
+        setTimeout(() => navigate("/livreur"), 2800);
       },
     });
   };
@@ -181,6 +184,68 @@ export default function LivreurLivraisonDetail() {
         label={gpsTarget.label}
         onClose={() => setGpsTarget(null)}
       />
+    );
+  }
+
+  if (showEarnings) {
+    return (
+      <LivreurLayout>
+        <div
+          className="flex-1 flex flex-col items-center justify-center gap-6 p-8 animate-in fade-in zoom-in-95 duration-300"
+          style={{ background: SAND }}
+        >
+          {/* Green circle with check */}
+          <div
+            className="w-28 h-28 rounded-full flex items-center justify-center shadow-lg"
+            style={{ background: GREEN }}
+          >
+            <CheckCircle2 className="h-14 w-14 text-white" />
+          </div>
+
+          {/* Title */}
+          <div className="text-center">
+            <h2 className="text-2xl font-bold mb-1" style={{ color: BROWN }}>
+              {t("delivery_success_title")}
+            </h2>
+            <p className="text-sm" style={{ color: BROWN_LIGHT }}>
+              {t("delivery_success_sub")}
+            </p>
+          </div>
+
+          {/* Earnings pill */}
+          <div
+            className="flex items-center gap-3 px-8 py-5 rounded-2xl border shadow-sm"
+            style={{ background: "white", borderColor: BORDER }}
+          >
+            <div
+              className="w-12 h-12 rounded-xl flex items-center justify-center"
+              style={{ background: "#FEF6E4" }}
+            >
+              <Coins className="h-6 w-6" style={{ color: GOLD }} />
+            </div>
+            <div>
+              <p className="text-xs font-medium mb-0.5" style={{ color: BROWN_LIGHT }}>
+                {t("earned_this_delivery")}
+              </p>
+              <p className="text-3xl font-extrabold" style={{ color: GOLD }}>
+                +{BASE_PAY} Dh
+              </p>
+            </div>
+          </div>
+
+          {/* Loading dots */}
+          <div className="flex gap-1.5 mt-2">
+            {[0, 1, 2].map(i => (
+              <span
+                key={i}
+                className="w-2 h-2 rounded-full animate-bounce"
+                style={{ background: GREEN, animationDelay: `${i * 150}ms` }}
+              />
+            ))}
+          </div>
+          <p className="text-xs" style={{ color: BROWN_LIGHT }}>{t("returning_dashboard")}</p>
+        </div>
+      </LivreurLayout>
     );
   }
 

@@ -38,8 +38,8 @@ router.get("/deliveries/stats", async (req, res): Promise<void> => {
   const pending = all.filter(d => d.status === "pending");
   const cancelled = todayDeliveries.filter(d => d.status === "cancelled");
 
-  const earningsToday = completed.length * 8.5;
-  const earningsWeek = all.filter(d => d.status === "delivered").length * 8.5;
+  const earningsToday = completed.length * 7;
+  const earningsWeek = all.filter(d => d.status === "delivered").length * 7;
 
   const stats = {
     totalToday: todayDeliveries.length,
