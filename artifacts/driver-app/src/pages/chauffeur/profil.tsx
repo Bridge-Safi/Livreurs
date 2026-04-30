@@ -1,6 +1,7 @@
 import { ChauffeurLayout } from "@/components/layout/ChauffeurLayout";
 import { useGetDriver, getGetDriverQueryKey, useUpdateDriver } from "@workspace/api-client-react";
 import { Car, Star, Navigation, Settings, CheckCircle2, CreditCard } from "lucide-react";
+import { PhotoUpload } from "@/components/PhotoUpload";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -100,10 +101,24 @@ export default function ChauffeurProfil() {
                 </div>
                 
                 <div className="p-8 flex flex-col md:flex-row gap-8 items-start md:items-center relative z-10">
-                  <div className="h-24 w-24 rounded-2xl bg-zinc-800 border-2 border-zinc-700 flex items-center justify-center shrink-0 shadow-xl overflow-hidden">
-                    <div className="text-4xl font-bold text-zinc-500">
-                      {profile.name.charAt(0).toUpperCase()}
-                    </div>
+                  <div className="shrink-0">
+                    <PhotoUpload
+                      currentPhotoUrl={profile.photoUrl}
+                      uploading={updateDriver.isPending}
+                      size={96}
+                      required={!profile.photoUrl}
+                      onUpload={(dataUrl) => {
+                        updateDriver.mutate(
+                          { id: DRIVER_ID, data: { photoUrl: dataUrl } },
+                          {
+                            onSuccess: () => {
+                              queryClient.invalidateQueries({ queryKey: getGetDriverQueryKey(DRIVER_ID) });
+                              toast({ title: t("profile_updated_title") });
+                            },
+                          }
+                        );
+                      }}
+                    />
                   </div>
                   
                   <div className="flex-1">

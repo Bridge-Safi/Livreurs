@@ -11,4 +11,5 @@ export interface UpdateDriverBody {
   status?: UpdateDriverBodyStatus;
   vehicleModel?: string;
   vehiclePlate?: string;
+  photoUrl?: string;
 }

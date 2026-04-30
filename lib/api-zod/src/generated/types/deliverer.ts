@@ -18,5 +18,6 @@ export interface Deliverer {
   zone?: string;
   totalDeliveries: number;
   rating: number;
+  photoUrl?: string;
   createdAt?: string;
 }

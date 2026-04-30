@@ -18,5 +18,6 @@ export interface Driver {
   status: DriverStatus;
   totalTrips: number;
   rating: number;
+  photoUrl?: string;
   createdAt?: string;
 }

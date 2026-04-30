@@ -41,6 +41,7 @@ interface TrackingData {
     phone: string;
     vehicleType: string;
     rating: number;
+    photoUrl?: string | null;
   } | null;
 }
 
@@ -189,12 +190,25 @@ export default function SuiviPage() {
                 VOTRE LIVREUR
               </p>
               <div className="flex items-center gap-4">
-                {/* Avatar */}
+                {/* Photo or avatar */}
                 <div
-                  className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold text-white flex-shrink-0"
-                  style={{ background: TC }}
+                  className="w-16 h-16 rounded-2xl flex-shrink-0 overflow-hidden border-2"
+                  style={{ borderColor: isDelivered ? GREEN : TC }}
                 >
-                  {data.deliverer.name.charAt(0).toUpperCase()}
+                  {data.deliverer.photoUrl ? (
+                    <img
+                      src={data.deliverer.photoUrl}
+                      alt={data.deliverer.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div
+                      className="w-full h-full flex items-center justify-center text-2xl font-bold text-white"
+                      style={{ background: TC }}
+                    >
+                      {data.deliverer.name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
                 </div>
                 {/* Info */}
                 <div className="flex-1 min-w-0">

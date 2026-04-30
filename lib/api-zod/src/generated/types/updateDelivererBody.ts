@@ -10,4 +10,5 @@ import type { UpdateDelivererBodyStatus } from "./updateDelivererBodyStatus";
 export interface UpdateDelivererBody {
   status?: UpdateDelivererBodyStatus;
   zone?: string;
+  photoUrl?: string;
 }

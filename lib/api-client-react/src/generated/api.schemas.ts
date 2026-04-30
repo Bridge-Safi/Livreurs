@@ -123,6 +123,7 @@ export interface Deliverer {
   zone?: string;
   totalDeliveries: number;
   rating: number;
+  photoUrl?: string;
   createdAt?: string;
 }
 
@@ -156,6 +157,7 @@ export const UpdateDelivererBodyStatus = {
 export interface UpdateDelivererBody {
   status?: UpdateDelivererBodyStatus;
   zone?: string;
+  photoUrl?: string;
 }
 
 export type TripStatus = (typeof TripStatus)[keyof typeof TripStatus];
@@ -242,6 +244,7 @@ export interface Driver {
   status: DriverStatus;
   totalTrips: number;
   rating: number;
+  photoUrl?: string;
   createdAt?: string;
 }
 
@@ -267,6 +270,7 @@ export interface UpdateDriverBody {
   status?: UpdateDriverBodyStatus;
   vehicleModel?: string;
   vehiclePlate?: string;
+  photoUrl?: string;
 }
 
 export type DispatchResultPhase =

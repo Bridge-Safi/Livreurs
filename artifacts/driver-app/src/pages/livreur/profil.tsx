@@ -3,6 +3,7 @@ import {
   useGetDeliverer, getGetDelivererQueryKey, useUpdateDeliverer,
   useGetDeliveryStats, getGetDeliveryStatsQueryKey,
 } from "@workspace/api-client-react";
+import { PhotoUpload } from "@/components/PhotoUpload";
 import {
   Star, Bike, CheckCircle2, Trophy, TrendingUp,
   Package, Settings, LogOut, MapPin, Coins, Gift, CalendarDays, Banknote, History,
@@ -213,12 +214,25 @@ export default function LivreurProfil() {
                 </div>
 
                 <div className="px-5 pb-5 -mt-10 relative">
-                  {/* Avatar */}
-                  <div
-                    className="w-20 h-20 rounded-2xl flex items-center justify-center text-3xl font-bold text-white border-4 border-white shadow-md mb-3"
-                    style={{ background: TC }}
-                  >
-                    {profile.name.charAt(0).toUpperCase()}
+                  {/* Photo upload */}
+                  <div className="mb-3">
+                    <PhotoUpload
+                      currentPhotoUrl={profile.photoUrl}
+                      uploading={updateDeliverer.isPending}
+                      size={80}
+                      required={!profile.photoUrl}
+                      onUpload={(dataUrl) => {
+                        updateDeliverer.mutate(
+                          { id: LIVREUR_ID, data: { photoUrl: dataUrl } },
+                          {
+                            onSuccess: () => {
+                              queryClient.invalidateQueries({ queryKey: getGetDelivererQueryKey(LIVREUR_ID) });
+                              toast({ title: "Photo mise à jour ✓" });
+                            },
+                          }
+                        );
+                      }}
+                    />
                   </div>
 
                   <div className="flex items-start justify-between gap-2 flex-wrap">

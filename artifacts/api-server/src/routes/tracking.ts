@@ -25,6 +25,7 @@ router.get("/tracking/:trackingNumber", async (req, res): Promise<void> => {
     phone: string;
     vehicleType: string;
     rating: number;
+    photoUrl: string | null;
   } | null = null;
 
   if (delivery.delivererId) {
@@ -35,6 +36,7 @@ router.get("/tracking/:trackingNumber", async (req, res): Promise<void> => {
         phone: deliverersTable.phone,
         vehicleType: deliverersTable.vehicleType,
         rating: deliverersTable.rating,
+        photoUrl: deliverersTable.photoUrl,
       })
       .from(deliverersTable)
       .where(eq(deliverersTable.id, delivery.delivererId))

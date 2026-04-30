@@ -1,10 +1,11 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { Home, Package, User, LogOut } from "lucide-react";
+import { Home, Package, User, LogOut, Camera } from "lucide-react";
 import { useI18n, LANGUAGES, type Lang } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { DispatchAlert } from "@/components/DispatchAlert";
 import { useDispatchPoller } from "@/hooks/useDispatchPoller";
+import { useGetDeliverer, getGetDelivererQueryKey } from "@workspace/api-client-react";
 
 const TC = "#C14B2A";
 const SAND = "#FAF6EF";
@@ -19,6 +20,11 @@ export function LivreurLayout({ children }: { children: ReactNode }) {
   const { livreur, logoutLivreur } = useAuth();
   const livreurId = livreur?.id ?? 0;
   const pendingDispatch = useDispatchPoller(livreurId);
+
+  const { data: profile } = useGetDeliverer(livreurId, {
+    query: { enabled: !!livreurId, queryKey: getGetDelivererQueryKey(livreurId) },
+  });
+  const hasPhoto = !!profile?.photoUrl;
 
   const navItems = [
     { href: "/livreur", icon: Home, label: t("nav_dashboard") },
@@ -152,6 +158,31 @@ export function LivreurLayout({ children }: { children: ReactNode }) {
             ))}
           </div>
         </div>
+
+        {/* Photo required banner */}
+        {profile && !hasPhoto && location !== "/livreur/profil" && (
+          <Link href="/livreur/profil">
+            <div
+              className="flex items-center gap-3 px-4 py-3 border-b cursor-pointer"
+              style={{ background: "#FFF3CD", borderColor: "#F5D98A" }}
+            >
+              <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "#E53E3E" }}>
+                <Camera className="h-4 w-4 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold" style={{ color: "#7D4A00" }}>
+                  📷 Photo de profil obligatoire
+                </p>
+                <p className="text-xs" style={{ color: "#9B6600" }}>
+                  Les clients ne peuvent pas voir votre photo. Appuyez pour l'ajouter.
+                </p>
+              </div>
+              <span className="text-xs font-bold px-2 py-1 rounded-lg" style={{ background: "#E53E3E", color: "white" }}>
+                Ajouter
+              </span>
+            </div>
+          </Link>
+        )}
 
         {children}
       </main>

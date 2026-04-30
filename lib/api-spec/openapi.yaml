@@ -670,6 +670,8 @@ components:
           type: integer
         rating:
           type: number
+        photoUrl:
+          type: string
         createdAt:
           type: string
       required:
@@ -707,6 +709,8 @@ components:
           type: string
           enum: [available, busy, offline]
         zone:
+          type: string
+        photoUrl:
           type: string
 
     Trip:
@@ -841,6 +845,8 @@ components:
           type: integer
         rating:
           type: number
+        photoUrl:
+          type: string
         createdAt:
           type: string
       required:
@@ -885,6 +891,8 @@ components:
         vehicleModel:
           type: string
         vehiclePlate:
+          type: string
+        photoUrl:
           type: string
 
     DispatchResult:
