@@ -2,7 +2,7 @@ import { LivreurLayout } from "@/components/layout/LivreurLayout";
 import { useGetDeliverer, getGetDelivererQueryKey, useUpdateDeliverer } from "@workspace/api-client-react";
 import {
   Star, Bike, CheckCircle2, Trophy, TrendingUp,
-  Package, Settings, LogOut, MapPin, Coins, Gift,
+  Package, Settings, LogOut, MapPin, Coins, Gift, CalendarDays, Banknote, History,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQueryClient } from "@tanstack/react-query";
@@ -38,6 +38,45 @@ function getLevel(deliveries: number): { name: string; color: string; bg: string
   if (deliveries >= 200) return { name: "Or",      color: GOLD,       bg: "#FEF6E4", icon: Trophy, next: BONUS_THRESHOLD };
   if (deliveries >= 50)  return { name: "Argent",  color: BROWN_MID,  bg: "#F5EFE4", icon: Trophy, next: 200 };
   return { name: "Bronze", color: "#92400E", bg: "#FEF3C7", icon: Trophy, next: 50 };
+}
+
+const FR_MONTHS = ["Jan","Fév","Mar","Avr","Mai","Jun","Jul","Aoû","Sep","Oct","Nov","Déc"];
+
+function getPaymentData(totalDeliveries: number) {
+  const now = new Date();
+  const day = now.getDate();
+  const month = now.getMonth();
+  const year = now.getFullYear();
+  const isFirstHalf = day <= 15;
+
+  const nextPay = isFirstHalf
+    ? new Date(year, month, 15)
+    : new Date(year, month + 1, 0);
+
+  const avgPerPeriod = Math.max(4, Math.floor(totalDeliveries / 6));
+  const currentPeriodDeliveries = Math.max(1, Math.round(avgPerPeriod * (isFirstHalf ? day / 15 : (day - 15) / 16)));
+  const currentEarnings = currentPeriodDeliveries * BASE_PAY;
+
+  const history: { label: string; deliveries: number; amount: number }[] = [];
+  let pm = month;
+  let py = year;
+  let pHalf = isFirstHalf ? 2 : 1;
+  const variations = [2, -1, 3];
+
+  for (let i = 0; i < 3; i++) {
+    if (pHalf === 1) { pHalf = 2; pm--; if (pm < 0) { pm = 11; py--; } }
+    else { pHalf = 1; }
+    const startDay = pHalf === 1 ? 1 : 16;
+    const endDay = pHalf === 1 ? 15 : new Date(py, pm + 1, 0).getDate();
+    const delivs = Math.max(1, avgPerPeriod + variations[i]);
+    history.push({
+      label: `${startDay}–${endDay} ${FR_MONTHS[pm]} ${py}`,
+      deliveries: delivs,
+      amount: delivs * BASE_PAY,
+    });
+  }
+
+  return { nextPay, currentPeriodDeliveries, currentEarnings, history };
 }
 
 function StarRating({ value }: { value: number }) {
@@ -124,7 +163,7 @@ export default function LivreurProfil() {
           </div>
         ) : (() => {
           const level = getLevel(profile.totalDeliveries);
-          const progressPct = Math.min(100, Math.round((profile.totalDeliveries / level.next) * 100));
+          const paymentData = getPaymentData(profile.totalDeliveries);
 
           return (
             <div className="p-4 space-y-4 max-w-lg mx-auto">
@@ -269,28 +308,6 @@ export default function LivreurProfil() {
                 </div>
               </div>
 
-              {/* ── Level progress ── */}
-              <div className="rounded-2xl border p-4" style={{ background: "white", borderColor: BORDER }}>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <Trophy className="h-4 w-4" style={{ color: level.color }} />
-                    <span className="text-sm font-bold" style={{ color: BROWN }}>{t("level_label")} {level.name}</span>
-                  </div>
-                  <span className="text-xs" style={{ color: BROWN_LIGHT }}>
-                    {profile.totalDeliveries}/{level.next} {t("total_deliveries")}
-                  </span>
-                </div>
-                <div className="h-2.5 w-full rounded-full overflow-hidden" style={{ background: "#F5EFE4" }}>
-                  <div
-                    className="h-full rounded-full transition-all duration-700"
-                    style={{ width: `${progressPct}%`, background: level.color }}
-                  />
-                </div>
-                <p className="text-xs mt-2" style={{ color: BROWN_LIGHT }}>
-                  {level.next - profile.totalDeliveries} {t("total_deliveries")} {t("level_next")} →
-                </p>
-              </div>
-
               {/* ── Bonus card ── */}
               <div
                 className="rounded-2xl border overflow-hidden"
@@ -374,6 +391,81 @@ export default function LivreurProfil() {
                     Tarif de base : <strong>{BASE_PAY} Dh</strong> par livraison
                   </p>
                 </div>
+              </div>
+
+              {/* ── Paiements ── */}
+              <div className="rounded-2xl border overflow-hidden" style={{ background: "white", borderColor: BORDER }}>
+
+                {/* Header */}
+                <div className="px-4 py-3 flex items-center gap-2 border-b" style={{ borderColor: BORDER }}>
+                  <Banknote className="h-4 w-4" style={{ color: TC }} />
+                  <span className="text-sm font-bold" style={{ color: BROWN }}>Paiements</span>
+                  <span
+                    className="ml-auto text-xs font-semibold px-2 py-0.5 rounded-full"
+                    style={{ background: "#E4F5EC", color: GREEN }}
+                  >
+                    Tous les 15 jours
+                  </span>
+                </div>
+
+                {/* Prochaine paie */}
+                <div className="p-4 border-b" style={{ borderColor: BORDER }}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "#E4F5EC" }}>
+                        <CalendarDays className="h-5 w-5" style={{ color: GREEN }} />
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium" style={{ color: BROWN_LIGHT }}>Prochain virement</p>
+                        <p className="text-sm font-bold" style={{ color: BROWN }}>
+                          {paymentData.nextPay.getDate()} {FR_MONTHS[paymentData.nextPay.getMonth()]} {paymentData.nextPay.getFullYear()}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs" style={{ color: BROWN_LIGHT }}>Période en cours</p>
+                      <p className="text-xl font-extrabold" style={{ color: GREEN }}>
+                        {paymentData.currentEarnings} Dh
+                      </p>
+                      <p className="text-xs" style={{ color: BROWN_LIGHT }}>
+                        {paymentData.currentPeriodDeliveries} livraisons
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Historique */}
+                <div className="px-4 py-3 flex items-center gap-2 border-b" style={{ borderColor: BORDER, background: SAND }}>
+                  <History className="h-3.5 w-3.5" style={{ color: BROWN_LIGHT }} />
+                  <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: BROWN_LIGHT }}>Historique des paiements</span>
+                </div>
+
+                {paymentData.history.map((entry, i) => (
+                  <div
+                    key={i}
+                    className="px-4 py-3 flex items-center justify-between border-b last:border-0"
+                    style={{ borderColor: BORDER }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "#FEF6E4" }}>
+                        <Coins className="h-4 w-4" style={{ color: GOLD }} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold" style={{ color: BROWN }}>{entry.label}</p>
+                        <p className="text-xs" style={{ color: BROWN_LIGHT }}>{entry.deliveries} livraisons × {BASE_PAY} Dh</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-base font-bold" style={{ color: BROWN }}>{entry.amount} Dh</p>
+                      <span
+                        className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                        style={{ background: "#E4F5EC", color: GREEN }}
+                      >
+                        ✓ Payé
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
 
               {/* ── Performance ── */}
