@@ -249,7 +249,25 @@ router.post("/trips", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const [trip] = await db.insert(tripsTable).values(parsed.data).returning();
+
+  const [trip] = await db
+    .insert(tripsTable)
+    .values({
+      ...parsed.data,
+      dispatchPhase: "cascade",
+      dispatchedAt: new Date(),
+      status: "scheduled",
+    })
+    .returning();
+
+  req.log.info({ tripId: trip.id }, "Trip created — auto-dispatched to all drivers");
+
+  sendPushToAll({
+    title: "🚖 Nouvelle course — Bridge Safi",
+    body: `${trip.passengerName} · ${trip.pickupAddress} → ${trip.dropoffAddress} — 5 min pour accepter`,
+    url: "/",
+  }).catch(() => {});
+
   res.status(201).json(GetTripResponse.parse(serializeTrip(trip)));
 });
 
