@@ -21,6 +21,7 @@ import ChauffeurTrajets from "@/pages/chauffeur/trajets";
 import ChauffeurTrajetDetail from "@/pages/chauffeur/trajet";
 import ChauffeurProfil from "@/pages/chauffeur/profil";
 import SuiviPage from "@/pages/suivi";
+import CommandePage from "@/pages/commande";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
@@ -59,6 +60,9 @@ function Router() {
       <Route path="/chauffeur/trajets">{() => <ChauffeurGuard component={ChauffeurTrajets} />}</Route>
       <Route path="/chauffeur/trajet/:id">{() => <ChauffeurGuard component={ChauffeurTrajetDetail} />}</Route>
       <Route path="/chauffeur/profil">{() => <ChauffeurGuard component={ChauffeurProfil} />}</Route>
+
+      {/* Public order page */}
+      <Route path="/commande" component={CommandePage} />
 
       {/* Public tracking page (no auth) */}
       <Route path="/suivi/:trackingNumber" component={SuiviPage} />
