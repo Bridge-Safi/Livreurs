@@ -18,6 +18,9 @@ import {
   AcceptRideBody,
   RefuseRideParams,
   RefuseRideBody,
+  PickupPassengerParams,
+  PickupPassengerBody,
+  PickupPassengerResponse,
 } from "@workspace/api-zod";
 import { serializeTrip } from "../lib/serializers";
 import { sendPushToAll } from "./push";
@@ -186,6 +189,44 @@ router.post("/trips/:id/refuse", async (req, res): Promise<void> => {
 
   req.log.info({ tripId: params.data.id, driverId: body.data.driverId }, "Ride refused (local only)");
   res.json(GetTripResponse.parse(serializeTrip(trip)));
+});
+
+// ── Passenger pickup: driver confirms passenger is in the car ─────────────
+router.post("/trips/:id/pickup-passenger", async (req, res): Promise<void> => {
+  const params = PickupPassengerParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  const body = PickupPassengerBody.safeParse(req.body);
+  if (!body.success) {
+    res.status(400).json({ error: body.error.message });
+    return;
+  }
+
+  const [trip] = await db.select().from(tripsTable).where(eq(tripsTable.id, params.data.id));
+  if (!trip) {
+    res.status(404).json({ error: "Course introuvable" });
+    return;
+  }
+  if (trip.status !== "scheduled") {
+    res.status(409).json({ error: "Impossible — la course n'est pas en attente de passager" });
+    return;
+  }
+
+  const [updated] = await db
+    .update(tripsTable)
+    .set({
+      status: "in_progress",
+      passengerPickedUpAt: new Date(),
+      startedAt: new Date().toISOString(),
+      updatedAt: new Date(),
+    })
+    .where(eq(tripsTable.id, params.data.id))
+    .returning();
+
+  req.log.info({ tripId: params.data.id, driverId: body.data.driverId }, "Passenger picked up");
+  res.json(PickupPassengerResponse.parse(serializeTrip(updated)));
 });
 
 // ── Stats ──────────────────────────────────────────────────────────────────

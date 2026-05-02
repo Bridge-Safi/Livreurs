@@ -39,6 +39,7 @@ import type {
   ListTripsParams,
   PendingDispatch,
   PendingRideDispatch,
+  PickupPassengerBody,
   RefuseDeliveryBody,
   RefuseRideBody,
   Trip,
@@ -2015,6 +2016,93 @@ export const useRefuseRide = <
   TContext
 > => {
   return useMutation(getRefuseRideMutationOptions(options));
+};
+
+/**
+ * @summary Driver confirms passenger is in the car
+ */
+export const getPickupPassengerUrl = (id: number) => {
+  return `/api/trips/${id}/pickup-passenger`;
+};
+
+export const pickupPassenger = async (
+  id: number,
+  pickupPassengerBody: PickupPassengerBody,
+  options?: RequestInit,
+): Promise<Trip> => {
+  return customFetch<Trip>(getPickupPassengerUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(pickupPassengerBody),
+  });
+};
+
+export const getPickupPassengerMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof pickupPassenger>>,
+    TError,
+    { id: number; data: BodyType<PickupPassengerBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof pickupPassenger>>,
+  TError,
+  { id: number; data: BodyType<PickupPassengerBody> },
+  TContext
+> => {
+  const mutationKey = ["pickupPassenger"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof pickupPassenger>>,
+    { id: number; data: BodyType<PickupPassengerBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return pickupPassenger(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PickupPassengerMutationResult = NonNullable<
+  Awaited<ReturnType<typeof pickupPassenger>>
+>;
+export type PickupPassengerMutationBody = BodyType<PickupPassengerBody>;
+export type PickupPassengerMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Driver confirms passenger is in the car
+ */
+export const usePickupPassenger = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof pickupPassenger>>,
+    TError,
+    { id: number; data: BodyType<PickupPassengerBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof pickupPassenger>>,
+  TError,
+  { id: number; data: BodyType<PickupPassengerBody> },
+  TContext
+> => {
+  return useMutation(getPickupPassengerMutationOptions(options));
 };
 
 /**

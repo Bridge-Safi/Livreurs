@@ -32,6 +32,7 @@ export default function CommandePage() {
   const [service, setService] = useState<ServiceType | null>(null);
   const [done, setDone] = useState(false);
   const [doneType, setDoneType] = useState<ServiceType>("taxi");
+  const [confirmCode, setConfirmCode] = useState<string | null>(null);
 
   const createTrip = useCreateTrip();
   const createDelivery = useCreateDelivery();
@@ -93,7 +94,8 @@ export default function CommandePage() {
         },
       },
       {
-        onSuccess: () => {
+        onSuccess: (data) => {
+          setConfirmCode(data.confirmCode ?? null);
           setDoneType("livraison");
           setDone(true);
         },
@@ -104,53 +106,84 @@ export default function CommandePage() {
   // Success screen
   if (done) {
     const isTaxi = doneType === "taxi";
+    const accent = isTaxi ? GOLD : GREEN;
+    const accentBg = isTaxi ? "#FEF6E4" : "#E4F5EC";
     return (
       <div
         className="min-h-screen flex flex-col items-center justify-center px-4 py-12"
         style={{ background: colors.bg }}
       >
         <div
-          className="w-full max-w-sm rounded-2xl p-8 text-center border"
+          className="w-full max-w-sm rounded-2xl overflow-hidden border shadow-lg"
           style={{ background: colors.bgCard, borderColor: BORDER }}
         >
-          <div
-            className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-5"
-            style={{ background: isTaxi ? "#FEF6E4" : "#E4F5EC" }}
-          >
-            <CheckCircle2
-              className="h-10 w-10"
-              style={{ color: isTaxi ? GOLD : GREEN }}
-            />
-          </div>
-          <h2 className="text-xl font-bold mb-2" style={{ color: BROWN }}>
-            {isTaxi ? "🚖 Course envoyée !" : "📦 Commande envoyée !"}
-          </h2>
-          <p className="text-sm mb-6" style={{ color: BROWN_MID }}>
-            {isTaxi
-              ? "Les chauffeurs disponibles reçoivent l'alerte. Réponse dans 5 minutes."
-              : "Les livreurs disponibles reçoivent l'alerte. Réponse dans 5 minutes."}
-          </p>
-          <div className="flex flex-col gap-3">
-            <button
-              onClick={() => {
-                setDone(false);
-                setService(null);
-                setTaxi({ passengerName: "", passengerPhone: "", pickupAddress: "", dropoffAddress: "", fare: "" });
-                setLivraison({ customerName: "", customerPhone: "", businessId: "", deliveryAddress: "", notes: "", priority: "normal" });
-              }}
-              className="w-full py-3 rounded-xl font-bold text-white transition-all"
-              style={{ background: isTaxi ? GOLD : GREEN }}
+          {/* Top bar */}
+          <div className="h-1.5 w-full" style={{ background: `linear-gradient(90deg, ${accent}, ${isTaxi ? TC : GOLD})` }} />
+
+          <div className="p-8 text-center">
+            <div
+              className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-5 shadow-sm"
+              style={{ background: accentBg }}
             >
-              Nouvelle commande
-            </button>
-            <Link href="/">
-              <button
-                className="w-full py-3 rounded-xl font-semibold border transition-all"
-                style={{ borderColor: BORDER, color: BROWN_MID, background: "transparent" }}
+              <CheckCircle2 className="h-10 w-10" style={{ color: accent }} />
+            </div>
+            <h2 className="text-xl font-bold mb-2" style={{ color: BROWN }}>
+              {isTaxi ? "🚖 Course envoyée !" : "📦 Commande envoyée !"}
+            </h2>
+            <p className="text-sm mb-5" style={{ color: BROWN_MID }}>
+              {isTaxi
+                ? "Les chauffeurs disponibles reçoivent l'alerte. Réponse dans 5 minutes."
+                : "Les livreurs disponibles reçoivent l'alerte. Réponse dans 5 minutes."}
+            </p>
+
+            {/* Confirm code card — livraison only */}
+            {!isTaxi && confirmCode && (
+              <div
+                className="rounded-2xl border mb-5 overflow-hidden"
+                style={{ borderColor: GREEN + "60", background: "#E4F5EC" }}
               >
-                Retour à l'accueil
+                <div className="px-4 py-2 border-b" style={{ borderColor: GREEN + "30", background: GREEN + "15" }}>
+                  <p className="text-xs font-bold uppercase tracking-widest" style={{ color: GREEN }}>
+                    🔐 Code de confirmation client
+                  </p>
+                </div>
+                <div className="py-4">
+                  <div
+                    className="text-5xl font-mono font-extrabold tracking-[0.35em] mx-auto"
+                    style={{ color: GREEN }}
+                  >
+                    {confirmCode}
+                  </div>
+                  <p className="text-xs mt-3 px-4" style={{ color: "#2A5C38" }}>
+                    Donnez ce code au livreur à la livraison. Il doit le saisir pour valider.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => {
+                  setDone(false);
+                  setService(null);
+                  setConfirmCode(null);
+                  setTaxi({ passengerName: "", passengerPhone: "", pickupAddress: "", dropoffAddress: "", fare: "" });
+                  setLivraison({ customerName: "", customerPhone: "", businessId: "", deliveryAddress: "", notes: "", priority: "normal" });
+                }}
+                className="w-full py-3 rounded-xl font-bold text-white transition-all"
+                style={{ background: accent }}
+              >
+                Nouvelle commande
               </button>
-            </Link>
+              <Link href="/">
+                <button
+                  className="w-full py-3 rounded-xl font-semibold border transition-all"
+                  style={{ borderColor: BORDER, color: BROWN_MID, background: "transparent" }}
+                >
+                  Retour à l'accueil
+                </button>
+              </Link>
+            </div>
           </div>
         </div>
       </div>

@@ -23,5 +23,6 @@ export interface Trip {
   completedAt?: string;
   dispatchPhase?: string;
   dispatchedAt?: string;
+  passengerPickedUpAt?: string;
   createdAt: string;
 }

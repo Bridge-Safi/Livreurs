@@ -119,6 +119,8 @@ export default function LivreurLivraisonDetail() {
   const BASE_PAY = 7;
   const [pickupConfirmOpen, setPickupConfirmOpen] = useState(false);
   const [deliveryConfirmOpen, setDeliveryConfirmOpen] = useState(false);
+  const [confirmCodeInput, setConfirmCodeInput] = useState("");
+  const [confirmCodeError, setConfirmCodeError] = useState("");
   const [gpsTarget, setGpsTarget] = useState<{ address: string; label: string } | null>(null);
   const [showGpsAfterPickup, setShowGpsAfterPickup] = useState(false);
   const [showEarnings, setShowEarnings] = useState(false);
@@ -153,16 +155,32 @@ export default function LivreurLivraisonDetail() {
   };
 
   const handleDelivered = () => {
-    confirmDelivered.mutate({ id, data: { delivererId: LIVREUR_ID } }, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getGetDeliveryQueryKey(id) });
-        queryClient.invalidateQueries({ queryKey: getListDeliveriesQueryKey({ delivererId: LIVREUR_ID }) });
-        queryClient.invalidateQueries({ queryKey: getGetDeliveryStatsQueryKey({ delivererId: LIVREUR_ID }) });
-        setDeliveryConfirmOpen(false);
-        setShowEarnings(true);
-        setTimeout(() => navigate("/livreur"), 2800);
+    setConfirmCodeError("");
+    confirmDelivered.mutate(
+      {
+        id,
+        data: {
+          delivererId: LIVREUR_ID,
+          confirmCode: confirmCodeInput.trim() || undefined,
+        },
       },
-    });
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getGetDeliveryQueryKey(id) });
+          queryClient.invalidateQueries({ queryKey: getListDeliveriesQueryKey({ delivererId: LIVREUR_ID }) });
+          queryClient.invalidateQueries({ queryKey: getGetDeliveryStatsQueryKey({ delivererId: LIVREUR_ID }) });
+          setDeliveryConfirmOpen(false);
+          setConfirmCodeInput("");
+          setShowEarnings(true);
+          setTimeout(() => navigate("/livreur"), 2800);
+        },
+        onError: (err: unknown) => {
+          const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
+            ?? "Code incorrect ou erreur serveur.";
+          setConfirmCodeError(msg);
+        },
+      }
+    );
   };
 
   const order = parseOrderNotes(delivery?.notes ?? null);
@@ -658,45 +676,68 @@ export default function LivreurLivraisonDetail() {
               className="rounded-t-3xl sm:rounded-3xl w-full sm:max-w-sm mx-0 sm:mx-4 overflow-hidden border animate-in slide-in-from-bottom-4 duration-300"
               style={{ background: "white", borderColor: GREEN + "40" }}
             >
-              <div className="h-1.5 w-full" style={{ background: GREEN }} />
-              <div className="p-6 text-center">
-                <div
-                  className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-                  style={{ background: "#E4F5EC" }}
-                >
-                  <CheckCircle2 className="h-8 w-8" style={{ color: GREEN }} />
-                </div>
-                <h3 className="text-xl font-bold mb-2" style={{ color: BROWN }}>{t("confirm_delivery_title")}</h3>
-                <p className="text-sm mb-2" style={{ color: BROWN_MID }}>{delivery.customerName}</p>
-                <div
-                  className="rounded-xl p-3 mb-2 border"
-                  style={{ background: SAND, borderColor: BORDER }}
-                >
-                  <p className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: BROWN_LIGHT }}>{t("destination")}</p>
-                  <p className="text-sm font-medium" style={{ color: BROWN }}>{delivery.deliveryAddress}</p>
-                </div>
-                <p className="text-xs mb-5" style={{ color: BROWN_LIGHT }}>{t("confirm_delivery_sub")}</p>
-                {profile && (
+              <div className="h-1.5 w-full" style={{ background: `linear-gradient(90deg, ${GREEN}, ${GOLD})` }} />
+              <div className="p-6">
+                {/* Header */}
+                <div className="text-center mb-4">
                   <div
-                    className="flex items-center gap-3 p-3 rounded-xl border mb-5"
-                    style={{ borderColor: BORDER, background: SAND }}
+                    className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3"
+                    style={{ background: "#E4F5EC" }}
                   >
-                    <div
-                      className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-white flex-shrink-0"
-                      style={{ background: TC }}
-                    >
-                      {profile.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="text-left">
-                      <p className="text-sm font-bold" style={{ color: BROWN }}>{profile.name}</p>
-                      <p className="text-xs" style={{ color: BROWN_LIGHT }}>{profile.phone}</p>
-                    </div>
-                    <AlertCircle className="h-4 w-4 ml-auto flex-shrink-0" style={{ color: BROWN_LIGHT }} />
+                    <CheckCircle2 className="h-7 w-7" style={{ color: GREEN }} />
                   </div>
-                )}
+                  <h3 className="text-xl font-bold" style={{ color: BROWN }}>{t("confirm_delivery_title")}</h3>
+                  <p className="text-sm mt-1" style={{ color: BROWN_MID }}>{delivery.customerName} · {delivery.deliveryAddress}</p>
+                </div>
+
+                {/* Anti-cheat: 4-digit confirm code from client */}
+                <div
+                  className="rounded-2xl border overflow-hidden mb-4"
+                  style={{ borderColor: GREEN + "60", background: "#E4F5EC" }}
+                >
+                  <div className="px-4 py-2.5 border-b" style={{ borderColor: GREEN + "30" }}>
+                    <p className="text-xs font-bold uppercase tracking-widest" style={{ color: GREEN }}>
+                      🔐 Code du client (anti-triche)
+                    </p>
+                  </div>
+                  <div className="p-4">
+                    <p className="text-xs mb-3" style={{ color: "#2A5C38" }}>
+                      Demandez le code à 4 chiffres au client et saisissez-le ci-dessous :
+                    </p>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      pattern="[0-9]{4}"
+                      maxLength={4}
+                      value={confirmCodeInput}
+                      onChange={e => {
+                        const val = e.target.value.replace(/\D/g, "").slice(0, 4);
+                        setConfirmCodeInput(val);
+                        setConfirmCodeError("");
+                      }}
+                      placeholder="_ _ _ _"
+                      className="w-full h-14 rounded-xl border text-center text-3xl font-mono font-bold tracking-[0.5em] outline-none transition-all"
+                      style={{
+                        borderColor: confirmCodeError ? "#DC2626" : confirmCodeInput.length === 4 ? GREEN : BORDER,
+                        background: "white",
+                        color: BROWN,
+                      }}
+                    />
+                    {confirmCodeError && (
+                      <p className="text-xs mt-2 text-center font-medium" style={{ color: "#DC2626" }}>
+                        ⚠️ {confirmCodeError}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-2 gap-3">
                   <button
-                    onClick={() => setDeliveryConfirmOpen(false)}
+                    onClick={() => {
+                      setDeliveryConfirmOpen(false);
+                      setConfirmCodeInput("");
+                      setConfirmCodeError("");
+                    }}
                     className="h-12 rounded-xl font-semibold border"
                     style={{ borderColor: BORDER, color: BROWN_MID, background: SAND }}
                   >
@@ -704,8 +745,8 @@ export default function LivreurLivraisonDetail() {
                   </button>
                   <button
                     onClick={handleDelivered}
-                    disabled={isPending}
-                    className="h-12 rounded-xl font-bold text-white disabled:opacity-60"
+                    disabled={isPending || confirmCodeInput.length !== 4}
+                    className="h-12 rounded-xl font-bold text-white disabled:opacity-50"
                     style={{ background: GREEN }}
                   >
                     {isPending ? "…" : t("confirm_delivered_btn")}

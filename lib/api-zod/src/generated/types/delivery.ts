@@ -21,6 +21,8 @@ export interface Delivery {
   notes?: string;
   delivererId?: number;
   estimatedDeliveryTime?: string;
+  confirmCode?: string;
+  pickedUpAt?: string;
   createdAt: string;
   updatedAt?: string;
 }

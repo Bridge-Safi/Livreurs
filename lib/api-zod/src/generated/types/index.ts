@@ -38,6 +38,7 @@ export * from "./listTripsParams";
 export * from "./listTripsStatus";
 export * from "./pendingDispatch";
 export * from "./pendingRideDispatch";
+export * from "./pickupPassengerBody";
 export * from "./refuseDeliveryBody";
 export * from "./refuseRideBody";
 export * from "./trip";

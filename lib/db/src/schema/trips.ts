@@ -18,6 +18,7 @@ export const tripsTable = pgTable("trips", {
   completedAt: text("completed_at"),
   dispatchPhase: text("dispatch_phase").default("none"),
   dispatchedAt: timestamp("dispatched_at", { withTimezone: true }),
+  passengerPickedUpAt: timestamp("passenger_picked_up_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

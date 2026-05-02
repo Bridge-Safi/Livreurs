@@ -477,6 +477,31 @@ paths:
               schema:
                 $ref: "#/components/schemas/Trip"
 
+  /trips/{id}/pickup-passenger:
+    post:
+      operationId: pickupPassenger
+      tags: [trips]
+      summary: Driver confirms passenger is in the car
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PickupPassengerBody"
+      responses:
+        "200":
+          description: Passenger picked up
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+
   /trips/{id}:
     get:
       operationId: getTrip
@@ -649,6 +674,10 @@ components:
         delivererId:
           type: integer
         estimatedDeliveryTime:
+          type: string
+        confirmCode:
+          type: string
+        pickedUpAt:
           type: string
         createdAt:
           type: string
@@ -834,6 +863,8 @@ components:
         dispatchPhase:
           type: string
         dispatchedAt:
+          type: string
+        passengerPickedUpAt:
           type: string
         createdAt:
           type: string
@@ -1059,10 +1090,20 @@ components:
       properties:
         delivererId:
           type: integer
+        confirmCode:
+          type: string
         proofNote:
           type: string
       required:
         - delivererId
+
+    PickupPassengerBody:
+      type: object
+      properties:
+        driverId:
+          type: integer
+      required:
+        - driverId
 
     PendingDispatch:
       type: object

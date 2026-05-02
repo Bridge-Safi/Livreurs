@@ -259,8 +259,30 @@ router.post("/deliveries/:id/confirm-delivered", async (req, res): Promise<void>
 
   const [delivery] = await db.select().from(deliveriesTable).where(eq(deliveriesTable.id, params.data.id));
   if (!delivery) {
-    res.status(404).json({ error: "Delivery not found" });
+    res.status(404).json({ error: "Livraison introuvable" });
     return;
+  }
+
+  if (delivery.status === "delivered") {
+    res.status(409).json({ error: "Livraison déjà confirmée" });
+    return;
+  }
+
+  // ── Anti-cheat: confirmCode must match if one was generated ──────────────
+  if (delivery.confirmCode) {
+    if (!body.data.confirmCode || body.data.confirmCode.trim() !== delivery.confirmCode.trim()) {
+      res.status(403).json({ error: "Code de confirmation incorrect. Demandez le code au client." });
+      return;
+    }
+  }
+
+  // ── Anti-cheat: cannot confirm too soon after pickup ─────────────────────
+  if (delivery.pickedUpAt) {
+    const elapsed = Date.now() - new Date(delivery.pickedUpAt).getTime();
+    if (elapsed < 60_000) {
+      res.status(409).json({ error: "Trop tôt — attendez d'être arrivé chez le client." });
+      return;
+    }
   }
 
   const delivererId = body.data.delivererId;

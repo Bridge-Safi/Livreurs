@@ -38,6 +38,8 @@ export const ListDeliveriesResponseItem = zod.object({
   notes: zod.string().optional(),
   delivererId: zod.number().optional(),
   estimatedDeliveryTime: zod.string().optional(),
+  confirmCode: zod.string().optional(),
+  pickedUpAt: zod.string().optional(),
   createdAt: zod.string(),
   updatedAt: zod.string().optional(),
 });
@@ -82,6 +84,8 @@ export const GetMyPendingDispatchResponse = zod.object({
       notes: zod.string().optional(),
       delivererId: zod.number().optional(),
       estimatedDeliveryTime: zod.string().optional(),
+      confirmCode: zod.string().optional(),
+      pickedUpAt: zod.string().optional(),
       createdAt: zod.string(),
       updatedAt: zod.string().optional(),
     })
@@ -113,6 +117,8 @@ export const DispatchDeliveryResponse = zod.object({
     notes: zod.string().optional(),
     delivererId: zod.number().optional(),
     estimatedDeliveryTime: zod.string().optional(),
+    confirmCode: zod.string().optional(),
+    pickedUpAt: zod.string().optional(),
     createdAt: zod.string(),
     updatedAt: zod.string().optional(),
   }),
@@ -146,6 +152,8 @@ export const AcceptDeliveryResponse = zod.object({
   notes: zod.string().optional(),
   delivererId: zod.number().optional(),
   estimatedDeliveryTime: zod.string().optional(),
+  confirmCode: zod.string().optional(),
+  pickedUpAt: zod.string().optional(),
   createdAt: zod.string(),
   updatedAt: zod.string().optional(),
 });
@@ -174,6 +182,8 @@ export const RefuseDeliveryResponse = zod.object({
   notes: zod.string().optional(),
   delivererId: zod.number().optional(),
   estimatedDeliveryTime: zod.string().optional(),
+  confirmCode: zod.string().optional(),
+  pickedUpAt: zod.string().optional(),
   createdAt: zod.string(),
   updatedAt: zod.string().optional(),
 });
@@ -187,6 +197,7 @@ export const ConfirmDeliveredParams = zod.object({
 
 export const ConfirmDeliveredBody = zod.object({
   delivererId: zod.number(),
+  confirmCode: zod.string().optional(),
   proofNote: zod.string().optional(),
 });
 
@@ -203,6 +214,8 @@ export const ConfirmDeliveredResponse = zod.object({
   notes: zod.string().optional(),
   delivererId: zod.number().optional(),
   estimatedDeliveryTime: zod.string().optional(),
+  confirmCode: zod.string().optional(),
+  pickedUpAt: zod.string().optional(),
   createdAt: zod.string(),
   updatedAt: zod.string().optional(),
 });
@@ -234,6 +247,8 @@ export const GetPendingDispatchResponse = zod.object({
       notes: zod.string().optional(),
       delivererId: zod.number().optional(),
       estimatedDeliveryTime: zod.string().optional(),
+      confirmCode: zod.string().optional(),
+      pickedUpAt: zod.string().optional(),
       createdAt: zod.string(),
       updatedAt: zod.string().optional(),
     })
@@ -263,6 +278,8 @@ export const GetDeliveryResponse = zod.object({
   notes: zod.string().optional(),
   delivererId: zod.number().optional(),
   estimatedDeliveryTime: zod.string().optional(),
+  confirmCode: zod.string().optional(),
+  pickedUpAt: zod.string().optional(),
   createdAt: zod.string(),
   updatedAt: zod.string().optional(),
 });
@@ -295,6 +312,8 @@ export const UpdateDeliveryResponse = zod.object({
   notes: zod.string().optional(),
   delivererId: zod.number().optional(),
   estimatedDeliveryTime: zod.string().optional(),
+  confirmCode: zod.string().optional(),
+  pickedUpAt: zod.string().optional(),
   createdAt: zod.string(),
   updatedAt: zod.string().optional(),
 });
@@ -420,6 +439,7 @@ export const ListTripsResponseItem = zod.object({
   completedAt: zod.string().optional(),
   dispatchPhase: zod.string().optional(),
   dispatchedAt: zod.string().optional(),
+  passengerPickedUpAt: zod.string().optional(),
   createdAt: zod.string(),
 });
 export const ListTripsResponse = zod.array(ListTripsResponseItem);
@@ -464,6 +484,7 @@ export const GetMyPendingRideResponse = zod.object({
       completedAt: zod.string().optional(),
       dispatchPhase: zod.string().optional(),
       dispatchedAt: zod.string().optional(),
+      passengerPickedUpAt: zod.string().optional(),
       createdAt: zod.string(),
     })
     .optional(),
@@ -495,6 +516,7 @@ export const DispatchRideResponse = zod.object({
   completedAt: zod.string().optional(),
   dispatchPhase: zod.string().optional(),
   dispatchedAt: zod.string().optional(),
+  passengerPickedUpAt: zod.string().optional(),
   createdAt: zod.string(),
 });
 
@@ -525,6 +547,7 @@ export const AcceptRideResponse = zod.object({
   completedAt: zod.string().optional(),
   dispatchPhase: zod.string().optional(),
   dispatchedAt: zod.string().optional(),
+  passengerPickedUpAt: zod.string().optional(),
   createdAt: zod.string(),
 });
 
@@ -555,6 +578,38 @@ export const RefuseRideResponse = zod.object({
   completedAt: zod.string().optional(),
   dispatchPhase: zod.string().optional(),
   dispatchedAt: zod.string().optional(),
+  passengerPickedUpAt: zod.string().optional(),
+  createdAt: zod.string(),
+});
+
+/**
+ * @summary Driver confirms passenger is in the car
+ */
+export const PickupPassengerParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const PickupPassengerBody = zod.object({
+  driverId: zod.number(),
+});
+
+export const PickupPassengerResponse = zod.object({
+  id: zod.number(),
+  passengerName: zod.string(),
+  passengerPhone: zod.string().optional(),
+  pickupAddress: zod.string(),
+  dropoffAddress: zod.string(),
+  status: zod.enum(["scheduled", "in_progress", "completed", "cancelled"]),
+  fare: zod.number(),
+  distance: zod.number().optional(),
+  duration: zod.number().optional(),
+  driverId: zod.number().optional(),
+  scheduledAt: zod.string().optional(),
+  startedAt: zod.string().optional(),
+  completedAt: zod.string().optional(),
+  dispatchPhase: zod.string().optional(),
+  dispatchedAt: zod.string().optional(),
+  passengerPickedUpAt: zod.string().optional(),
   createdAt: zod.string(),
 });
 
@@ -581,6 +636,7 @@ export const GetTripResponse = zod.object({
   completedAt: zod.string().optional(),
   dispatchPhase: zod.string().optional(),
   dispatchedAt: zod.string().optional(),
+  passengerPickedUpAt: zod.string().optional(),
   createdAt: zod.string(),
 });
 
@@ -616,6 +672,7 @@ export const UpdateTripResponse = zod.object({
   completedAt: zod.string().optional(),
   dispatchPhase: zod.string().optional(),
   dispatchedAt: zod.string().optional(),
+  passengerPickedUpAt: zod.string().optional(),
   createdAt: zod.string(),
 });
 

@@ -12,11 +12,18 @@ import {
   ListDeliveriesQueryParams,
   GetDeliveryStatsResponse,
   GetDeliveryStatsQueryParams,
+  ConfirmDeliveredParams,
+  ConfirmDeliveredBody,
+  ConfirmDeliveredResponse,
 } from "@workspace/api-zod";
 import { serializeDelivery } from "../lib/serializers";
 import { sendPushToAllDeliverers } from "./push";
 
 const router: IRouter = Router();
+
+function genConfirmCode(): string {
+  return String(Math.floor(1000 + Math.random() * 9000));
+}
 
 router.get("/deliveries/stats", async (req, res): Promise<void> => {
   res.set("Cache-Control", "no-store");
@@ -32,7 +39,6 @@ router.get("/deliveries/stats", async (req, res): Promise<void> => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // Current 15-day pay period: 1-15 or 16-end of month
   const now = new Date();
   const periodStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() <= 15 ? 1 : 16);
   periodStart.setHours(0, 0, 0, 0);
@@ -90,6 +96,7 @@ router.post("/deliveries", async (req, res): Promise<void> => {
     .insert(deliveriesTable)
     .values({
       ...parsed.data,
+      confirmCode: genConfirmCode(),
       dispatchPhase: "cascade",
       dispatchedAt: new Date(),
     })
@@ -99,13 +106,41 @@ router.post("/deliveries", async (req, res): Promise<void> => {
 
   res.status(201).json(GetDeliveryResponse.parse(serializeDelivery(delivery)));
 
-  // Push après la réponse pour ne pas bloquer le client
   sendPushToAllDeliverers({
     title: `🔔 Nouvelle commande — ${delivery.customerName}`,
     body: `📍 ${delivery.deliveryAddress}\n⏱️ 5 min pour accepter`,
     url: "/livreur",
     urgent: true,
   }).catch(() => {});
+});
+
+// ── pickup: mark as picked up from merchant ───────────────────────────────────
+router.patch("/deliveries/:id/pickup", async (req, res): Promise<void> => {
+  const params = GetDeliveryParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const [delivery] = await db.select().from(deliveriesTable).where(eq(deliveriesTable.id, params.data.id));
+  if (!delivery) {
+    res.status(404).json({ error: "Livraison introuvable" });
+    return;
+  }
+
+  if (delivery.status !== "pending") {
+    res.status(409).json({ error: "Impossible — statut incorrect" });
+    return;
+  }
+
+  const [updated] = await db
+    .update(deliveriesTable)
+    .set({ status: "in_progress", pickedUpAt: new Date(), updatedAt: new Date() })
+    .where(eq(deliveriesTable.id, params.data.id))
+    .returning();
+
+  req.log.info({ deliveryId: params.data.id }, "Delivery picked up from merchant");
+  res.json(GetDeliveryResponse.parse(serializeDelivery(updated)));
 });
 
 router.get("/deliveries/:id", async (req, res): Promise<void> => {
@@ -133,9 +168,15 @@ router.patch("/deliveries/:id", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
+
+  const extraFields: Record<string, unknown> = {};
+  if (parsed.data.status === "in_progress") {
+    extraFields.pickedUpAt = new Date();
+  }
+
   const [delivery] = await db
     .update(deliveriesTable)
-    .set({ ...parsed.data, updatedAt: new Date() })
+    .set({ ...parsed.data, ...extraFields, updatedAt: new Date() })
     .where(eq(deliveriesTable.id, params.data.id))
     .returning();
   if (!delivery) {

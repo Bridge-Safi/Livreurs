@@ -6,8 +6,6 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface ConfirmDeliveredBody {
-  delivererId: number;
-  confirmCode?: string;
-  proofNote?: string;
+export interface PickupPassengerBody {
+  driverId: number;
 }

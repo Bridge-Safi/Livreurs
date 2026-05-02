@@ -25,6 +25,8 @@ export function serializeDelivery(d: Delivery) {
     notes: d.notes ?? undefined,
     delivererId: d.delivererId ?? undefined,
     estimatedDeliveryTime: d.estimatedDeliveryTime ?? undefined,
+    confirmCode: d.confirmCode ?? undefined,
+    pickedUpAt: d.pickedUpAt ? d.pickedUpAt.toISOString() : undefined,
     createdAt: requiredDate(d.createdAt),
     updatedAt: serializeDate(d.updatedAt),
   };
@@ -79,6 +81,7 @@ export function serializeTrip(t: Trip) {
     completedAt: t.completedAt ?? undefined,
     dispatchPhase: t.dispatchPhase ?? "none",
     dispatchedAt: t.dispatchedAt ? t.dispatchedAt.toISOString() : undefined,
+    passengerPickedUpAt: t.passengerPickedUpAt ? t.passengerPickedUpAt.toISOString() : undefined,
     createdAt: requiredDate(t.createdAt),
   };
 }

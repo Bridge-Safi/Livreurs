@@ -41,6 +41,8 @@ export interface Delivery {
   notes?: string;
   delivererId?: number;
   estimatedDeliveryTime?: string;
+  confirmCode?: string;
+  pickedUpAt?: string;
   createdAt: string;
   updatedAt?: string;
 }
@@ -185,6 +187,7 @@ export interface Trip {
   completedAt?: string;
   dispatchPhase?: string;
   dispatchedAt?: string;
+  passengerPickedUpAt?: string;
   createdAt: string;
 }
 
@@ -317,7 +320,12 @@ export interface RefuseDeliveryBody {
 
 export interface ConfirmDeliveredBody {
   delivererId: number;
+  confirmCode?: string;
   proofNote?: string;
+}
+
+export interface PickupPassengerBody {
+  driverId: number;
 }
 
 export interface PendingDispatch {
