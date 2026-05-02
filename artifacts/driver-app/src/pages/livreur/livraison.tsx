@@ -470,37 +470,74 @@ export default function LivreurLivraisonDetail() {
                       background: delivery.status === "pending" ? "#FEF6E4" : "#E4F5EC",
                     }}
                   />
-                  <div className="w-0.5 flex-1 my-1" style={{ background: BORDER, minHeight: 24 }} />
+                  <div className="w-0.5 flex-1 my-1" style={{ background: delivery.status === "pending" ? GOLD + "50" : BORDER, minHeight: 24 }} />
                 </div>
                 <div className="flex-1 pb-4 min-w-0">
-                  <p className="text-xs font-bold uppercase tracking-wide mb-0.5" style={{ color: BROWN_LIGHT }}>{t("pickup_point")}</p>
+                  <p className="text-xs font-bold uppercase tracking-wide mb-0.5" style={{ color: delivery.status === "pending" ? GOLD : BROWN_LIGHT }}>
+                    {t("pickup_point")}
+                    {delivery.status === "pending" && <span className="ml-1.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold" style={{ background: GOLD + "20", color: GOLD }}>← Étape 1</span>}
+                  </p>
                   <p className="text-sm font-medium" style={{ color: BROWN }}>{delivery.pickupAddress}</p>
-                  <button
-                    onClick={() => setGpsTarget({ address: delivery.pickupAddress, label: t("gps_pickup") })}
-                    className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"
-                    style={{ background: SAND, color: BROWN_MID, border: `1px solid ${BORDER}` }}
-                  >
-                    <Navigation className="h-3 w-3" />
-                    {t("navigate_pickup")}
-                  </button>
+                  <div className="mt-2 flex gap-2 flex-wrap">
+                    <button
+                      onClick={() => setGpsTarget({ address: delivery.pickupAddress, label: t("gps_pickup") })}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"
+                      style={{ background: SAND, color: BROWN_MID, border: `1px solid ${BORDER}` }}
+                    >
+                      <Navigation className="h-3 w-3" />
+                      {t("navigate_pickup")}
+                    </button>
+                  </div>
+                  {/* ── Pickup CTA — visible only at pickup stage ── */}
+                  {delivery.status === "pending" && (
+                    <button
+                      onClick={() => setPickupConfirmOpen(true)}
+                      disabled={isPending}
+                      className="mt-3 w-full h-11 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-60 shadow-sm"
+                      style={{ background: GOLD }}
+                    >
+                      <Package className="h-4 w-4" />
+                      {t("start_delivery_btn")}
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
               </div>
               {/* Delivery */}
               <div className="flex gap-3">
                 <div className="flex flex-col items-center pt-1">
-                  <div className="w-4 h-4 rounded-full flex-shrink-0" style={{ background: TC }} />
+                  <div className="w-4 h-4 rounded-full flex-shrink-0" style={{
+                    background: delivery.status === "in_progress" ? TC : delivery.status === "delivered" ? GREEN : "#D0BEB0",
+                  }} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold uppercase tracking-wide mb-0.5" style={{ color: TC }}>{t("destination")}</p>
+                  <p className="text-xs font-bold uppercase tracking-wide mb-0.5" style={{ color: delivery.status === "in_progress" ? TC : delivery.status === "delivered" ? GREEN : BROWN_LIGHT }}>
+                    {t("destination")}
+                    {delivery.status === "in_progress" && <span className="ml-1.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold" style={{ background: TC + "20", color: TC }}>← Étape 2</span>}
+                  </p>
                   <p className="text-sm font-semibold" style={{ color: BROWN }}>{delivery.deliveryAddress}</p>
-                  <button
-                    onClick={() => setGpsTarget({ address: delivery.deliveryAddress, label: t("gps_delivery") })}
-                    className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white"
-                    style={{ background: TC }}
-                  >
-                    <Navigation className="h-3 w-3" />
-                    {t("navigate_delivery")}
-                  </button>
+                  {delivery.status !== "pending" && (
+                    <button
+                      onClick={() => setGpsTarget({ address: delivery.deliveryAddress, label: t("gps_delivery") })}
+                      className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white"
+                      style={{ background: delivery.status === "in_progress" ? TC : GREEN }}
+                    >
+                      <Navigation className="h-3 w-3" />
+                      {t("navigate_delivery")}
+                    </button>
+                  )}
+                  {/* ── Delivery CTA — visible only when in_progress ── */}
+                  {delivery.status === "in_progress" && (
+                    <button
+                      onClick={() => setDeliveryConfirmOpen(true)}
+                      disabled={isPending}
+                      className="mt-2 w-full h-11 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-60 shadow-sm"
+                      style={{ background: GREEN }}
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                      {t("confirm_delivered_btn")}
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
