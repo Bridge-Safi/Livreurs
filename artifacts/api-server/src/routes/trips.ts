@@ -103,12 +103,7 @@ router.post("/trips/:id/dispatch", async (req, res): Promise<void> => {
     return;
   }
 
-  const available = await db.select().from(driversTable).where(eq(driversTable.status, "available"));
-  if (available.length === 0) {
-    res.status(409).json({ error: "Aucun chauffeur disponible pour le moment" });
-    return;
-  }
-
+  // Broadcast to ALL chauffeurs immediately — no "available" check blocks the dispatch
   const [updated] = await db
     .update(tripsTable)
     .set({

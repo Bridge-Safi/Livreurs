@@ -1,15 +1,17 @@
-import { ReactNode } from "react";
+import { ReactNode, useCallback } from "react";
 import { Link, useLocation } from "wouter";
-import { Home, Package, User, LogOut, Camera, Sun, Moon } from "lucide-react";
+import { Home, Package, User, LogOut, Camera, Sun, Moon, Wifi, WifiOff } from "lucide-react";
 import { useI18n, LANGUAGES, type Lang } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { useTheme } from "@/lib/theme";
 import { DispatchAlert } from "@/components/DispatchAlert";
 import { useDispatchPoller } from "@/hooks/useDispatchPoller";
-import { useGetDeliverer, getGetDelivererQueryKey } from "@workspace/api-client-react";
+import { useGetDeliverer, getGetDelivererQueryKey, useUpdateDeliverer } from "@workspace/api-client-react";
 import { useLocationReporter } from "@/hooks/useLocationReporter";
+import { useQueryClient } from "@tanstack/react-query";
 
 const TC = "#C14B2A";
+const GREEN = "#2A7A48";
 
 export function LivreurLayout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
@@ -17,6 +19,7 @@ export function LivreurLayout({ children }: { children: ReactNode }) {
   const { livreur, logoutLivreur } = useAuth();
   const { colors, isDark, toggleTheme } = useTheme();
   const livreurId = livreur?.id ?? 0;
+  const queryClient = useQueryClient();
   const pendingDispatch = useDispatchPoller(livreurId);
   useLocationReporter(livreurId);
 
@@ -24,6 +27,19 @@ export function LivreurLayout({ children }: { children: ReactNode }) {
     query: { enabled: !!livreurId, queryKey: getGetDelivererQueryKey(livreurId) },
   });
   const hasPhoto = !!profile?.photoUrl;
+
+  const updateDeliverer = useUpdateDeliverer();
+  const livreurStatus = profile?.status ?? "available";
+  const isOnline = livreurStatus === "available" || livreurStatus === "busy";
+
+  const toggleAvailability = useCallback(() => {
+    if (!livreurId) return;
+    const next = livreurStatus === "offline" ? "available" : "offline";
+    updateDeliverer.mutate(
+      { id: livreurId, data: { status: next } },
+      { onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetDelivererQueryKey(livreurId) }) }
+    );
+  }, [livreurId, livreurStatus, updateDeliverer, queryClient]);
 
   const navItems = [
     { href: "/livreur", icon: Home, label: t("nav_dashboard") },
@@ -84,6 +100,24 @@ export function LivreurLayout({ children }: { children: ReactNode }) {
 
         {/* Language + Theme */}
         <div className="px-4 pb-3 space-y-3">
+
+          {/* ── Availability toggle ── */}
+          <button
+            onClick={toggleAvailability}
+            disabled={updateDeliverer.isPending || livreurStatus === "busy"}
+            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all text-sm font-bold border disabled:opacity-60"
+            style={
+              isOnline
+                ? { background: "#E4F5EC", color: GREEN, borderColor: "#A8DFC1" }
+                : { background: colors.bgCard, color: colors.textLight, borderColor: colors.border }
+            }
+          >
+            {isOnline
+              ? <><Wifi className="h-4 w-4" /><span>{livreurStatus === "busy" ? "En livraison" : "En ligne"}</span></>
+              : <><WifiOff className="h-4 w-4" /><span>Hors-ligne — Appuyer pour activer</span></>
+            }
+          </button>
+
           <div>
             <p className="text-[10px] uppercase tracking-widest font-semibold mb-2" style={{ color: colors.textLight }}>
               Langue
@@ -144,6 +178,23 @@ export function LivreurLayout({ children }: { children: ReactNode }) {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Availability toggle — most important */}
+            <button
+              onClick={toggleAvailability}
+              disabled={updateDeliverer.isPending || livreurStatus === "busy"}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-bold border transition-all disabled:opacity-60"
+              style={
+                isOnline
+                  ? { background: "#E4F5EC", color: GREEN, borderColor: "#A8DFC1" }
+                  : { background: colors.bgCard, color: colors.textLight, borderColor: colors.border }
+              }
+            >
+              {isOnline
+                ? <><Wifi className="h-3.5 w-3.5" />{livreurStatus === "busy" ? "En livraison" : "En ligne"}</>
+                : <><WifiOff className="h-3.5 w-3.5" />Hors-ligne</>
+              }
+            </button>
+
             {/* Theme toggle mobile */}
             <button
               onClick={toggleTheme}

@@ -16,21 +16,14 @@ import {
 import { sendWhatsAppProof } from "../lib/whatsapp";
 import { serializeDelivery } from "../lib/serializers";
 import { sendPushToAll } from "./push";
-import { haversineKm } from "../lib/haversine";
 
 const router: IRouter = Router();
 
 const DISPATCH_TIMEOUT_MS = 5 * 60 * 1000;
 
-// Proximity constants
-// Deliverers within this radius get the delivery immediately (wave 1)
-const PROXIMITY_THRESHOLD_KM = 2.0;
-// Deliverers beyond the threshold must wait this long before seeing the delivery (wave 2)
-const PROXIMITY_DELAY_MS = 60 * 1000;
-// Default Safi city center (used when no GPS is stored for the restaurant)
-const SAFI_CENTER_LAT = 32.2994;
-const SAFI_CENTER_LNG = -9.2372;
-
+// ── Pending dispatch for a livreur ─────────────────────────────────────────
+// All livreurs see the same order at the SAME TIME — no proximity delay.
+// Only livreurs poll this endpoint. Chauffeurs have their own /trips/pending-dispatch.
 router.get("/deliveries/pending-dispatch", async (req, res): Promise<void> => {
   res.set("Cache-Control", "no-store");
 
@@ -40,11 +33,16 @@ router.get("/deliveries/pending-dispatch", async (req, res): Promise<void> => {
     return;
   }
 
-  // Fetch deliverer to get their GPS position
+  // Guard: offline livreurs don't receive orders
   const [deliverer] = await db
     .select()
     .from(deliverersTable)
     .where(eq(deliverersTable.id, rawDelivererId));
+
+  if (deliverer?.status === "offline") {
+    res.json({ hasPending: false });
+    return;
+  }
 
   const allDispatching = await db
     .select()
@@ -71,30 +69,7 @@ router.get("/deliveries/pending-dispatch", async (req, res): Promise<void> => {
       continue;
     }
 
-    // ── Proximity gate ──────────────────────────────────────────
-    // Restaurant coordinates: use stored pickup coords or default to Safi center
-    const restaurantLat = delivery.pickupLat ?? SAFI_CENTER_LAT;
-    const restaurantLng = delivery.pickupLng ?? SAFI_CENTER_LNG;
-
-    if (deliverer?.lastLat != null && deliverer?.lastLng != null) {
-      const distanceKm = haversineKm(
-        deliverer.lastLat, deliverer.lastLng,
-        restaurantLat, restaurantLng
-      );
-
-      const isNearby = distanceKm < PROXIMITY_THRESHOLD_KM;
-
-      if (!isNearby && elapsed < PROXIMITY_DELAY_MS) {
-        // Far deliverer — must wait 60 seconds before seeing this delivery
-        req.log.debug(
-          { delivererId: rawDelivererId, distanceKm: distanceKm.toFixed(2), elapsed },
-          "Proximity delay active — far deliverer"
-        );
-        continue;
-      }
-    }
-    // ── End proximity gate ───────────────────────────────────────
-
+    // ── NO proximity gate: all livreurs see this at the same time ──
     const secondsLeft = Math.max(0, Math.floor((DISPATCH_TIMEOUT_MS - elapsed) / 1000));
     found = {
       hasPending: true,
@@ -127,16 +102,7 @@ router.post("/deliveries/:id/dispatch", async (req, res): Promise<void> => {
     return;
   }
 
-  const availableDeliverers = await db
-    .select()
-    .from(deliverersTable)
-    .where(eq(deliverersTable.status, "available"));
-
-  if (availableDeliverers.length === 0) {
-    res.status(409).json({ error: "Aucun livreur disponible pour le moment" });
-    return;
-  }
-
+  // Broadcast to ALL livreurs immediately — no "available" check blocks the dispatch
   const [updated] = await db
     .update(deliveriesTable)
     .set({
@@ -149,18 +115,18 @@ router.post("/deliveries/:id/dispatch", async (req, res): Promise<void> => {
     .where(eq(deliveriesTable.id, params.data.id))
     .returning();
 
-  req.log.info({ deliveryId: params.data.id, phase: "cascade" }, "Delivery broadcast to all deliverers");
+  req.log.info({ deliveryId: params.data.id, phase: "cascade" }, "Delivery broadcast to all livreurs");
 
   sendPushToAll({
     title: "🛵 Nouvelle commande — Bridge Safi",
-    body: `${updated.customerName} · ${updated.deliveryAddress} — 7 min pour accepter`,
-    url: "/",
+    body: `${updated.customerName} · ${updated.deliveryAddress} — 5 min pour accepter`,
+    url: "/livreur",
   }).catch(() => {});
 
   res.json({
     delivery: GetDeliveryResponse.parse(serializeDelivery(updated)),
     phase: "cascade",
-    message: `Commande envoyée à tous les livreurs disponibles — 7 minutes pour accepter`,
+    message: `Commande envoyée à tous les livreurs — 5 minutes pour accepter`,
   });
 });
 
