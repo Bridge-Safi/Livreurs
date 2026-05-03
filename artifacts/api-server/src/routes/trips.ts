@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, ne } from "drizzle-orm";
+import { eq, and, ne, or } from "drizzle-orm";
 import { db, tripsTable, driversTable } from "@workspace/db";
 import {
   CreateTripBody,
@@ -39,6 +39,13 @@ router.get("/trips/pending-dispatch", async (req, res): Promise<void> => {
     return;
   }
   const driverId = query.data.driverId;
+
+  // ── Guard: if driver is offline, never show pending rides ────────────────
+  const [driver] = await db.select().from(driversTable).where(eq(driversTable.id, driverId));
+  if (driver?.status === "offline") {
+    res.json({ hasPending: false });
+    return;
+  }
 
   const allDispatching = await db
     .select()
@@ -347,6 +354,43 @@ router.patch("/trips/:id", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Trip not found" });
     return;
   }
+
+  // ── Auto-reset driver status when trip ends ───────────────────────────────
+  // When a trip is completed or cancelled, free the driver back to "available"
+  // so they can receive the next dispatch. This is the critical fix for drivers
+  // staying stuck as "busy" after finishing a course.
+  if (
+    (parsed.data.status === "completed" || parsed.data.status === "cancelled") &&
+    trip.driverId
+  ) {
+    // Only reset to available if the driver has no other active trips
+    const otherActive = await db
+      .select()
+      .from(tripsTable)
+      .where(
+        and(
+          eq(tripsTable.driverId, trip.driverId),
+          or(
+            eq(tripsTable.status, "scheduled"),
+            eq(tripsTable.status, "in_progress")
+          ),
+          ne(tripsTable.id, trip.id)
+        )
+      );
+
+    if (otherActive.length === 0) {
+      await db
+        .update(driversTable)
+        .set({ status: "available" })
+        .where(eq(driversTable.id, trip.driverId));
+
+      req.log.info(
+        { tripId: trip.id, driverId: trip.driverId, newStatus: parsed.data.status },
+        "Driver freed back to available after trip end"
+      );
+    }
+  }
+
   res.json(UpdateTripResponse.parse(serializeTrip(trip)));
 });
 

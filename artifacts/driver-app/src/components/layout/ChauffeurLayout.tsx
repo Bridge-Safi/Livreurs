@@ -1,14 +1,16 @@
-import { ReactNode } from "react";
+import { ReactNode, useCallback } from "react";
 import { Link, useLocation } from "wouter";
-import { Home, MapPin, User, LogOut, Sun, Moon, Camera } from "lucide-react";
+import { Home, MapPin, User, LogOut, Sun, Moon, Camera, Wifi, WifiOff } from "lucide-react";
 import { useI18n, LANGUAGES, type Lang } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { useTheme } from "@/lib/theme";
-import { useGetDriver, getGetDriverQueryKey } from "@workspace/api-client-react";
+import { useGetDriver, getGetDriverQueryKey, useUpdateDriver } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRidePoller } from "@/hooks/useRidePoller";
 import { RideAlert } from "@/components/RideAlert";
 
 const GOLD = "#D4880C";
+const GREEN = "#2A7A48";
 
 export function ChauffeurLayout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
@@ -16,12 +18,26 @@ export function ChauffeurLayout({ children }: { children: ReactNode }) {
   const { chauffeur, logoutChauffeur } = useAuth();
   const { colors, isDark, toggleTheme } = useTheme();
   const driverId = chauffeur?.id ?? 0;
+  const queryClient = useQueryClient();
 
   const { data: profile } = useGetDriver(driverId, {
     query: { enabled: !!driverId, queryKey: getGetDriverQueryKey(driverId) },
   });
   const hasPhoto = !!profile?.photoUrl;
   const pendingRide = useRidePoller(driverId);
+
+  const updateDriver = useUpdateDriver();
+  const driverStatus = profile?.status ?? "available";
+  const isOnline = driverStatus === "available" || driverStatus === "busy";
+
+  const toggleAvailability = useCallback(() => {
+    if (!driverId) return;
+    const next = driverStatus === "offline" ? "available" : "offline";
+    updateDriver.mutate(
+      { id: driverId, data: { status: next } },
+      { onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetDriverQueryKey(driverId) }) }
+    );
+  }, [driverId, driverStatus, updateDriver, queryClient]);
 
   const navItems = [
     { href: "/chauffeur", icon: Home, label: t("nav_dashboard") },
@@ -78,6 +94,24 @@ export function ChauffeurLayout({ children }: { children: ReactNode }) {
 
         {/* Language + Theme */}
         <div className="px-4 pb-3 space-y-3">
+
+          {/* ── Availability toggle ── */}
+          <button
+            onClick={toggleAvailability}
+            disabled={updateDriver.isPending || driverStatus === "busy"}
+            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all text-sm font-bold border disabled:opacity-60"
+            style={
+              isOnline
+                ? { background: "#E4F5EC", color: GREEN, borderColor: "#A8DFC1" }
+                : { background: colors.bgCard, color: colors.textLight, borderColor: colors.border }
+            }
+          >
+            {isOnline
+              ? <><Wifi className="h-4 w-4" /><span>{driverStatus === "busy" ? "En course" : "En ligne"}</span></>
+              : <><WifiOff className="h-4 w-4" /><span>Hors-ligne — Appuyer pour activer</span></>
+            }
+          </button>
+
           <div>
             <p className="text-[10px] uppercase tracking-widest font-semibold mb-2" style={{ color: colors.textLight }}>
               Langue
@@ -138,6 +172,24 @@ export function ChauffeurLayout({ children }: { children: ReactNode }) {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Availability toggle — most important for the driver */}
+            <button
+              onClick={toggleAvailability}
+              disabled={updateDriver.isPending || driverStatus === "busy"}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-bold border transition-all disabled:opacity-60"
+              style={
+                isOnline
+                  ? { background: "#E4F5EC", color: GREEN, borderColor: "#A8DFC1" }
+                  : { background: colors.bgCard, color: colors.textLight, borderColor: colors.border }
+              }
+              title={isOnline ? "Passer hors-ligne" : "Passer en ligne"}
+            >
+              {isOnline
+                ? <><Wifi className="h-3.5 w-3.5" />{driverStatus === "busy" ? "En course" : "En ligne"}</>
+                : <><WifiOff className="h-3.5 w-3.5" />Hors-ligne</>
+              }
+            </button>
+
             {/* Theme toggle mobile */}
             <button
               onClick={toggleTheme}
