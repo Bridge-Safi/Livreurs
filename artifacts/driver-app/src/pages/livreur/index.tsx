@@ -95,10 +95,13 @@ export default function LivreurDashboard() {
               )}
               <Link href="/livreur/profil">
                 <div
-                  className="w-11 h-11 rounded-2xl flex items-center justify-center text-lg font-bold text-white border-2 border-white/30"
+                  className="w-11 h-11 rounded-2xl overflow-hidden flex items-center justify-center text-lg font-bold text-white border-2 border-white/30 flex-shrink-0"
                   style={{ background: "rgba(255,255,255,0.2)" }}
                 >
-                  {profile?.name?.charAt(0)?.toUpperCase() ?? "?"}
+                  {profile?.photoUrl
+                    ? <img src={profile.photoUrl} alt="" className="w-full h-full object-cover" />
+                    : profile?.name?.charAt(0)?.toUpperCase() ?? "?"
+                  }
                 </div>
               </Link>
             </div>

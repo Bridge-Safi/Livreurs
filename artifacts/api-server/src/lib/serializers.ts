@@ -43,6 +43,7 @@ export function serializeDeliverer(d: Deliverer) {
     zone: d.zone ?? undefined,
     totalDeliveries: d.totalDeliveries,
     rating: d.rating,
+    photoUrl: d.photoUrl ?? undefined,
     averageDeliveryTime: d.averageDeliveryTime,
     createdAt: requiredDate(d.createdAt),
   };
@@ -60,6 +61,7 @@ export function serializeDriver(d: Driver) {
     status: d.status,
     totalTrips: d.totalTrips,
     rating: d.rating,
+    photoUrl: d.photoUrl ?? undefined,
     createdAt: requiredDate(d.createdAt),
   };
 }
