@@ -488,21 +488,41 @@ export default function LivreurLivraisonDetail() {
                       {t("navigate_pickup")}
                     </button>
                   </div>
-                  {/* ── Pickup CTA — visible only at pickup stage ── */}
-                  {delivery.status === "pending" && (
-                    <button
-                      onClick={() => setPickupConfirmOpen(true)}
-                      disabled={isPending}
-                      className="mt-3 w-full h-11 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-60 shadow-sm"
-                      style={{ background: GOLD }}
-                    >
-                      <Package className="h-4 w-4" />
-                      {t("start_delivery_btn")}
-                      <ChevronRight className="h-4 w-4" />
-                    </button>
-                  )}
                 </div>
               </div>
+
+              {/* ─────── INTERMEDIATE STEP: Pickup confirmation ─────── */}
+              {delivery.status === "pending" && (
+                <div className="my-3 -mx-4 px-4 py-3 border-y" style={{ background: "#FFF8E8", borderColor: GOLD + "40" }}>
+                  <p className="text-[11px] font-extrabold uppercase tracking-wider mb-2 text-center" style={{ color: GOLD }}>
+                    ✋ Étape intermédiaire
+                  </p>
+                  <button
+                    onClick={() => setPickupConfirmOpen(true)}
+                    disabled={isPending}
+                    className="w-full h-14 rounded-2xl font-extrabold text-base text-white flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-60 shadow-md"
+                    style={{ background: `linear-gradient(135deg, ${GOLD} 0%, #B8740A 100%)` }}
+                  >
+                    <Package className="h-5 w-5" />
+                    J'ai pris la commande
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                  <p className="text-[11px] mt-2 text-center font-medium" style={{ color: BROWN_MID }}>
+                    Appuyez après avoir récupéré la commande au restaurant. Le client sera notifié et verra votre position en temps réel.
+                  </p>
+                </div>
+              )}
+
+              {/* Marker showing pickup is done — visible after in_progress */}
+              {(delivery.status === "in_progress" || delivery.status === "delivered") && (
+                <div className="my-3 -mx-4 px-4 py-2 flex items-center justify-center gap-2 border-y" style={{ background: "#E4F5EC", borderColor: GREEN + "40" }}>
+                  <CheckCircle2 className="h-4 w-4" style={{ color: GREEN }} />
+                  <span className="text-xs font-bold" style={{ color: GREEN }}>
+                    Commande récupérée — en route vers le client
+                  </span>
+                </div>
+              )}
+
               {/* Delivery */}
               <div className="flex gap-3">
                 <div className="flex flex-col items-center pt-1">

@@ -26,6 +26,8 @@ router.get("/tracking/:trackingNumber", async (req, res): Promise<void> => {
     vehicleType: string;
     rating: number;
     photoUrl: string | null;
+    lastLat: number | null;
+    lastLng: number | null;
   } | null = null;
 
   if (delivery.delivererId) {
@@ -37,6 +39,8 @@ router.get("/tracking/:trackingNumber", async (req, res): Promise<void> => {
         vehicleType: deliverersTable.vehicleType,
         rating: deliverersTable.rating,
         photoUrl: deliverersTable.photoUrl,
+        lastLat: deliverersTable.lastLat,
+        lastLng: deliverersTable.lastLng,
       })
       .from(deliverersTable)
       .where(eq(deliverersTable.id, delivery.delivererId))
@@ -52,6 +56,9 @@ router.get("/tracking/:trackingNumber", async (req, res): Promise<void> => {
     deliveryAddress: delivery.deliveryAddress,
     notes: delivery.notes ?? null,
     estimatedDeliveryTime: delivery.estimatedDeliveryTime ?? null,
+    pickedUpAt: delivery.pickedUpAt instanceof Date
+      ? delivery.pickedUpAt.toISOString()
+      : (delivery.pickedUpAt ? String(delivery.pickedUpAt) : null),
     createdAt: delivery.createdAt instanceof Date
       ? delivery.createdAt.toISOString()
       : String(delivery.createdAt),
