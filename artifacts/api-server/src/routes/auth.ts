@@ -1,35 +1,42 @@
 import { Router, type IRouter } from "express";
 import { eq, and, gt } from "drizzle-orm";
 import { db, deliverersTable, driversTable, phoneVerificationsTable } from "@workspace/db";
-import twilio from "twilio";
 
 const router: IRouter = Router();
 
 // ── PIN-only user IDs (first 2 of each role) ──────────────────────────────
 const PIN_ONLY_IDS = new Set([1, 2]);
 
-// ── Twilio / SMS helpers ───────────────────────────────────────────────────
-function twilioClient() {
-  const sid = process.env.TWILIO_ACCOUNT_SID;
-  const token = process.env.TWILIO_AUTH_TOKEN;
-  if (!sid || !token) return null;
-  return twilio(sid, token);
-}
-
+// ── Infobip / SMS helpers ─────────────────────────────────────────────────
 function generateOtp(): string {
   return String(Math.floor(100000 + Math.random() * 900000));
 }
 
 async function sendSms(to: string, body: string): Promise<boolean> {
-  const client = twilioClient();
-  const from = process.env.TWILIO_PHONE_NUMBER;
-  if (!client || !from) {
-    // Development mode: log OTP to console
+  const apiKey = process.env.INFOBIP_API_KEY;
+  const baseUrl = process.env.INFOBIP_BASE_URL; // e.g. xxxxx.api.infobip.com
+  if (!apiKey || !baseUrl) {
+    // Mode développement : afficher le code dans les logs
     console.log(`[OTP DEV] ${to} → ${body}`);
     return true;
   }
   try {
-    await client.messages.create({ to, from, body });
+    const resp = await fetch(`https://${baseUrl}/sms/2/text/advanced`, {
+      method: "POST",
+      headers: {
+        "Authorization": `App ${apiKey}`,
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+      body: JSON.stringify({
+        messages: [{ destinations: [{ to }], from: "Bridge", text: body }],
+      }),
+    });
+    if (!resp.ok) {
+      const err = await resp.text();
+      console.error("[INFOBIP ERROR]", resp.status, err);
+      return false;
+    }
     return true;
   } catch (err) {
     console.error("[SMS ERROR]", err);
