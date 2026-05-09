@@ -12,6 +12,7 @@ import {
 import { Bell, Car, Clock, CheckCircle2, XCircle, Phone } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { startContinuousAlarm, stopContinuousAlarm, isAlarmRunning } from "@/lib/alarm";
+import { RouteMiniMap } from "./RouteMiniMap";
 import { useLocation } from "wouter";
 
 const GOLD = "#D4880C";
@@ -232,6 +233,15 @@ export function RideAlert({ driverId }: RideAlertProps) {
               )}
             </div>
           </div>
+
+          {/* ── Mini-carte aperçu trajet ── */}
+          <RouteMiniMap
+            pickupAddress={trip.pickupAddress}
+            dropoffAddress={trip.dropoffAddress}
+            pickupColor={GOLD}
+            dropoffColor={GREEN}
+            height={150}
+          />
 
           {/* Route */}
           <div className="space-y-2.5 relative">

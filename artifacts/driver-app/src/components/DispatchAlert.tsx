@@ -9,10 +9,11 @@ import {
   getListDeliveriesQueryKey,
   getGetDeliveryStatsQueryKey,
 } from "@workspace/api-client-react";
-import { Bell, Package, Clock, CheckCircle2, XCircle, Layers } from "lucide-react";
+import { Bell, Package, Clock, CheckCircle2, XCircle, Layers, Wallet } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { startContinuousAlarm, stopContinuousAlarm, isAlarmRunning } from "@/lib/alarm";
 import { GpsPickerModal } from "./GpsPickerModal";
+import { RouteMiniMap } from "./RouteMiniMap";
 import { useLocation } from "wouter";
 
 const TC = "#C14B2A";
@@ -342,6 +343,26 @@ export function DispatchAlert({ delivererId }: DispatchAlertProps) {
                 >
                   {priorityLabel}
                 </span>
+              </div>
+
+              {/* ── Mini-carte aperçu trajet ── */}
+              <RouteMiniMap
+                pickupAddress={delivery.pickupAddress}
+                dropoffAddress={delivery.deliveryAddress}
+                pickupColor="#9B7060"
+                dropoffColor={TC}
+                height={150}
+              />
+
+              {/* ── Gain livreur ── */}
+              <div className="rounded-xl p-3 flex items-center justify-between" style={{ background: "linear-gradient(135deg,#E4F5EC 0%,#D1ECDB 100%)", border: `1px solid ${GREEN}40` }}>
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "white" }}>
+                    <Wallet className="h-4 w-4" style={{ color: GREEN }} />
+                  </div>
+                  <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: GREEN }}>Vous gagnez</span>
+                </div>
+                <span className="text-xl font-extrabold tabular-nums" style={{ color: GREEN }}>7 DH</span>
               </div>
 
               <div>
