@@ -2,8 +2,9 @@ import { useParams } from "wouter";
 import { useEffect, useState } from "react";
 import {
   MapPin, Phone, Star, Bike, CheckCircle2, Clock,
-  Package, Loader2, AlertCircle, Navigation,
+  Package, Loader2, AlertCircle, Navigation, Timer,
 } from "lucide-react";
+import { TrackingMap, geocodeAddress } from "@/components/TrackingMap";
 
 const TC = "#C14B2A";
 const GREEN = "#2A7A48";
@@ -34,6 +35,7 @@ interface TrackingData {
   deliveryAddress: string;
   notes: string | null;
   estimatedDeliveryTime: string | null;
+  pickedUpAt: string | null;
   createdAt: string;
   deliverer: {
     id: number;
@@ -42,7 +44,19 @@ interface TrackingData {
     vehicleType: string;
     rating: number;
     photoUrl?: string | null;
+    lastLat?: number | null;
+    lastLng?: number | null;
   } | null;
+}
+
+function formatElapsed(sinceIso: string | null): string {
+  if (!sinceIso) return "0:00";
+  const ms = Date.now() - new Date(sinceIso).getTime();
+  if (ms < 0) return "0:00";
+  const totalSec = Math.floor(ms / 1000);
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -54,6 +68,8 @@ export default function SuiviPage() {
   const [data, setData] = useState<TrackingData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [destCoords, setDestCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [, setTick] = useState(0);
 
   useEffect(() => {
     if (!trackingNumber) return;
@@ -73,12 +89,30 @@ export default function SuiviPage() {
     }
 
     fetchTracking();
-    const interval = setInterval(fetchTracking, 15000);
+    // Faster refresh once a livreur is on the way
+    const interval = setInterval(fetchTracking, 10000);
     return () => {
       cancelled = true;
       clearInterval(interval);
     };
   }, [trackingNumber]);
+
+  // Tick every second so the elapsed timer updates
+  useEffect(() => {
+    if (data?.status !== "in_progress" || !data?.pickedUpAt) return;
+    const id = setInterval(() => setTick(t => t + 1), 1000);
+    return () => clearInterval(id);
+  }, [data?.status, data?.pickedUpAt]);
+
+  // Geocode destination address once
+  useEffect(() => {
+    if (!data?.deliveryAddress || destCoords) return;
+    let cancelled = false;
+    geocodeAddress(data.deliveryAddress).then(coords => {
+      if (!cancelled && coords) setDestCoords(coords);
+    });
+    return () => { cancelled = true; };
+  }, [data?.deliveryAddress, destCoords]);
 
   if (loading) {
     return (
@@ -177,6 +211,41 @@ export default function SuiviPage() {
       </div>
 
       <div className="px-4 py-5 flex flex-col gap-4" style={{ maxWidth: 480, margin: "0 auto" }}>
+
+        {/* ─── Live tracking map (only when livreur is en route) ─── */}
+        {data.status === "in_progress" && data.deliverer?.lastLat != null && data.deliverer?.lastLng != null && (
+          <div className="rounded-3xl border overflow-hidden shadow-sm" style={{ background: "white", borderColor: BORDER }}>
+            <div className="px-4 py-3 flex items-center justify-between border-b" style={{ borderColor: BORDER, background: "#FDEEE9" }}>
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: TC }} />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5" style={{ background: TC }} />
+                </span>
+                <p className="text-sm font-bold" style={{ color: TC }}>Livreur en route — direct</p>
+              </div>
+              {data.pickedUpAt && (
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full" style={{ background: "white", border: `1px solid ${TC}30` }}>
+                  <Timer className="h-3.5 w-3.5" style={{ color: TC }} />
+                  <span className="text-xs font-bold tabular-nums" style={{ color: TC }}>
+                    {formatElapsed(data.pickedUpAt)}
+                  </span>
+                </div>
+              )}
+            </div>
+            <TrackingMap
+              delivererLat={data.deliverer.lastLat}
+              delivererLng={data.deliverer.lastLng}
+              delivererName={data.deliverer.name}
+              delivererPhotoUrl={data.deliverer.photoUrl}
+              destinationLat={destCoords?.lat ?? null}
+              destinationLng={destCoords?.lng ?? null}
+            />
+            <div className="px-4 py-2.5 text-[11px] flex items-center justify-center gap-1.5" style={{ color: BROWN_LIGHT }}>
+              <Navigation className="h-3 w-3" />
+              <span>Position rafraîchie automatiquement toutes les 10 secondes</span>
+            </div>
+          </div>
+        )}
 
         {/* Deliverer card */}
         {data.deliverer ? (
