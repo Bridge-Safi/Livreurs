@@ -3,3 +3,4 @@ export * from "./deliveries";
 export * from "./drivers";
 export * from "./trips";
 export * from "./push-subscriptions";
+export * from "./phone-verifications";
