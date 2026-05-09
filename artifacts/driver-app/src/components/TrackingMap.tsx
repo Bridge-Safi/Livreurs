@@ -171,16 +171,49 @@ export function TrackingMap({
   );
 }
 
-// Geocode an address to lat/lng using Nominatim (OpenStreetMap, free, no key)
-export async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
-  try {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`;
-    const res = await fetch(url, { headers: { Accept: "application/json" } });
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (!Array.isArray(data) || data.length === 0) return null;
-    return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
-  } catch {
-    return null;
+// Centre de Safi — fallback si adresse introuvable
+export const SAFI_CENTER = { lat: 32.2994, lng: -9.2372 };
+
+function cleanAddress(raw: string): string {
+  // Supprimer " — NomVille" ou "NomResto — Ville" pour garder la partie géographique
+  let a = raw;
+  // "Bridge Pizza & Tacos — Safi" → "Safi"
+  if (a.includes(" — ")) a = a.split(" — ").pop()!;
+  // "McDonald's Safi" → "Safi" via ville connue
+  a = a.replace(/\b(McDonald'?s?|KFC|Burger King|Pizza Hut|Bridge)\b/gi, "").trim();
+  // Ajouter "Safi Maroc" si pas encore présent
+  if (!/safi/i.test(a)) a = a + ", Safi, Maroc";
+  else if (!/maroc/i.test(a)) a = a + ", Maroc";
+  return a.trim();
+}
+
+// Geocode an address to lat/lng using Nominatim (OpenStreetMap, free, no key).
+// Tries multiple cleaned variants. Returns SAFI_CENTER as fallback.
+export async function geocodeAddress(address: string): Promise<{ lat: number; lng: number }> {
+  const variants = [
+    address,
+    cleanAddress(address),
+    `${address}, Safi, Maroc`,
+  ];
+
+  for (const q of variants) {
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1&countrycodes=ma`;
+      const res = await fetch(url, {
+        headers: {
+          Accept: "application/json",
+          "User-Agent": "Bridge-Safi-Logistique/1.0",
+        },
+      });
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+      }
+    } catch {
+      // try next variant
+    }
   }
+
+  return SAFI_CENTER;
 }
