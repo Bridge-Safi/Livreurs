@@ -10,6 +10,7 @@ import pushRouter from "./push";
 import webhookRouter from "./webhook";
 import trackingRouter from "./tracking";
 import assignRouter from "./assign";
+import geocodeRouter from "./geocode";
 
 const router: IRouter = Router();
 
@@ -23,6 +24,7 @@ router.use(driversRouter);
 router.use(tripsRouter);
 router.use(webhookRouter);
 router.use(assignRouter);
+router.use(geocodeRouter);
 router.use("/", trackingRouter);
 
 export default router;

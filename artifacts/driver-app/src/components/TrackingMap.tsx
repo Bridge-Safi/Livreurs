@@ -174,46 +174,17 @@ export function TrackingMap({
 // Centre de Safi — fallback si adresse introuvable
 export const SAFI_CENTER = { lat: 32.2994, lng: -9.2372 };
 
-function cleanAddress(raw: string): string {
-  // Supprimer " — NomVille" ou "NomResto — Ville" pour garder la partie géographique
-  let a = raw;
-  // "Bridge Pizza & Tacos — Safi" → "Safi"
-  if (a.includes(" — ")) a = a.split(" — ").pop()!;
-  // "McDonald's Safi" → "Safi" via ville connue
-  a = a.replace(/\b(McDonald'?s?|KFC|Burger King|Pizza Hut|Bridge)\b/gi, "").trim();
-  // Ajouter "Safi Maroc" si pas encore présent
-  if (!/safi/i.test(a)) a = a + ", Safi, Maroc";
-  else if (!/maroc/i.test(a)) a = a + ", Maroc";
-  return a.trim();
-}
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-// Geocode an address to lat/lng using Nominatim (OpenStreetMap, free, no key).
-// Tries multiple cleaned variants. Returns SAFI_CENTER as fallback.
+// Geocode via le backend (Google Maps si clé dispo, sinon Nominatim, sinon Safi centre)
 export async function geocodeAddress(address: string): Promise<{ lat: number; lng: number }> {
-  const variants = [
-    address,
-    cleanAddress(address),
-    `${address}, Safi, Maroc`,
-  ];
-
-  for (const q of variants) {
-    try {
-      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1&countrycodes=ma`;
-      const res = await fetch(url, {
-        headers: {
-          Accept: "application/json",
-          "User-Agent": "Bridge-Safi-Logistique/1.0",
-        },
-      });
-      if (!res.ok) continue;
-      const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) {
-        return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
-      }
-    } catch {
-      // try next variant
-    }
+  try {
+    const url = `${BASE}/api/geocode?address=${encodeURIComponent(address)}`;
+    const res = await fetch(url);
+    if (!res.ok) return SAFI_CENTER;
+    const data = await res.json() as { lat: number; lng: number };
+    return { lat: data.lat, lng: data.lng };
+  } catch {
+    return SAFI_CENTER;
   }
-
-  return SAFI_CENTER;
 }
