@@ -342,25 +342,56 @@ export default function ChauffeurTrajetDetail() {
             </div>
           </div>
 
-          {/* Fare */}
+          {/* Fare — InDrive style breakdown */}
           <div className="rounded-2xl border overflow-hidden" style={{ background: colors.bgCard, borderColor: BORDER }}>
-            <div className="p-4 flex items-center justify-between">
+            {/* Main fare row */}
+            <div className="px-4 py-3.5 flex items-center justify-between border-b" style={{ background: isDark ? "#2A1A0A" : "#FEF6E4", borderColor: GOLD + "30" }}>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: isDark ? "#2A1A0A" : "#FEF6E4" }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: GOLD + "20" }}>
                   <Coins className="h-5 w-5" style={{ color: GOLD }} />
                 </div>
                 <div>
-                  <p className="text-xs" style={{ color: BROWN_LIGHT }}>Tarif de la course</p>
-                  <p className="text-xl font-bold" style={{ color: GOLD }}>{trip.fare.toFixed(0)} DH</p>
+                  <p className="text-xs font-medium" style={{ color: BROWN_LIGHT }}>Tarif final encaissé</p>
+                  <p className="text-2xl font-extrabold" style={{ color: GOLD }}>{trip.fare.toFixed(0)} DH</p>
                 </div>
               </div>
-              {trip.distance && (
+              {trip.distance && trip.distance > 0 ? (
                 <div className="text-right">
-                  <p className="text-xs" style={{ color: BROWN_LIGHT }}>Distance</p>
-                  <p className="text-base font-bold" style={{ color: colors.text }}>{trip.distance} km</p>
+                  <p className="text-xs font-medium" style={{ color: BROWN_LIGHT }}>Distance</p>
+                  <p className="text-lg font-bold" style={{ color: colors.text }}>{trip.distance.toFixed(1)} km</p>
                 </div>
-              )}
+              ) : null}
             </div>
+            {/* Breakdown */}
+            {trip.distance && trip.distance > 0 ? (
+              <div className="divide-y" style={{ borderColor: BORDER }}>
+                <div className="px-4 py-2.5 flex justify-between items-center">
+                  <span className="text-xs" style={{ color: BROWN_LIGHT }}>Base forfaitaire</span>
+                  <span className="text-xs font-semibold" style={{ color: colors.text }}>{(trip.baseFare ?? 5).toFixed(0)} DH</span>
+                </div>
+                <div className="px-4 py-2.5 flex justify-between items-center">
+                  <span className="text-xs" style={{ color: BROWN_LIGHT }}>{trip.distance.toFixed(1)} km × {(trip.pricePerKm ?? 2.5).toFixed(1)} DH/km</span>
+                  <span className="text-xs font-semibold" style={{ color: colors.text }}>{(trip.distance * (trip.pricePerKm ?? 2.5)).toFixed(1)} DH</span>
+                </div>
+                {trip.suggestedFare && trip.fare !== trip.suggestedFare ? (
+                  <div className="px-4 py-2.5 flex justify-between items-center" style={{ background: isDark ? "#1A0A00" : "#FFF5F0" }}>
+                    <span className="text-xs" style={{ color: TC }}>Tarif conseillé</span>
+                    <span className="text-xs font-bold" style={{ color: TC }}>{trip.suggestedFare.toFixed(0)} DH</span>
+                  </div>
+                ) : null}
+                {trip.negotiationStatus === "agreed" ? (
+                  <div className="px-4 py-2 flex items-center gap-2" style={{ background: isDark ? "#0A2015" : "#E4F5EC" }}>
+                    <CheckCircle2 className="h-3.5 w-3.5 flex-shrink-0" style={{ color: GREEN }} />
+                    <span className="text-xs font-medium" style={{ color: GREEN }}>Tarif négocié accepté par le passager</span>
+                  </div>
+                ) : trip.passengerOffer && trip.passengerOffer !== trip.fare ? (
+                  <div className="px-4 py-2 flex items-center gap-2">
+                    <span className="text-xs" style={{ color: BROWN_LIGHT }}>Offre initiale passager</span>
+                    <span className="text-xs font-semibold" style={{ color: BROWN_MID }}>{trip.passengerOffer.toFixed(0)} DH</span>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
           </div>
 
           {/* Timing */}

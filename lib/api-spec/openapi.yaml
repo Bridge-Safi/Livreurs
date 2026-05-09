@@ -477,6 +477,60 @@ paths:
               schema:
                 $ref: "#/components/schemas/Trip"
 
+  /trips/{id}/counter-offer:
+    post:
+      operationId: counterOfferRide
+      tags: [trips]
+      summary: Driver proposes a counter-offer price
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CounterOfferBody"
+      responses:
+        "200":
+          description: Counter-offer submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+
+  /trips/{id}/accept-offer:
+    post:
+      operationId: acceptDriverOffer
+      tags: [trips]
+      summary: Passenger accepts driver counter-offer
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                accept:
+                  type: boolean
+              required: [accept]
+      responses:
+        "200":
+          description: Offer accepted or rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trip"
+
   /trips/{id}/pickup-passenger:
     post:
       operationId: pickupPassenger
@@ -868,6 +922,19 @@ components:
           type: string
         createdAt:
           type: string
+        suggestedFare:
+          type: number
+        passengerOffer:
+          type: number
+        driverOffer:
+          type: number
+        negotiationStatus:
+          type: string
+          enum: [open, countered, agreed]
+        pricePerKm:
+          type: number
+        baseFare:
+          type: number
       required:
         - id
         - passengerName
@@ -908,6 +975,17 @@ components:
           type: integer
       required:
         - driverId
+
+    CounterOfferBody:
+      type: object
+      properties:
+        driverId:
+          type: integer
+        driverOffer:
+          type: number
+      required:
+        - driverId
+        - driverOffer
 
     CreateTripBody:
       type: object

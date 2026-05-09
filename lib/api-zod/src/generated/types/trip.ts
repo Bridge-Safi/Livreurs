@@ -5,6 +5,7 @@
  * Driver and Delivery App API
  * OpenAPI spec version: 0.1.0
  */
+import type { TripNegotiationStatus } from "./tripNegotiationStatus";
 import type { TripStatus } from "./tripStatus";
 
 export interface Trip {
@@ -25,4 +26,10 @@ export interface Trip {
   dispatchedAt?: string;
   passengerPickedUpAt?: string;
   createdAt: string;
+  suggestedFare?: number;
+  passengerOffer?: number;
+  driverOffer?: number;
+  negotiationStatus?: TripNegotiationStatus;
+  pricePerKm?: number;
+  baseFare?: number;
 }

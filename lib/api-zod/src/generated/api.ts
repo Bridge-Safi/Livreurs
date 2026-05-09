@@ -441,6 +441,12 @@ export const ListTripsResponseItem = zod.object({
   dispatchedAt: zod.string().optional(),
   passengerPickedUpAt: zod.string().optional(),
   createdAt: zod.string(),
+  suggestedFare: zod.number().optional(),
+  passengerOffer: zod.number().optional(),
+  driverOffer: zod.number().optional(),
+  negotiationStatus: zod.enum(["open", "countered", "agreed"]).optional(),
+  pricePerKm: zod.number().optional(),
+  baseFare: zod.number().optional(),
 });
 export const ListTripsResponse = zod.array(ListTripsResponseItem);
 
@@ -486,6 +492,12 @@ export const GetMyPendingRideResponse = zod.object({
       dispatchedAt: zod.string().optional(),
       passengerPickedUpAt: zod.string().optional(),
       createdAt: zod.string(),
+      suggestedFare: zod.number().optional(),
+      passengerOffer: zod.number().optional(),
+      driverOffer: zod.number().optional(),
+      negotiationStatus: zod.enum(["open", "countered", "agreed"]).optional(),
+      pricePerKm: zod.number().optional(),
+      baseFare: zod.number().optional(),
     })
     .optional(),
   expiresAt: zod.string().optional(),
@@ -518,6 +530,12 @@ export const DispatchRideResponse = zod.object({
   dispatchedAt: zod.string().optional(),
   passengerPickedUpAt: zod.string().optional(),
   createdAt: zod.string(),
+  suggestedFare: zod.number().optional(),
+  passengerOffer: zod.number().optional(),
+  driverOffer: zod.number().optional(),
+  negotiationStatus: zod.enum(["open", "countered", "agreed"]).optional(),
+  pricePerKm: zod.number().optional(),
+  baseFare: zod.number().optional(),
 });
 
 /**
@@ -549,6 +567,12 @@ export const AcceptRideResponse = zod.object({
   dispatchedAt: zod.string().optional(),
   passengerPickedUpAt: zod.string().optional(),
   createdAt: zod.string(),
+  suggestedFare: zod.number().optional(),
+  passengerOffer: zod.number().optional(),
+  driverOffer: zod.number().optional(),
+  negotiationStatus: zod.enum(["open", "countered", "agreed"]).optional(),
+  pricePerKm: zod.number().optional(),
+  baseFare: zod.number().optional(),
 });
 
 /**
@@ -580,6 +604,87 @@ export const RefuseRideResponse = zod.object({
   dispatchedAt: zod.string().optional(),
   passengerPickedUpAt: zod.string().optional(),
   createdAt: zod.string(),
+  suggestedFare: zod.number().optional(),
+  passengerOffer: zod.number().optional(),
+  driverOffer: zod.number().optional(),
+  negotiationStatus: zod.enum(["open", "countered", "agreed"]).optional(),
+  pricePerKm: zod.number().optional(),
+  baseFare: zod.number().optional(),
+});
+
+/**
+ * @summary Driver proposes a counter-offer price
+ */
+export const CounterOfferRideParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const CounterOfferRideBody = zod.object({
+  driverId: zod.number(),
+  driverOffer: zod.number(),
+});
+
+export const CounterOfferRideResponse = zod.object({
+  id: zod.number(),
+  passengerName: zod.string(),
+  passengerPhone: zod.string().optional(),
+  pickupAddress: zod.string(),
+  dropoffAddress: zod.string(),
+  status: zod.enum(["scheduled", "in_progress", "completed", "cancelled"]),
+  fare: zod.number(),
+  distance: zod.number().optional(),
+  duration: zod.number().optional(),
+  driverId: zod.number().optional(),
+  scheduledAt: zod.string().optional(),
+  startedAt: zod.string().optional(),
+  completedAt: zod.string().optional(),
+  dispatchPhase: zod.string().optional(),
+  dispatchedAt: zod.string().optional(),
+  passengerPickedUpAt: zod.string().optional(),
+  createdAt: zod.string(),
+  suggestedFare: zod.number().optional(),
+  passengerOffer: zod.number().optional(),
+  driverOffer: zod.number().optional(),
+  negotiationStatus: zod.enum(["open", "countered", "agreed"]).optional(),
+  pricePerKm: zod.number().optional(),
+  baseFare: zod.number().optional(),
+});
+
+/**
+ * @summary Passenger accepts driver counter-offer
+ */
+export const AcceptDriverOfferParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const AcceptDriverOfferBody = zod.object({
+  accept: zod.boolean(),
+});
+
+export const AcceptDriverOfferResponse = zod.object({
+  id: zod.number(),
+  passengerName: zod.string(),
+  passengerPhone: zod.string().optional(),
+  pickupAddress: zod.string(),
+  dropoffAddress: zod.string(),
+  status: zod.enum(["scheduled", "in_progress", "completed", "cancelled"]),
+  fare: zod.number(),
+  distance: zod.number().optional(),
+  duration: zod.number().optional(),
+  driverId: zod.number().optional(),
+  scheduledAt: zod.string().optional(),
+  startedAt: zod.string().optional(),
+  completedAt: zod.string().optional(),
+  dispatchPhase: zod.string().optional(),
+  dispatchedAt: zod.string().optional(),
+  passengerPickedUpAt: zod.string().optional(),
+  createdAt: zod.string(),
+  suggestedFare: zod.number().optional(),
+  passengerOffer: zod.number().optional(),
+  driverOffer: zod.number().optional(),
+  negotiationStatus: zod.enum(["open", "countered", "agreed"]).optional(),
+  pricePerKm: zod.number().optional(),
+  baseFare: zod.number().optional(),
 });
 
 /**
@@ -611,6 +716,12 @@ export const PickupPassengerResponse = zod.object({
   dispatchedAt: zod.string().optional(),
   passengerPickedUpAt: zod.string().optional(),
   createdAt: zod.string(),
+  suggestedFare: zod.number().optional(),
+  passengerOffer: zod.number().optional(),
+  driverOffer: zod.number().optional(),
+  negotiationStatus: zod.enum(["open", "countered", "agreed"]).optional(),
+  pricePerKm: zod.number().optional(),
+  baseFare: zod.number().optional(),
 });
 
 /**
@@ -638,6 +749,12 @@ export const GetTripResponse = zod.object({
   dispatchedAt: zod.string().optional(),
   passengerPickedUpAt: zod.string().optional(),
   createdAt: zod.string(),
+  suggestedFare: zod.number().optional(),
+  passengerOffer: zod.number().optional(),
+  driverOffer: zod.number().optional(),
+  negotiationStatus: zod.enum(["open", "countered", "agreed"]).optional(),
+  pricePerKm: zod.number().optional(),
+  baseFare: zod.number().optional(),
 });
 
 /**
@@ -674,6 +791,12 @@ export const UpdateTripResponse = zod.object({
   dispatchedAt: zod.string().optional(),
   passengerPickedUpAt: zod.string().optional(),
   createdAt: zod.string(),
+  suggestedFare: zod.number().optional(),
+  passengerOffer: zod.number().optional(),
+  driverOffer: zod.number().optional(),
+  negotiationStatus: zod.enum(["open", "countered", "agreed"]).optional(),
+  pricePerKm: zod.number().optional(),
+  baseFare: zod.number().optional(),
 });
 
 /**

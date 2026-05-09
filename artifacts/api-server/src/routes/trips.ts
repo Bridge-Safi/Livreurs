@@ -21,9 +21,54 @@ import {
   PickupPassengerParams,
   PickupPassengerBody,
   PickupPassengerResponse,
+  CounterOfferRideParams,
+  CounterOfferRideBody,
+  AcceptDriverOfferParams,
+  AcceptDriverOfferBody,
 } from "@workspace/api-zod";
 import { serializeTrip } from "../lib/serializers";
 import { sendPushToAll } from "./push";
+
+const PRICE_PER_KM = 2.5;
+const BASE_FARE = 5;
+const MIN_FARE = 10;
+
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+const SAFI = { lat: 32.2994, lng: -9.2372 };
+
+async function geocodeForServer(address: string): Promise<{ lat: number; lng: number }> {
+  const googleKey = process.env.GOOGLE_MAPS_API_KEY;
+  if (googleKey) {
+    try {
+      const url = new URL("https://maps.googleapis.com/maps/api/geocode/json");
+      url.searchParams.set("address", /safi/i.test(address) ? address : `${address}, Safi, Maroc`);
+      url.searchParams.set("key", googleKey);
+      url.searchParams.set("region", "ma");
+      const r = await fetch(url.toString());
+      const d = await r.json() as { status: string; results: Array<{ geometry: { location: { lat: number; lng: number } } }> };
+      if (d.status === "OK" && d.results.length > 0) return d.results[0].geometry.location;
+    } catch { /* fall through */ }
+  }
+  // Nominatim fallback
+  try {
+    const q = /safi/i.test(address) ? `${address}, Maroc` : `${address}, Safi, Maroc`;
+    const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1&countrycodes=ma`, {
+      headers: { "User-Agent": "Bridge-Safi-Logistique/1.0" },
+    });
+    const d = await r.json() as Array<{ lat: string; lon: string }>;
+    if (Array.isArray(d) && d.length > 0) return { lat: parseFloat(d[0].lat), lng: parseFloat(d[0].lon) };
+  } catch { /* fall through */ }
+  return SAFI;
+}
 
 const router: IRouter = Router();
 
@@ -293,21 +338,40 @@ router.post("/trips", async (req, res): Promise<void> => {
     return;
   }
 
+  // ── Auto-calculate distance + suggested fare (InDrive-style) ────────────
+  let suggestedFare = parsed.data.fare;
+  let distance = parsed.data.distance;
+  try {
+    const [pickup, dropoff] = await Promise.all([
+      geocodeForServer(parsed.data.pickupAddress),
+      geocodeForServer(parsed.data.dropoffAddress),
+    ]);
+    const km = haversineKm(pickup.lat, pickup.lng, dropoff.lat, dropoff.lng);
+    distance = Math.round(km * 10) / 10;
+    suggestedFare = Math.max(MIN_FARE, Math.round((BASE_FARE + km * PRICE_PER_KM) * 10) / 10);
+  } catch { /* keep defaults */ }
+
   const [trip] = await db
     .insert(tripsTable)
     .values({
       ...parsed.data,
+      distance,
       dispatchPhase: "cascade",
       dispatchedAt: new Date(),
       status: "scheduled",
+      suggestedFare,
+      passengerOffer: parsed.data.fare > 0 ? parsed.data.fare : suggestedFare,
+      negotiationStatus: "open",
+      pricePerKm: PRICE_PER_KM,
+      baseFare: BASE_FARE,
     })
     .returning();
 
-  req.log.info({ tripId: trip.id }, "Trip created — auto-dispatched to all drivers");
+  req.log.info({ tripId: trip.id, distance, suggestedFare }, "Trip created — auto-dispatched to all drivers");
 
   sendPushToAll({
     title: "🚖 Nouvelle course — Bridge Safi",
-    body: `${trip.passengerName} · ${trip.pickupAddress} → ${trip.dropoffAddress} — 5 min pour accepter`,
+    body: `${trip.passengerName} · ${trip.pickupAddress} → ${trip.dropoffAddress} — ${suggestedFare} DH · 5 min pour accepter`,
     url: "/",
   }).catch(() => {});
 
@@ -387,6 +451,77 @@ router.patch("/trips/:id", async (req, res): Promise<void> => {
   }
 
   res.json(UpdateTripResponse.parse(serializeTrip(trip)));
+});
+
+// ── InDrive Counter-Offer ─────────────────────────────────────────────────
+router.post("/trips/:id/counter-offer", async (req, res): Promise<void> => {
+  const params = CounterOfferRideParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  const body = CounterOfferRideBody.safeParse(req.body);
+  if (!body.success) {
+    res.status(400).json({ error: body.error.message });
+    return;
+  }
+
+  const [existing] = await db.select().from(tripsTable).where(eq(tripsTable.id, params.data.id));
+  if (!existing) {
+    res.status(404).json({ error: "Trip not found" });
+    return;
+  }
+  if (existing.status !== "scheduled") {
+    res.status(409).json({ error: "Trip no longer available for negotiation" });
+    return;
+  }
+
+  const [trip] = await db
+    .update(tripsTable)
+    .set({
+      driverOffer: body.data.driverOffer,
+      negotiationStatus: "countered",
+    })
+    .where(eq(tripsTable.id, params.data.id))
+    .returning();
+
+  req.log.info({ tripId: trip.id, driverOffer: body.data.driverOffer }, "Driver counter-offer submitted");
+
+  res.json(serializeTrip(trip));
+});
+
+// ── Accept/reject driver counter-offer (passenger side) ───────────────────
+router.post("/trips/:id/accept-offer", async (req, res): Promise<void> => {
+  const params = AcceptDriverOfferParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  const body = AcceptDriverOfferBody.safeParse(req.body);
+  if (!body.success) {
+    res.status(400).json({ error: body.error.message });
+    return;
+  }
+
+  const [existing] = await db.select().from(tripsTable).where(eq(tripsTable.id, params.data.id));
+  if (!existing) {
+    res.status(404).json({ error: "Trip not found" });
+    return;
+  }
+
+  const updateData = body.data.accept && existing.driverOffer
+    ? { fare: existing.driverOffer, negotiationStatus: "agreed" as const }
+    : { negotiationStatus: "open" as const, driverOffer: null };
+
+  const [trip] = await db
+    .update(tripsTable)
+    .set(updateData)
+    .where(eq(tripsTable.id, params.data.id))
+    .returning();
+
+  req.log.info({ tripId: trip.id, accepted: body.data.accept }, "Passenger responded to driver counter-offer");
+
+  res.json(serializeTrip(trip));
 });
 
 export default router;

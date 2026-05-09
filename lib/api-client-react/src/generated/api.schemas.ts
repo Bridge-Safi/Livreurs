@@ -171,6 +171,15 @@ export const TripStatus = {
   cancelled: "cancelled",
 } as const;
 
+export type TripNegotiationStatus =
+  (typeof TripNegotiationStatus)[keyof typeof TripNegotiationStatus];
+
+export const TripNegotiationStatus = {
+  open: "open",
+  countered: "countered",
+  agreed: "agreed",
+} as const;
+
 export interface Trip {
   id: number;
   passengerName: string;
@@ -189,6 +198,12 @@ export interface Trip {
   dispatchedAt?: string;
   passengerPickedUpAt?: string;
   createdAt: string;
+  suggestedFare?: number;
+  passengerOffer?: number;
+  driverOffer?: number;
+  negotiationStatus?: TripNegotiationStatus;
+  pricePerKm?: number;
+  baseFare?: number;
 }
 
 export interface PendingRideDispatch {
@@ -205,6 +220,11 @@ export interface AcceptRideBody {
 
 export interface RefuseRideBody {
   driverId: number;
+}
+
+export interface CounterOfferBody {
+  driverId: number;
+  driverOffer: number;
 }
 
 export interface CreateTripBody {
@@ -380,6 +400,10 @@ export const ListTripsStatus = {
 
 export type GetMyPendingRideParams = {
   driverId: number;
+};
+
+export type AcceptDriverOfferBody = {
+  accept: boolean;
 };
 
 export type GetTripStatsParams = {

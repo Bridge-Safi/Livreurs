@@ -7,8 +7,10 @@
  */
 
 export * from "./acceptDeliveryBody";
+export * from "./acceptDriverOfferBody";
 export * from "./acceptRideBody";
 export * from "./confirmDeliveredBody";
+export * from "./counterOfferBody";
 export * from "./createDelivererBody";
 export * from "./createDelivererBodyVehicleType";
 export * from "./createDeliveryBody";
@@ -42,6 +44,7 @@ export * from "./pickupPassengerBody";
 export * from "./refuseDeliveryBody";
 export * from "./refuseRideBody";
 export * from "./trip";
+export * from "./tripNegotiationStatus";
 export * from "./tripStats";
 export * from "./tripStatus";
 export * from "./updateDelivererBody";

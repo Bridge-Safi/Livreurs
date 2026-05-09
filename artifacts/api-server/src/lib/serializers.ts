@@ -85,5 +85,11 @@ export function serializeTrip(t: Trip) {
     dispatchedAt: t.dispatchedAt ? t.dispatchedAt.toISOString() : undefined,
     passengerPickedUpAt: t.passengerPickedUpAt ? t.passengerPickedUpAt.toISOString() : undefined,
     createdAt: requiredDate(t.createdAt),
+    suggestedFare: t.suggestedFare ?? undefined,
+    passengerOffer: t.passengerOffer ?? undefined,
+    driverOffer: t.driverOffer ?? undefined,
+    negotiationStatus: (t.negotiationStatus ?? "open") as "open" | "countered" | "agreed",
+    pricePerKm: t.pricePerKm ?? 2.5,
+    baseFare: t.baseFare ?? 5,
   };
 }

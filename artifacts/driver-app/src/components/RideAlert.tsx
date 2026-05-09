@@ -5,11 +5,11 @@ import {
   getGetMyPendingRideQueryKey,
   useAcceptRide,
   useRefuseRide,
-  useListTrips,
+  useCounterOfferRide,
   getListTripsQueryKey,
   getGetTripStatsQueryKey,
 } from "@workspace/api-client-react";
-import { Bell, Car, Clock, CheckCircle2, XCircle, Phone } from "lucide-react";
+import { Bell, Car, Clock, CheckCircle2, XCircle, Phone, TrendingDown, Coins, AlertCircle } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { startContinuousAlarm, stopContinuousAlarm, isAlarmRunning } from "@/lib/alarm";
 import { RouteMiniMap } from "./RouteMiniMap";
@@ -22,6 +22,7 @@ const BORDER = "#E8DDD0";
 const BROWN = "#2C1810";
 const BROWN_MID = "#6B4033";
 const SAND = "#FAF6EF";
+const TC = "#C14B2A";
 
 function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -39,18 +40,23 @@ function addRefused(id: number) {
   localStorage.setItem(LS_REFUSED, JSON.stringify(list.slice(-50)));
 }
 
-type AlertState = "idle" | "accepted" | "refused";
+type AlertState = "idle" | "accepted" | "refused" | "countered";
 
 interface RideAlertProps {
   driverId: number;
   tripId: number;
 }
 
+const QUICK_OFFERS = [5, 10, 15, 20, 25, 30, 40, 50];
+
 export function RideAlert({ driverId }: RideAlertProps) {
   const queryClient = useQueryClient();
   const alarmStartedRef = useRef(false);
   const [alertState, setAlertState] = useState<AlertState>("idle");
   const [dismissed, setDismissed] = useState(false);
+  const [showCounterModal, setShowCounterModal] = useState(false);
+  const [counterValue, setCounterValue] = useState("");
+  const [counterError, setCounterError] = useState("");
   const { t } = useI18n();
   const [, navigate] = useLocation();
 
@@ -66,11 +72,18 @@ export function RideAlert({ driverId }: RideAlertProps) {
 
   const acceptMutation = useAcceptRide();
   const refuseMutation = useRefuseRide();
+  const counterMutation = useCounterOfferRide();
 
   const secondsLeft = pending?.secondsLeft ?? 300;
   const trip = pending?.trip;
   const isRefused = trip ? getRefused().includes(trip.id) : false;
   const showAlert = pending?.hasPending && !dismissed && !isRefused && alertState === "idle";
+
+  const suggestedFare = trip?.suggestedFare ?? trip?.fare ?? 0;
+  const passengerOffer = trip?.passengerOffer ?? trip?.fare ?? 0;
+  const km = trip?.distance;
+  const pricePerKm = trip?.pricePerKm ?? 2.5;
+  const baseFare = trip?.baseFare ?? 5;
 
   const invalidateAll = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: getListTripsQueryKey({ driverId }) });
@@ -104,6 +117,14 @@ export function RideAlert({ driverId }: RideAlertProps) {
 
   useEffect(() => () => stopContinuousAlarm(), []);
 
+  // Pre-fill counter with suggested fare
+  useEffect(() => {
+    if (showCounterModal && suggestedFare > 0) {
+      setCounterValue(String(Math.round(suggestedFare)));
+      setCounterError("");
+    }
+  }, [showCounterModal, suggestedFare]);
+
   const handleAccept = useCallback(() => {
     if (!trip) return;
     stopContinuousAlarm();
@@ -120,9 +141,7 @@ export function RideAlert({ driverId }: RideAlertProps) {
             navigate("/chauffeur/trajets");
           }, 2000);
         },
-        onError: () => {
-          setAlertState("idle");
-        },
+        onError: () => setAlertState("idle"),
       }
     );
   }, [trip, driverId, acceptMutation, invalidateAll, navigate]);
@@ -143,6 +162,33 @@ export function RideAlert({ driverId }: RideAlertProps) {
       }
     );
   }, [trip, driverId, refuseMutation, invalidateAll]);
+
+  const handleCounterOffer = useCallback(() => {
+    if (!trip) return;
+    const val = parseFloat(counterValue);
+    if (isNaN(val) || val < 5) {
+      setCounterError("Minimum 5 DH");
+      return;
+    }
+    if (val > 500) {
+      setCounterError("Maximum 500 DH");
+      return;
+    }
+    stopContinuousAlarm();
+    alarmStartedRef.current = false;
+    counterMutation.mutate(
+      { id: trip.id, data: { driverId, driverOffer: val } },
+      {
+        onSuccess: () => {
+          setShowCounterModal(false);
+          setAlertState("countered");
+          invalidateAll();
+          setTimeout(() => { setAlertState("idle"); setDismissed(false); }, 4000);
+        },
+        onError: () => setCounterError("Erreur, réessayez"),
+      }
+    );
+  }, [trip, driverId, counterValue, counterMutation, invalidateAll]);
 
   /* ── Accepté ── */
   if (alertState === "accepted") {
@@ -174,136 +220,266 @@ export function RideAlert({ driverId }: RideAlertProps) {
     );
   }
 
+  /* ── Counter-offer envoyé ── */
+  if (alertState === "countered") {
+    return (
+      <div className="fixed inset-0 z-[60] flex items-center justify-center" style={{ background: "rgba(44,24,16,0.6)", backdropFilter: "blur(4px)" }}>
+        <div className="rounded-2xl p-8 max-w-sm w-full mx-4 text-center animate-in zoom-in-95 duration-300 border" style={{ background: "white", borderColor: GOLD + "60" }}>
+          <div className="flex items-center justify-center w-16 h-16 rounded-full border mx-auto mb-4" style={{ background: "#FEF6E4", borderColor: GOLD + "40" }}>
+            <TrendingDown className="h-8 w-8" style={{ color: GOLD }} />
+          </div>
+          <h2 className="text-xl font-bold mb-1" style={{ color: BROWN }}>Contre-offre envoyée !</h2>
+          <p className="text-sm" style={{ color: BROWN_MID }}>Le passager va répondre à votre proposition tarifaire.</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!showAlert || !trip) return null;
 
-  const isPending = acceptMutation.isPending || refuseMutation.isPending;
+  const isPending = acceptMutation.isPending || refuseMutation.isPending || counterMutation.isPending;
   const isLowTime = secondsLeft <= 60;
 
   return (
-    <div
-      className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center"
-      style={{ background: "rgba(44,24,16,0.55)", backdropFilter: "blur(4px)" }}
-    >
+    <>
       <div
-        className="rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md mx-0 sm:mx-4 flex flex-col animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300 border"
-        style={{ background: "white", borderColor: GOLD + "60", maxHeight: "85vh" }}
+        className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center"
+        style={{ background: "rgba(44,24,16,0.55)", backdropFilter: "blur(4px)" }}
       >
-        {/* Rainbow bar */}
-        <div className="h-1 w-full flex-shrink-0" style={{ backgroundImage: "repeating-linear-gradient(90deg,#D4880C 0,#D4880C 20px,#C14B2A 20px,#C14B2A 40px,#2A7A48 40px,#2A7A48 60px,#C14B2A 60px,#C14B2A 80px)" }} />
+        <div
+          className="rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md mx-0 sm:mx-4 flex flex-col animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300 border"
+          style={{ background: "white", borderColor: GOLD + "60", maxHeight: "90vh" }}
+        >
+          {/* Rainbow bar */}
+          <div className="h-1 w-full flex-shrink-0" style={{ backgroundImage: `repeating-linear-gradient(90deg,${GOLD} 0,${GOLD} 20px,${TC} 20px,${TC} 40px,${GREEN} 40px,${GREEN} 60px,${TC} 60px,${TC} 80px)` }} />
 
-        {/* Header */}
-        <div className="px-5 py-4 flex items-center gap-3 border-b flex-shrink-0" style={{ background: "#FEF6E4", borderColor: GOLD + "30" }}>
-          <div className="relative flex h-10 w-10 items-center justify-center rounded-full flex-shrink-0" style={{ background: GOLD + "20" }}>
-            <Bell className="h-5 w-5 animate-bounce" style={{ color: GOLD }} />
-            <span className="absolute top-0 right-0 h-3 w-3 rounded-full border-2 border-white" style={{ background: "#E53E3E" }} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold uppercase tracking-wider" style={{ color: GOLD_DARK }}>🚖 Nouvelle course</p>
-            <p className="text-xs mt-0.5" style={{ color: BROWN_MID }}>Répondez avant expiration du délai</p>
-          </div>
-          <div
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold tabular-nums flex-shrink-0"
-            style={{ background: isLowTime ? "#FDEEE9" : "#FAF6EF", color: isLowTime ? "#E53E3E" : GOLD_DARK, border: `1px solid ${GOLD}40` }}
-          >
-            <Clock className="h-3.5 w-3.5" />
-            {formatTime(secondsLeft)}
-          </div>
-        </div>
-
-        {/* Trip details */}
-        <div className="overflow-y-auto flex-1 p-5 space-y-4">
-          {/* Passenger */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "#FEF6E4", border: `1px solid ${GOLD}40` }}>
-              <span className="text-lg font-bold" style={{ color: GOLD_DARK }}>{trip.passengerName.charAt(0)}</span>
+          {/* Header */}
+          <div className="px-5 py-3.5 flex items-center gap-3 border-b flex-shrink-0" style={{ background: "#FEF6E4", borderColor: GOLD + "30" }}>
+            <div className="relative flex h-10 w-10 items-center justify-center rounded-full flex-shrink-0" style={{ background: GOLD + "20" }}>
+              <Bell className="h-5 w-5 animate-bounce" style={{ color: GOLD }} />
+              <span className="absolute top-0 right-0 h-3 w-3 rounded-full border-2 border-white" style={{ background: "#E53E3E" }} />
             </div>
-            <div>
-              <h3 className="text-base font-bold" style={{ color: BROWN }}>{trip.passengerName}</h3>
-              {trip.passengerPhone && (
-                <div className="flex items-center gap-1 mt-0.5">
-                  <Phone className="h-3 w-3" style={{ color: BROWN_MID }} />
-                  <span className="text-xs" style={{ color: BROWN_MID }}>{trip.passengerPhone}</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold uppercase tracking-wider" style={{ color: GOLD_DARK }}>🚖 Nouvelle course</p>
+              <p className="text-xs mt-0.5" style={{ color: BROWN_MID }}>Acceptez, refusez, ou négociez le tarif</p>
+            </div>
+            <div
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold tabular-nums flex-shrink-0"
+              style={{ background: isLowTime ? "#FDEEE9" : "#FAF6EF", color: isLowTime ? "#E53E3E" : GOLD_DARK, border: `1px solid ${GOLD}40` }}
+            >
+              <Clock className="h-3.5 w-3.5" />
+              {formatTime(secondsLeft)}
+            </div>
+          </div>
+
+          {/* Body */}
+          <div className="overflow-y-auto flex-1 p-4 space-y-3.5">
+            {/* Passenger + fare hero */}
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "#FEF6E4", border: `1px solid ${GOLD}40` }}>
+                <span className="text-lg font-bold" style={{ color: GOLD_DARK }}>{trip.passengerName.charAt(0)}</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base font-bold leading-tight" style={{ color: BROWN }}>{trip.passengerName}</h3>
+                {trip.passengerPhone && (
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <Phone className="h-3 w-3" style={{ color: BROWN_MID }} />
+                    <span className="text-xs" style={{ color: BROWN_MID }}>{trip.passengerPhone}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* ── InDrive-style fare card ── */}
+            <div className="rounded-2xl border overflow-hidden" style={{ borderColor: GOLD + "50" }}>
+              {/* Price header */}
+              <div className="px-4 py-3 flex items-center justify-between" style={{ background: "#FEF6E4" }}>
+                <div className="flex items-center gap-2">
+                  <Coins className="h-4 w-4" style={{ color: GOLD_DARK }} />
+                  <span className="text-xs font-bold uppercase tracking-wide" style={{ color: GOLD_DARK }}>Tarif proposé</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-2xl font-extrabold" style={{ color: GOLD_DARK }}>{passengerOffer.toFixed(0)} DH</span>
+                </div>
+              </div>
+              {/* Km breakdown */}
+              {km && km > 0 ? (
+                <div className="px-4 py-2.5 border-t flex items-center justify-between" style={{ background: "white", borderColor: GOLD + "20" }}>
+                  <div className="flex items-center gap-1.5">
+                    <Car className="h-3.5 w-3.5" style={{ color: BROWN_MID }} />
+                    <span className="text-xs" style={{ color: BROWN_MID }}>{km.toFixed(1)} km</span>
+                    <span className="text-xs" style={{ color: "#C8B8A8" }}>·</span>
+                    <span className="text-xs" style={{ color: BROWN_MID }}>{baseFare} DH + {pricePerKm} DH/km</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs" style={{ color: BROWN_MID }}>Suggéré :</span>
+                    <span className="text-xs font-bold" style={{ color: suggestedFare > passengerOffer ? TC : GREEN }}>
+                      {suggestedFare.toFixed(0)} DH
+                    </span>
+                  </div>
+                </div>
+              ) : null}
+              {/* Negotiation status */}
+              {passengerOffer < suggestedFare && suggestedFare > 0 && (
+                <div className="px-4 py-2 flex items-center gap-2 border-t" style={{ background: "#FFF5F0", borderColor: TC + "20" }}>
+                  <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" style={{ color: TC }} />
+                  <p className="text-xs" style={{ color: TC }}>
+                    Le passager propose {((passengerOffer / suggestedFare) * 100).toFixed(0)}% du tarif conseillé. Vous pouvez négocier.
+                  </p>
                 </div>
               )}
             </div>
-            <div className="ml-auto text-right">
-              <p className="text-xl font-bold" style={{ color: GOLD_DARK }}>{trip.fare} DH</p>
-              {trip.distance && (
-                <p className="text-xs" style={{ color: BROWN_MID }}>{trip.distance.toFixed(1)} km</p>
-              )}
-            </div>
-          </div>
 
-          {/* ── Mini-carte aperçu trajet ── */}
-          <RouteMiniMap
-            pickupAddress={trip.pickupAddress}
-            dropoffAddress={trip.dropoffAddress}
-            pickupColor={GOLD}
-            dropoffColor={GREEN}
-            height={150}
-          />
+            {/* Mini-map */}
+            <RouteMiniMap
+              pickupAddress={trip.pickupAddress}
+              dropoffAddress={trip.dropoffAddress}
+              pickupColor={GOLD}
+              dropoffColor={GREEN}
+              height={140}
+            />
 
-          {/* Route */}
-          <div className="space-y-2.5 relative">
-            <div className="absolute left-[9px] top-0 bottom-0 w-0.5" style={{ background: BORDER }} />
-            <div className="relative flex items-start gap-3">
-              <div className="mt-0.5 h-5 w-5 rounded-full border-2 flex items-center justify-center z-10 shrink-0" style={{ background: "#FEF6E4", borderColor: GOLD }}>
-                <div className="h-1.5 w-1.5 rounded-full" style={{ background: GOLD }} />
+            {/* Route */}
+            <div className="space-y-2.5 relative">
+              <div className="absolute left-[9px] top-0 bottom-0 w-0.5" style={{ background: BORDER }} />
+              <div className="relative flex items-start gap-3">
+                <div className="mt-0.5 h-5 w-5 rounded-full border-2 flex items-center justify-center z-10 shrink-0" style={{ background: "#FEF6E4", borderColor: GOLD }}>
+                  <div className="h-1.5 w-1.5 rounded-full" style={{ background: GOLD }} />
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide font-semibold" style={{ color: BROWN_MID }}>Prise en charge</p>
+                  <p className="text-sm font-medium" style={{ color: BROWN }}>{trip.pickupAddress}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-xs uppercase tracking-wide font-semibold" style={{ color: BROWN_MID }}>Prise en charge</p>
-                <p className="text-sm font-medium" style={{ color: BROWN }}>{trip.pickupAddress}</p>
-              </div>
-            </div>
-            <div className="relative flex items-start gap-3">
-              <div className="mt-0.5 h-5 w-5 rounded-full border-2 flex items-center justify-center z-10 shrink-0" style={{ background: "#E4F5EC", borderColor: GREEN }}>
-                <div className="h-1.5 w-1.5 rounded-full" style={{ background: GREEN }} />
-              </div>
-              <div>
-                <p className="text-xs uppercase tracking-wide font-semibold" style={{ color: BROWN_MID }}>Destination</p>
-                <p className="text-sm font-medium" style={{ color: BROWN }}>{trip.dropoffAddress}</p>
+              <div className="relative flex items-start gap-3">
+                <div className="mt-0.5 h-5 w-5 rounded-full border-2 flex items-center justify-center z-10 shrink-0" style={{ background: "#E4F5EC", borderColor: GREEN }}>
+                  <div className="h-1.5 w-1.5 rounded-full" style={{ background: GREEN }} />
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide font-semibold" style={{ color: BROWN_MID }}>Destination</p>
+                  <p className="text-sm font-medium" style={{ color: BROWN }}>{trip.dropoffAddress}</p>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Fare card */}
-          <div className="rounded-xl p-3" style={{ background: SAND, border: `1px solid ${BORDER}` }}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Car className="h-4 w-4" style={{ color: GOLD_DARK }} />
-                <span className="text-sm font-semibold" style={{ color: BROWN_MID }}>Taxi Confort — Safi</span>
-              </div>
-              <span className="text-sm font-bold" style={{ color: GOLD_DARK }}>{trip.fare} DH</span>
+          {/* Actions — 3-button InDrive layout */}
+          <div className="px-4 py-3.5 flex-shrink-0 border-t space-y-2.5" style={{ borderColor: BORDER, background: "white" }}>
+            {/* Row 1: Refuse + Accept */}
+            <div className="grid grid-cols-2 gap-2.5">
+              <button
+                onClick={handleRefuse}
+                disabled={isPending}
+                className="flex items-center justify-center gap-2 font-semibold h-13 rounded-xl transition-all border disabled:opacity-50"
+                style={{ borderColor: "#E53E3E50", color: "#E53E3E", background: "#FFF5F5", height: 52 }}
+              >
+                <XCircle className="h-4 w-4" />
+                {t("dispatch_refuse")}
+              </button>
+              <button
+                onClick={handleAccept}
+                disabled={isPending}
+                className="flex items-center justify-center gap-2 font-bold rounded-xl transition-all text-white disabled:opacity-50"
+                style={{ background: GREEN, height: 52 }}
+              >
+                {isPending && !counterMutation.isPending ? "…" : (
+                  <>
+                    <CheckCircle2 className="h-4 w-4" />
+                    Accepter {passengerOffer.toFixed(0)} DH
+                  </>
+                )}
+              </button>
             </div>
+            {/* Row 2: Counter-offer */}
+            <button
+              onClick={() => setShowCounterModal(true)}
+              disabled={isPending}
+              className="w-full flex items-center justify-center gap-2 font-semibold rounded-xl transition-all border disabled:opacity-50"
+              style={{ borderColor: GOLD + "70", color: GOLD_DARK, background: "#FEF6E4", height: 44 }}
+            >
+              <TrendingDown className="h-4 w-4" />
+              Proposer un autre tarif
+            </button>
           </div>
-        </div>
-
-        {/* Actions */}
-        <div className="px-5 py-4 grid grid-cols-2 gap-3 flex-shrink-0 border-t" style={{ borderColor: BORDER, background: "white" }}>
-          <button
-            onClick={handleRefuse}
-            disabled={isPending}
-            className="flex items-center justify-center gap-2 font-semibold h-14 rounded-xl transition-all border disabled:opacity-50"
-            style={{ borderColor: "#E53E3E50", color: "#E53E3E", background: "#FFF5F5" }}
-          >
-            <XCircle className="h-4 w-4" />
-            {t("dispatch_refuse")}
-          </button>
-          <button
-            onClick={handleAccept}
-            disabled={isPending}
-            className="flex items-center justify-center gap-2 font-bold h-14 rounded-xl transition-all text-white disabled:opacity-50"
-            style={{ background: GOLD }}
-          >
-            {isPending ? "…" : (
-              <>
-                <CheckCircle2 className="h-4 w-4" />
-                {t("dispatch_accept")}
-              </>
-            )}
-          </button>
         </div>
       </div>
-    </div>
+
+      {/* ── Counter-offer modal ── */}
+      {showCounterModal && (
+        <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center" style={{ background: "rgba(44,24,16,0.7)", backdropFilter: "blur(8px)" }}>
+          <div className="rounded-t-3xl sm:rounded-3xl w-full sm:max-w-sm mx-0 sm:mx-4 overflow-hidden border animate-in slide-in-from-bottom-4 duration-300" style={{ background: "white", borderColor: GOLD + "60" }}>
+            <div className="h-1.5 w-full" style={{ background: `linear-gradient(90deg, ${GOLD}, ${TC})` }} />
+            <div className="p-6">
+              <div className="text-center mb-5">
+                <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3" style={{ background: "#FEF6E4" }}>
+                  <TrendingDown className="h-7 w-7" style={{ color: GOLD }} />
+                </div>
+                <h3 className="text-xl font-bold" style={{ color: BROWN }}>Votre contre-offre</h3>
+                <p className="text-sm mt-1" style={{ color: BROWN_MID }}>
+                  Le passager propose <strong>{passengerOffer.toFixed(0)} DH</strong>. Tarif conseillé : <strong>{suggestedFare.toFixed(0)} DH</strong>
+                  {km ? ` (${km.toFixed(1)} km)` : ""}.
+                </p>
+              </div>
+
+              {/* Price input */}
+              <div className="mb-4">
+                <div className="flex items-center rounded-2xl border-2 overflow-hidden" style={{ borderColor: counterError ? TC : GOLD }}>
+                  <input
+                    type="number"
+                    min={5}
+                    max={500}
+                    value={counterValue}
+                    onChange={e => { setCounterValue(e.target.value); setCounterError(""); }}
+                    placeholder="0"
+                    className="flex-1 text-4xl font-extrabold text-center py-4 px-2 outline-none bg-transparent"
+                    style={{ color: GOLD_DARK }}
+                  />
+                  <div className="px-4 text-xl font-bold" style={{ color: BROWN_MID }}>DH</div>
+                </div>
+                {counterError && (
+                  <p className="text-center text-sm mt-2" style={{ color: TC }}>{counterError}</p>
+                )}
+              </div>
+
+              {/* Quick-select chips */}
+              <div className="flex flex-wrap gap-2 mb-5">
+                {QUICK_OFFERS.filter(v => v >= (passengerOffer - 5)).map(v => (
+                  <button
+                    key={v}
+                    onClick={() => { setCounterValue(String(v)); setCounterError(""); }}
+                    className="px-3 py-1.5 rounded-full text-sm font-bold border transition-all"
+                    style={{
+                      background: counterValue === String(v) ? GOLD : SAND,
+                      borderColor: counterValue === String(v) ? GOLD : BORDER,
+                      color: counterValue === String(v) ? "white" : BROWN_MID,
+                    }}
+                  >
+                    {v} DH
+                  </button>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => { setShowCounterModal(false); setCounterError(""); }}
+                  className="h-12 rounded-xl font-semibold border"
+                  style={{ borderColor: BORDER, color: BROWN_MID, background: SAND }}
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleCounterOffer}
+                  disabled={counterMutation.isPending}
+                  className="h-12 rounded-xl font-bold text-white disabled:opacity-60"
+                  style={{ background: GOLD }}
+                >
+                  {counterMutation.isPending ? "…" : "Envoyer"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

@@ -18,8 +18,10 @@ import type {
 
 import type {
   AcceptDeliveryBody,
+  AcceptDriverOfferBody,
   AcceptRideBody,
   ConfirmDeliveredBody,
+  CounterOfferBody,
   CreateDelivererBody,
   CreateDeliveryBody,
   CreateDriverBody,
@@ -2016,6 +2018,180 @@ export const useRefuseRide = <
   TContext
 > => {
   return useMutation(getRefuseRideMutationOptions(options));
+};
+
+/**
+ * @summary Driver proposes a counter-offer price
+ */
+export const getCounterOfferRideUrl = (id: number) => {
+  return `/api/trips/${id}/counter-offer`;
+};
+
+export const counterOfferRide = async (
+  id: number,
+  counterOfferBody: CounterOfferBody,
+  options?: RequestInit,
+): Promise<Trip> => {
+  return customFetch<Trip>(getCounterOfferRideUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(counterOfferBody),
+  });
+};
+
+export const getCounterOfferRideMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof counterOfferRide>>,
+    TError,
+    { id: number; data: BodyType<CounterOfferBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof counterOfferRide>>,
+  TError,
+  { id: number; data: BodyType<CounterOfferBody> },
+  TContext
+> => {
+  const mutationKey = ["counterOfferRide"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof counterOfferRide>>,
+    { id: number; data: BodyType<CounterOfferBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return counterOfferRide(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CounterOfferRideMutationResult = NonNullable<
+  Awaited<ReturnType<typeof counterOfferRide>>
+>;
+export type CounterOfferRideMutationBody = BodyType<CounterOfferBody>;
+export type CounterOfferRideMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Driver proposes a counter-offer price
+ */
+export const useCounterOfferRide = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof counterOfferRide>>,
+    TError,
+    { id: number; data: BodyType<CounterOfferBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof counterOfferRide>>,
+  TError,
+  { id: number; data: BodyType<CounterOfferBody> },
+  TContext
+> => {
+  return useMutation(getCounterOfferRideMutationOptions(options));
+};
+
+/**
+ * @summary Passenger accepts driver counter-offer
+ */
+export const getAcceptDriverOfferUrl = (id: number) => {
+  return `/api/trips/${id}/accept-offer`;
+};
+
+export const acceptDriverOffer = async (
+  id: number,
+  acceptDriverOfferBody: AcceptDriverOfferBody,
+  options?: RequestInit,
+): Promise<Trip> => {
+  return customFetch<Trip>(getAcceptDriverOfferUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(acceptDriverOfferBody),
+  });
+};
+
+export const getAcceptDriverOfferMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof acceptDriverOffer>>,
+    TError,
+    { id: number; data: BodyType<AcceptDriverOfferBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof acceptDriverOffer>>,
+  TError,
+  { id: number; data: BodyType<AcceptDriverOfferBody> },
+  TContext
+> => {
+  const mutationKey = ["acceptDriverOffer"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof acceptDriverOffer>>,
+    { id: number; data: BodyType<AcceptDriverOfferBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return acceptDriverOffer(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AcceptDriverOfferMutationResult = NonNullable<
+  Awaited<ReturnType<typeof acceptDriverOffer>>
+>;
+export type AcceptDriverOfferMutationBody = BodyType<AcceptDriverOfferBody>;
+export type AcceptDriverOfferMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Passenger accepts driver counter-offer
+ */
+export const useAcceptDriverOffer = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof acceptDriverOffer>>,
+    TError,
+    { id: number; data: BodyType<AcceptDriverOfferBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof acceptDriverOffer>>,
+  TError,
+  { id: number; data: BodyType<AcceptDriverOfferBody> },
+  TContext
+> => {
+  return useMutation(getAcceptDriverOfferMutationOptions(options));
 };
 
 /**

@@ -21,6 +21,13 @@ export const tripsTable = pgTable("trips", {
   passengerPickedUpAt: timestamp("passenger_picked_up_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
+  // ── InDrive-style negotiation ──────────────────────────────────────────────
+  suggestedFare: real("suggested_fare"),          // auto-calculated: base + km × rate
+  passengerOffer: real("passenger_offer"),        // price passenger proposes
+  driverOffer: real("driver_offer"),              // driver counter-offer
+  negotiationStatus: text("negotiation_status").default("open"), // open | countered | agreed
+  pricePerKm: real("price_per_km").default(2.5), // DH/km at booking time
+  baseFare: real("base_fare").default(5),         // base flat DH
 });
 
 export const insertTripSchema = createInsertSchema(tripsTable).omit({ id: true, createdAt: true, updatedAt: true });
