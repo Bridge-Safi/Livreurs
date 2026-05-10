@@ -4,15 +4,27 @@
   "description": "Plateforme logistique pour Safi, Maroc",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#C14B2A",
-  "theme_color": "#C14B2A",
+  "background_color": "#0D1B3E",
+  "theme_color": "#D4880C",
   "orientation": "portrait",
   "icons": [
     {
       "src": "/bridge-icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/bridge-icon.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/bridge-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "categories": ["logistics", "productivity"]
