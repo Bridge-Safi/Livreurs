@@ -14,6 +14,7 @@ export const driversTable = pgTable("drivers", {
   totalTrips: integer("total_trips").notNull().default(0),
   rating: real("rating").notNull().default(5.0),
   pin: text("pin").notNull().default("5678"),
+  password: text("password"),
   photoUrl: text("photo_url"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

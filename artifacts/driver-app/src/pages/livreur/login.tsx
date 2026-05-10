@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
 import { subscribeToPush, isPushSupported } from "@/lib/push";
-import { ArrowLeft, Delete, Phone, MessageSquare, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Mail, Lock, Eye, EyeOff } from "lucide-react";
 
 const TC = "#C14B2A";
 const SAND = "#FAF6EF";
@@ -14,47 +14,6 @@ const BROWN_LIGHT = "#9B7060";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-type LoginStep = "phone" | "pin" | "otp";
-
-function PinDot({ filled, color }: { filled: boolean; color: string }) {
-  return (
-    <div
-      className="w-4 h-4 rounded-full border-2 transition-all duration-150"
-      style={{
-        borderColor: filled ? color : BORDER,
-        background: filled ? color : "transparent",
-        transform: filled ? "scale(1.15)" : "scale(1)",
-      }}
-    />
-  );
-}
-
-const PAD = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "⌫"];
-
-function Numpad({ onDigit, loading }: { onDigit: (d: string) => void; loading: boolean }) {
-  return (
-    <div className="grid grid-cols-3 gap-3">
-      {PAD.map((d, i) => (
-        <button
-          key={i}
-          onClick={() => onDigit(d)}
-          disabled={loading || d === ""}
-          className="h-14 rounded-xl text-xl font-semibold transition-all active:scale-95 disabled:opacity-0 flex items-center justify-center"
-          style={
-            d === "⌫"
-              ? { background: "#FDEEE9", color: TC }
-              : d === ""
-              ? { background: "transparent" }
-              : { background: SAND, color: BROWN, border: `1px solid ${BORDER}` }
-          }
-        >
-          {d === "⌫" ? <Delete className="h-5 w-5" /> : d}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 export default function LivreurLogin() {
   const [, navigate] = useLocation();
   const { livreur, loginLivreur } = useAuth();
@@ -64,83 +23,22 @@ export default function LivreurLogin() {
     if (livreur) navigate("/livreur");
   }, [livreur]);
 
-  const [step, setStep] = useState<LoginStep>("phone");
-  const [phone, setPhone] = useState("");
-  const [phoneError, setPhoneError] = useState("");
-  const [phoneLoading, setPhoneLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const [userId, setUserId] = useState<number | null>(null);
-  const [userName, setUserName] = useState("");
-
-  // PIN state
-  const [pin, setPin] = useState("");
-  const [pinError, setPinError] = useState("");
-  const [pinLoading, setPinLoading] = useState(false);
-
-  // OTP state
-  const [otp, setOtp] = useState("");
-  const [otpError, setOtpError] = useState("");
-  const [otpLoading, setOtpLoading] = useState(false);
-  const [resendCountdown, setResendCountdown] = useState(0);
-
-  // Countdown timer for OTP resend
-  useEffect(() => {
-    if (resendCountdown <= 0) return;
-    const t = setTimeout(() => setResendCountdown(c => c - 1), 1000);
-    return () => clearTimeout(t);
-  }, [resendCountdown]);
-
-  // ── Step 1: Phone number submission ──
-  const handlePhoneSubmit = async () => {
-    const trimmed = phone.trim();
-    if (!trimmed) { setPhoneError("Entrez votre numéro de téléphone"); return; }
-    setPhoneLoading(true);
-    setPhoneError("");
+  const handleSubmit = async () => {
+    if (!email.trim()) { setError("Entrez votre adresse email"); return; }
+    if (!password) { setError("Entrez votre mot de passe"); return; }
+    setLoading(true);
+    setError("");
     try {
-      const res = await fetch(`${BASE}/api/auth/request-login`, {
+      const res = await fetch(`${BASE}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: trimmed, role: "livreur" }),
-      });
-      const data = await res.json();
-      if (!data.success) {
-        setPhoneError(data.error || "Numéro non reconnu");
-        return;
-      }
-      setUserId(data.userId);
-      setUserName(data.name);
-      if (data.method === "pin") {
-        setStep("pin");
-      } else {
-        setStep("otp");
-        setResendCountdown(60);
-      }
-    } catch {
-      setPhoneError("Erreur de connexion. Réessayez.");
-    } finally {
-      setPhoneLoading(false);
-    }
-  };
-
-  // ── Step 2a: PIN verification ──
-  const handlePinDigit = (d: string) => {
-    if (d === "⌫") { setPin(p => p.slice(0, -1)); setPinError(""); return; }
-    if (d === "" || pin.length >= 4) return;
-    const next = pin + d;
-    setPin(next);
-    setPinError("");
-    if (next.length === 4) verifyPin(next);
-  };
-
-  const verifyPin = async (code: string) => {
-    if (!userId) return;
-    setPinLoading(true);
-    setPinError("");
-    try {
-      const res = await fetch(`${BASE}/api/auth/deliverer-verify`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ delivererId: userId, pin: code }),
+        body: JSON.stringify({ email: email.trim(), password, role: "livreur" }),
       });
       const data = await res.json();
       if (data.success) {
@@ -148,65 +46,13 @@ export default function LivreurLogin() {
         if (isPushSupported()) subscribeToPush({ delivererId: data.id }).catch(() => {});
         navigate("/livreur");
       } else {
-        setPinError(data.error || "Code PIN incorrect");
-        setPin("");
+        setError(data.error || "Identifiants incorrects");
       }
     } catch {
-      setPinError("Erreur de connexion");
-      setPin("");
+      setError("Erreur de connexion. Réessayez.");
     } finally {
-      setPinLoading(false);
+      setLoading(false);
     }
-  };
-
-  // ── Step 2b: OTP verification ──
-  const handleOtpDigit = (d: string) => {
-    if (d === "⌫") { setOtp(o => o.slice(0, -1)); setOtpError(""); return; }
-    if (d === "" || otp.length >= 6) return;
-    const next = otp + d;
-    setOtp(next);
-    setOtpError("");
-    if (next.length === 6) verifyOtp(next);
-  };
-
-  const verifyOtp = async (code: string) => {
-    setOtpLoading(true);
-    setOtpError("");
-    try {
-      const res = await fetch(`${BASE}/api/auth/verify-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: phone.trim(), role: "livreur", code }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        loginLivreur({ id: data.id, name: data.name, phone: data.phone, role: "livreur" });
-        if (isPushSupported()) subscribeToPush({ delivererId: data.id }).catch(() => {});
-        navigate("/livreur");
-      } else {
-        setOtpError(data.error || "Code incorrect");
-        setOtp("");
-      }
-    } catch {
-      setOtpError("Erreur de connexion");
-      setOtp("");
-    } finally {
-      setOtpLoading(false);
-    }
-  };
-
-  const handleResend = async () => {
-    if (resendCountdown > 0) return;
-    setOtp("");
-    setOtpError("");
-    setResendCountdown(60);
-    try {
-      await fetch(`${BASE}/api/auth/request-login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: phone.trim(), role: "livreur" }),
-      });
-    } catch { /* ignore */ }
   };
 
   return (
@@ -214,164 +60,83 @@ export default function LivreurLogin() {
       <div className="fixed top-0 left-0 right-0 h-1" style={{ backgroundImage: "repeating-linear-gradient(90deg,#C14B2A 0,#C14B2A 20px,#D4880C 20px,#D4880C 40px,#2A7A48 40px,#2A7A48 60px,#D4880C 60px,#D4880C 80px)" }} />
 
       <div className="w-full max-w-sm">
-        {/* Logo */}
         <div className="text-center mb-8">
           <img src="/bridge-logo.png" alt="Bridge" className="w-20 h-20 object-contain drop-shadow-xl mb-3" />
           <h1 className="text-2xl font-bold" style={{ color: BROWN }}>{t("livreur_title")}</h1>
-          <p className="text-sm mt-1" style={{ color: BROWN_LIGHT }}>
-            {step === "phone" ? "Entrez votre numéro de téléphone"
-              : step === "pin" ? `Bonjour ${userName} — Code PIN`
-              : `Code envoyé au ${phone}`}
-          </p>
+          <p className="text-sm mt-1" style={{ color: BROWN_LIGHT }}>Connectez-vous à votre espace</p>
         </div>
 
-        {/* Back button */}
-        {step !== "phone" && (
-          <button
-            onClick={() => { setStep("phone"); setPin(""); setPinError(""); setOtp(""); setOtpError(""); }}
-            className="flex items-center gap-2 mb-4 text-sm"
-            style={{ color: BROWN_MID }}
-          >
-            <ArrowLeft className="h-4 w-4" />
-            {t("back")}
-          </button>
-        )}
-
-        {/* ── Step 1: Phone entry ── */}
-        {step === "phone" && (
-          <div className="space-y-4">
-            <div className="rounded-2xl border overflow-hidden" style={{ background: "white", borderColor: BORDER }}>
-              <div className="px-4 py-3 flex items-center gap-3 border-b" style={{ borderColor: BORDER, background: "#FFF5F2" }}>
-                <Phone className="h-5 w-5 flex-shrink-0" style={{ color: TC }} />
-                <span className="text-sm font-semibold" style={{ color: BROWN_MID }}>Numéro de téléphone</span>
-              </div>
-              <div className="flex items-center px-4 py-1">
-                <span className="text-base font-bold mr-2" style={{ color: BROWN_MID }}>+212</span>
-                <input
-                  type="tel"
-                  inputMode="tel"
-                  autoFocus
-                  placeholder="06 XX XX XX XX"
-                  value={phone}
-                  onChange={e => { setPhone(e.target.value); setPhoneError(""); }}
-                  onKeyDown={e => e.key === "Enter" && handlePhoneSubmit()}
-                  className="flex-1 text-lg font-semibold outline-none py-3 bg-transparent"
-                  style={{ color: BROWN }}
-                />
-              </div>
+        <div className="rounded-2xl border overflow-hidden mb-4" style={{ background: "white", borderColor: BORDER }}>
+          {/* Email */}
+          <div className="border-b" style={{ borderColor: BORDER }}>
+            <div className="px-4 py-2 flex items-center gap-3" style={{ background: "#FFF5F2" }}>
+              <Mail className="h-4 w-4 flex-shrink-0" style={{ color: TC }} />
+              <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: BROWN_MID }}>Adresse email</span>
             </div>
-
-            {phoneError && (
-              <p className="text-center text-sm font-medium px-2" style={{ color: TC }}>{phoneError}</p>
-            )}
-
-            <button
-              onClick={handlePhoneSubmit}
-              disabled={phoneLoading || !phone.trim()}
-              className="w-full h-14 rounded-2xl font-bold text-lg text-white transition-all active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2"
-              style={{ background: TC }}
-            >
-              {phoneLoading ? (
-                <span className="flex items-center gap-2">
-                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Vérification…
-                </span>
-              ) : (
-                <>
-                  <MessageSquare className="h-5 w-5" />
-                  Continuer
-                </>
-              )}
-            </button>
-
-            <p className="text-center text-xs px-4" style={{ color: BROWN_LIGHT }}>
-              Les utilisateurs enregistrés reçoivent un code par SMS. Les comptes administrateurs utilisent un code PIN.
-            </p>
-          </div>
-        )}
-
-        {/* ── Step 2a: PIN ── */}
-        {step === "pin" && (
-          <div className="rounded-2xl border p-6" style={{ background: "white", borderColor: BORDER }}>
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b" style={{ borderColor: BORDER }}>
-              <div className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold text-white flex-shrink-0" style={{ background: TC }}>
-                {userName.charAt(0).toUpperCase()}
-              </div>
-              <div>
-                <p className="font-semibold text-sm" style={{ color: BROWN }}>{userName}</p>
-                <p className="text-xs" style={{ color: BROWN_LIGHT }}>Entrez votre code PIN à 4 chiffres</p>
-              </div>
-            </div>
-
-            <div className="flex justify-center gap-4 mb-6">
-              {[0, 1, 2, 3].map(i => <PinDot key={i} filled={i < pin.length} color={TC} />)}
-            </div>
-
-            {pinError && <p className="text-center text-sm mb-4 font-medium" style={{ color: TC }}>{pinError}</p>}
-
-            <Numpad onDigit={handlePinDigit} loading={pinLoading} />
-
-            {pinLoading && <p className="text-center text-sm mt-4" style={{ color: BROWN_LIGHT }}>Vérification…</p>}
-          </div>
-        )}
-
-        {/* ── Step 2b: OTP ── */}
-        {step === "otp" && (
-          <div className="rounded-2xl border p-6" style={{ background: "white", borderColor: BORDER }}>
-            {/* Header */}
-            <div className="text-center mb-6 pb-4 border-b" style={{ borderColor: BORDER }}>
-              <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3" style={{ background: "#FFF5F2" }}>
-                <ShieldCheck className="h-7 w-7" style={{ color: TC }} />
-              </div>
-              <p className="text-sm font-semibold" style={{ color: BROWN }}>Code de vérification</p>
-              <p className="text-xs mt-1" style={{ color: BROWN_LIGHT }}>
-                SMS envoyé au <span className="font-semibold">{phone}</span>
-              </p>
-            </div>
-
-            {/* OTP dots (6 digits) */}
-            <div className="flex justify-center gap-3 mb-6">
-              {[0, 1, 2, 3, 4, 5].map(i => (
-                <div
-                  key={i}
-                  className="w-10 h-12 rounded-xl border-2 flex items-center justify-center text-xl font-bold transition-all"
-                  style={{
-                    borderColor: i < otp.length ? TC : BORDER,
-                    background: i < otp.length ? "#FFF5F2" : SAND,
-                    color: BROWN,
-                  }}
-                >
-                  {otp[i] ? "•" : ""}
-                </div>
-              ))}
-            </div>
-
-            {otpError && <p className="text-center text-sm mb-4 font-medium" style={{ color: TC }}>{otpError}</p>}
-
-            <Numpad onDigit={handleOtpDigit} loading={otpLoading} />
-
-            {otpLoading && <p className="text-center text-sm mt-4" style={{ color: BROWN_LIGHT }}>Vérification…</p>}
-
-            {/* Resend */}
-            <div className="mt-5 text-center">
-              {resendCountdown > 0 ? (
-                <p className="text-xs" style={{ color: BROWN_LIGHT }}>
-                  Renvoyer dans <span className="font-bold">{resendCountdown}s</span>
-                </p>
-              ) : (
-                <button onClick={handleResend} className="text-xs font-semibold underline" style={{ color: BROWN_MID }}>
-                  Renvoyer le code
-                </button>
-              )}
+            <div className="px-4">
+              <input
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                autoFocus
+                placeholder="exemple@email.com"
+                value={email}
+                onChange={e => { setEmail(e.target.value); setError(""); }}
+                onKeyDown={e => e.key === "Enter" && handleSubmit()}
+                className="w-full text-base outline-none py-3 bg-transparent"
+                style={{ color: BROWN }}
+              />
             </div>
           </div>
+
+          {/* Password */}
+          <div>
+            <div className="px-4 py-2 flex items-center gap-3" style={{ background: "#FFF5F2" }}>
+              <Lock className="h-4 w-4 flex-shrink-0" style={{ color: TC }} />
+              <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: BROWN_MID }}>Mot de passe</span>
+            </div>
+            <div className="px-4 flex items-center">
+              <input
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                placeholder="••••••••"
+                value={password}
+                onChange={e => { setPassword(e.target.value); setError(""); }}
+                onKeyDown={e => e.key === "Enter" && handleSubmit()}
+                className="flex-1 text-base outline-none py-3 bg-transparent"
+                style={{ color: BROWN }}
+              />
+              <button onClick={() => setShowPassword(v => !v)} className="p-1" style={{ color: BROWN_LIGHT }}>
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {error && (
+          <p className="text-center text-sm font-medium mb-4 px-2" style={{ color: TC }}>{error}</p>
         )}
 
         <button
+          onClick={handleSubmit}
+          disabled={loading || !email.trim() || !password}
+          className="w-full h-14 rounded-2xl font-bold text-lg text-white transition-all active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2"
+          style={{ background: TC }}
+        >
+          {loading ? (
+            <span className="flex items-center gap-2">
+              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              Connexion…
+            </span>
+          ) : "Se connecter"}
+        </button>
+
+        <button
           onClick={() => navigate("/")}
-          className="mt-6 w-full text-sm py-3"
+          className="mt-6 w-full text-sm py-3 flex items-center justify-center gap-2"
           style={{ color: BROWN_LIGHT }}
         >
+          <ArrowLeft className="h-4 w-4" />
           {t("login_back_home")}
         </button>
       </div>
