@@ -12,16 +12,17 @@ function generateOtp(): string {
   return String(Math.floor(100000 + Math.random() * 900000));
 }
 
-async function sendSms(to: string, body: string): Promise<boolean> {
+async function sendSms(to: string, text: string): Promise<boolean> {
   const apiKey = process.env.INFOBIP_API_KEY;
-  const baseUrl = process.env.INFOBIP_BASE_URL; // e.g. xxxxx.api.infobip.com
+  const baseUrl = process.env.INFOBIP_BASE_URL; // e.g. pd23kl.api.infobip.com
+  const sender = process.env.INFOBIP_SENDER || "447491163443";
   if (!apiKey || !baseUrl) {
     // Mode développement : afficher le code dans les logs
-    console.log(`[OTP DEV] ${to} → ${body}`);
+    console.log(`[OTP DEV] ${to} → ${text}`);
     return true;
   }
   try {
-    const resp = await fetch(`https://${baseUrl}/sms/2/text/advanced`, {
+    const resp = await fetch(`https://${baseUrl}/sms/3/messages`, {
       method: "POST",
       headers: {
         "Authorization": `App ${apiKey}`,
@@ -29,7 +30,11 @@ async function sendSms(to: string, body: string): Promise<boolean> {
         "Accept": "application/json",
       },
       body: JSON.stringify({
-        messages: [{ destinations: [{ to }], from: "Bridge", text: body }],
+        messages: [{
+          destinations: [{ to }],
+          sender,
+          content: { text },
+        }],
       }),
     });
     if (!resp.ok) {
