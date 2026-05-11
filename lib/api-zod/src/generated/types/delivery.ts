@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { DeliveryPriority } from "./deliveryPriority";
+import type { DeliveryServiceType } from "./deliveryServiceType";
 import type { DeliveryStatus } from "./deliveryStatus";
 
 export interface Delivery {
@@ -21,6 +22,7 @@ export interface Delivery {
   notes?: string;
   delivererId?: number;
   estimatedDeliveryTime?: string;
+  serviceType?: DeliveryServiceType;
   confirmCode?: string;
   pickedUpAt?: string;
   createdAt: string;

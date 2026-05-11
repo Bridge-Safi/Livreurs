@@ -729,6 +729,9 @@ components:
           type: integer
         estimatedDeliveryTime:
           type: string
+        serviceType:
+          type: string
+          enum: [eats, tabac, pharmacie, fleurs, autre]
         confirmCode:
           type: string
         pickedUpAt:
@@ -771,6 +774,9 @@ components:
           type: integer
         estimatedDeliveryTime:
           type: string
+        serviceType:
+          type: string
+          enum: [eats, tabac, pharmacie, fleurs, autre]
       required:
         - trackingNumber
         - customerName

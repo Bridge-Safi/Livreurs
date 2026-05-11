@@ -27,9 +27,14 @@ async function dispatchWithDelay(
 ): Promise<void> {
   await sleep(2000);
 
+  const SERVICE_EMOJIS: Record<string, string> = {
+    eats: "🍽️", tabac: "🚬", pharmacie: "💊", fleurs: "💐", autre: "📦",
+  };
+  const serviceEmoji = SERVICE_EMOJIS[source] ?? "📦";
+
   const pushBody = [
     `📍 ${deliveryAddress}`,
-    itemsSummary ? `🍽️ ${itemsSummary}` : "",
+    itemsSummary ? `${serviceEmoji} ${itemsSummary}` : "",
     `⏱️ 5 min pour accepter`,
   ]
     .filter(Boolean)
@@ -64,6 +69,7 @@ router.post("/orders/inbound", async (req, res): Promise<void> => {
     total,
     notes,
     source,
+    serviceType,
   } = req.body;
 
   if (!customerName || !deliveryAddress) {
@@ -71,7 +77,19 @@ router.post("/orders/inbound", async (req, res): Promise<void> => {
     return;
   }
 
-  const pickup = pickupAddress || "Bridge Eats — Safi";
+  const VALID_SERVICE_TYPES = ["eats", "tabac", "pharmacie", "fleurs", "autre"] as const;
+  type ServiceType = typeof VALID_SERVICE_TYPES[number];
+  const validatedServiceType: ServiceType = VALID_SERVICE_TYPES.includes(serviceType) ? serviceType : "eats";
+
+  const SERVICE_PICKUPS: Record<ServiceType, string> = {
+    eats:      "Bridge Eats — Safi",
+    tabac:     "Tabac — Safi",
+    pharmacie: "Pharmacie — Safi",
+    fleurs:    "Fleurs — Safi",
+    autre:     "Bridge — Safi",
+  };
+
+  const pickup = pickupAddress || SERVICE_PICKUPS[validatedServiceType];
   const trackingNumber = generateTrackingNumber();
   const orderSource = source || "bridge_eats";
 
@@ -100,6 +118,7 @@ router.post("/orders/inbound", async (req, res): Promise<void> => {
       dispatchedAt: new Date(),
       notes: orderNotes || null,
       priority: "urgent",
+      serviceType: validatedServiceType,
     })
     .returning();
 

@@ -19,6 +19,7 @@ export const deliveriesTable = pgTable("deliveries", {
   dispatchPhase: text("dispatch_phase").default("none"),
   pickupLat: real("pickup_lat"),
   pickupLng: real("pickup_lng"),
+  serviceType: text("service_type").default("eats"),
   confirmCode: text("confirm_code"),
   pickedUpAt: timestamp("picked_up_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

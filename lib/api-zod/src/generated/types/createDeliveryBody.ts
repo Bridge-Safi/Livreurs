@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { CreateDeliveryBodyPriority } from "./createDeliveryBodyPriority";
+import type { CreateDeliveryBodyServiceType } from "./createDeliveryBodyServiceType";
 
 export interface CreateDeliveryBody {
   trackingNumber: string;
@@ -18,4 +19,5 @@ export interface CreateDeliveryBody {
   notes?: string;
   delivererId?: number;
   estimatedDeliveryTime?: string;
+  serviceType?: CreateDeliveryBodyServiceType;
 }

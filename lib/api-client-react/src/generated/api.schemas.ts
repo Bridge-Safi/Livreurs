@@ -28,6 +28,17 @@ export const DeliveryPriority = {
   urgent: "urgent",
 } as const;
 
+export type DeliveryServiceType =
+  (typeof DeliveryServiceType)[keyof typeof DeliveryServiceType];
+
+export const DeliveryServiceType = {
+  eats: "eats",
+  tabac: "tabac",
+  pharmacie: "pharmacie",
+  fleurs: "fleurs",
+  autre: "autre",
+} as const;
+
 export interface Delivery {
   id: number;
   trackingNumber: string;
@@ -41,6 +52,7 @@ export interface Delivery {
   notes?: string;
   delivererId?: number;
   estimatedDeliveryTime?: string;
+  serviceType?: DeliveryServiceType;
   confirmCode?: string;
   pickedUpAt?: string;
   createdAt: string;
@@ -56,6 +68,17 @@ export const CreateDeliveryBodyPriority = {
   urgent: "urgent",
 } as const;
 
+export type CreateDeliveryBodyServiceType =
+  (typeof CreateDeliveryBodyServiceType)[keyof typeof CreateDeliveryBodyServiceType];
+
+export const CreateDeliveryBodyServiceType = {
+  eats: "eats",
+  tabac: "tabac",
+  pharmacie: "pharmacie",
+  fleurs: "fleurs",
+  autre: "autre",
+} as const;
+
 export interface CreateDeliveryBody {
   trackingNumber: string;
   customerName: string;
@@ -67,6 +90,7 @@ export interface CreateDeliveryBody {
   notes?: string;
   delivererId?: number;
   estimatedDeliveryTime?: string;
+  serviceType?: CreateDeliveryBodyServiceType;
 }
 
 export type UpdateDeliveryBodyStatus =

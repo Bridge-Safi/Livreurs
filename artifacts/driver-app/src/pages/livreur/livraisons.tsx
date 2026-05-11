@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { LivreurLayout } from "@/components/layout/LivreurLayout";
 import { useListDeliveries, getListDeliveriesQueryKey, useUpdateDelivery } from "@workspace/api-client-react";
-import { Package, Search, Filter, CheckCircle2, Clock, XCircle, ArrowRight } from "lucide-react";
+import { Package, Search, Filter, CheckCircle2, Clock, XCircle, ArrowRight, UtensilsCrossed, Cigarette, Pill, Flower2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -60,6 +60,24 @@ export default function LivreurLivraisons() {
     const Icon = s.icon;
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold" style={{ background: s.bg, color: s.color }}>
+        <Icon className="h-3 w-3" />
+        {s.label}
+      </span>
+    );
+  };
+
+  const serviceBadge = (serviceType: string | null | undefined) => {
+    const map: Record<string, { label: string; color: string; bg: string; icon: any }> = {
+      eats:      { label: "Bridge Eats",  color: TC,        bg: "#FDEEE9", icon: UtensilsCrossed },
+      tabac:     { label: "Tabac",        color: BROWN_MID, bg: "#F5EFE4", icon: Cigarette },
+      pharmacie: { label: "Pharmacie",    color: "#2A7A48", bg: "#E4F5EC", icon: Pill },
+      fleurs:    { label: "Fleurs",       color: "#9B3EAA", bg: "#F5E8FA", icon: Flower2 },
+      autre:     { label: "Autre",        color: BROWN_LIGHT, bg: "#F5EFE4", icon: Package },
+    };
+    const s = map[serviceType ?? "eats"] ?? map["eats"];
+    const Icon = s.icon;
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold border" style={{ background: s.bg, color: s.color, borderColor: s.color + "33" }}>
         <Icon className="h-3 w-3" />
         {s.label}
       </span>
@@ -146,6 +164,7 @@ export default function LivreurLivraisons() {
                   <div className="flex flex-wrap justify-between items-start gap-2 mb-2">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-mono text-xs" style={{ color: BROWN_LIGHT }}>{delivery.trackingNumber}</span>
+                      {serviceBadge(delivery.serviceType)}
                       {priorityBadge(delivery.priority)}
                     </div>
                     {statusBadge(delivery.status)}
