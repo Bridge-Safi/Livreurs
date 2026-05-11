@@ -27,7 +27,7 @@ import {
   AcceptDriverOfferBody,
 } from "@workspace/api-zod";
 import { serializeTrip } from "../lib/serializers";
-import { sendPushToAll } from "./push";
+import { sendPushToAllDrivers } from "./push";
 
 const PRICE_PER_KM = 2.5;
 const BASE_FARE = 5;
@@ -163,10 +163,10 @@ router.post("/trips/:id/dispatch", async (req, res): Promise<void> => {
 
   req.log.info({ tripId: params.data.id }, "Ride broadcast to all drivers");
 
-  sendPushToAll({
+  sendPushToAllDrivers({
     title: "🚖 Nouvelle course — Bridge Safi",
     body: `${updated.passengerName} · ${updated.pickupAddress} → ${updated.dropoffAddress} — 5 min pour accepter`,
-    url: "/",
+    url: "/chauffeur",
   }).catch(() => {});
 
   res.json(GetTripResponse.parse(serializeTrip(updated)));
@@ -369,10 +369,10 @@ router.post("/trips", async (req, res): Promise<void> => {
 
   req.log.info({ tripId: trip.id, distance, suggestedFare }, "Trip created — auto-dispatched to all drivers");
 
-  sendPushToAll({
+  sendPushToAllDrivers({
     title: "🚖 Nouvelle course — Bridge Safi",
     body: `${trip.passengerName} · ${trip.pickupAddress} → ${trip.dropoffAddress} — ${suggestedFare} DH · 5 min pour accepter`,
-    url: "/",
+    url: "/chauffeur",
   }).catch(() => {});
 
   res.status(201).json(GetTripResponse.parse(serializeTrip(trip)));

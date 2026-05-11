@@ -113,6 +113,20 @@ export async function sendPushToAll(payload: {
   await sendPushBatch(allSubs, payload);
 }
 
+export async function sendPushToAllDrivers(payload: {
+  title: string;
+  body: string;
+  url?: string;
+  urgent?: boolean;
+}) {
+  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) return;
+  const subs = await db
+    .select()
+    .from(pushSubscriptionsTable)
+    .where(isNotNull(pushSubscriptionsTable.driverId));
+  await sendPushBatch(subs, payload);
+}
+
 export async function sendPushToAllDeliverers(payload: {
   title: string;
   body: string;
