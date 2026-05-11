@@ -106,6 +106,28 @@ router.post("/auth/login", async (req, res): Promise<void> => {
   }
 });
 
+// ── POST /auth/admin-add-user — Insert a new deliverer or driver ──────────
+router.post("/auth/admin-add-user", async (req, res): Promise<void> => {
+  const adminToken = req.headers["x-admin-token"];
+  if (!adminToken || adminToken !== process.env.SESSION_SECRET) {
+    res.status(403).json({ success: false, error: "Forbidden" });
+    return;
+  }
+  const { name, email, password, role } = req.body as { name?: string; email?: string; password?: string; role?: string };
+  if (!name || !email || !password || !role || !["livreur", "chauffeur"].includes(role)) {
+    res.status(400).json({ success: false, error: "name, email, password, role requis" });
+    return;
+  }
+  const hashed = await bcrypt.hash(password, 10);
+  if (role === "livreur") {
+    const [inserted] = await db.insert(deliverersTable).values({ name, email, password: hashed, phone: "" }).returning({ id: deliverersTable.id });
+    res.json({ success: true, id: inserted.id });
+  } else {
+    const [inserted] = await db.insert(driversTable).values({ name, email, password: hashed, phone: "", licenseNumber: "", vehicleModel: "", vehiclePlate: "" }).returning({ id: driversTable.id });
+    res.json({ success: true, id: inserted.id });
+  }
+});
+
 // ── POST /auth/set-password — Admin sets password for a user ──────────────
 router.post("/auth/set-password", async (req, res): Promise<void> => {
   const { userId, role, password } = req.body as { userId?: number; role?: string; password?: string };
