@@ -56,7 +56,7 @@ export function ChauffeurLayout({ children }: { children: ReactNode }) {
         style={{ background: colors.sidebar, borderColor: colors.sidebarBorder }}
       >
         {/* Brand header with Moroccan gold */}
-        <div className="p-5 border-b flex items-center gap-3" style={{ borderColor: colors.sidebarBorder, background: GOLD }}>
+        <div className="p-5 border-b flex items-center gap-3" style={{ borderColor: colors.sidebarBorder, background: GOLD, textShadow: "0 2px 4px rgba(0,0,0,0.2)" }}>
           <img src="/bridge-logo.png" alt="Bridge" className="h-9 w-9 object-contain flex-shrink-0" />
           <span className="font-bold text-white text-base tracking-tight">{t("chauffeur_title")}</span>
         </div>
@@ -102,7 +102,7 @@ export function ChauffeurLayout({ children }: { children: ReactNode }) {
             className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all text-sm font-bold border disabled:opacity-60"
             style={
               isOnline
-                ? { background: "#E4F5EC", color: GREEN, borderColor: "#A8DFC1" }
+                ? { background: "rgba(42,122,72,0.2)", color: "#2AE86C", border: "1px solid rgba(42,122,72,0.5)", boxShadow: "0 0 12px rgba(42,234,108,0.25)" }
                 : { background: colors.bgCard, color: colors.textLight, borderColor: colors.border }
             }
           >
@@ -179,7 +179,7 @@ export function ChauffeurLayout({ children }: { children: ReactNode }) {
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-bold border transition-all disabled:opacity-60"
               style={
                 isOnline
-                  ? { background: "#E4F5EC", color: GREEN, borderColor: "#A8DFC1" }
+                  ? { background: "rgba(42,122,72,0.2)", color: "#2AE86C", border: "1px solid rgba(42,122,72,0.5)", boxShadow: "0 0 12px rgba(42,234,108,0.25)" }
                   : { background: colors.bgCard, color: colors.textLight, borderColor: colors.border }
               }
               title={isOnline ? "Passer hors-ligne" : "Passer en ligne"}
@@ -222,7 +222,7 @@ export function ChauffeurLayout({ children }: { children: ReactNode }) {
           <Link href="/chauffeur/profil">
             <div
               className="flex items-center gap-3 px-4 py-3 border-b cursor-pointer"
-              style={{ background: isDark ? "#2A1A0A" : "#FFF3CD", borderColor: isDark ? "#4A3010" : "#F5D98A" }}
+              style={{ background: isDark ? "rgba(42,10,0,0.6)" : "#FFF3CD", borderColor: isDark ? "rgba(212,136,12,0.3)" : "#F5D98A" }}
             >
               <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "#E53E3E" }}>
                 <Camera className="h-4 w-4 text-white" />

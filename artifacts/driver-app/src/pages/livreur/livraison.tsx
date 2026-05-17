@@ -19,14 +19,24 @@ import { useAuth } from "@/lib/auth";
 import { GpsPickerModal } from "@/components/GpsPickerModal";
 import { stopContinuousAlarm } from "@/lib/alarm";
 
-const TC = "#C14B2A";
+const TC = "#E85C30";
 const GREEN = "#2A7A48";
 const GOLD = "#D4880C";
-const SAND = "#FAF6EF";
-const BORDER = "#E8DDD0";
-const BROWN = "#2C1810";
-const BROWN_MID = "#6B4033";
-const BROWN_LIGHT = "#9B7060";
+const SAND = "#1A0A06";
+const BORDER = "rgba(255,255,255,0.15)";
+const BROWN = "rgba(255,255,255,0.95)";
+const BROWN_MID = "rgba(255,255,255,0.65)";
+const BROWN_LIGHT = "rgba(255,255,255,0.40)";
+
+const GLASS_STYLE = {
+  background: "rgba(255,255,255,0.08)",
+  backdropFilter: "blur(20px)",
+  WebkitBackdropFilter: "blur(20px)",
+  border: "1px solid rgba(255,255,255,0.15)",
+  boxShadow: "0 8px 32px rgba(0,0,0,0.3)"
+};
+
+const GOLD_GRADIENT = "linear-gradient(135deg, #FADB5F 0%, #D4880C 100%)";
 
 interface ParsedOrder {
   items: string[];
@@ -55,16 +65,16 @@ function parseOrderNotes(notes: string | null): ParsedOrder {
 function StatusPill({ status }: { status?: string }) {
   const { t } = useI18n();
   const config: Record<string, { label: string; color: string; bg: string }> = {
-    pending:     { label: t("status_pending"),     color: BROWN_MID, bg: "#F5EFE4" },
-    in_progress: { label: t("status_in_progress"), color: TC,        bg: "#FDEEE9" },
-    delivered:   { label: t("status_delivered"),   color: GREEN,     bg: "#E4F5EC" },
-    cancelled:   { label: t("status_cancelled"),   color: "#DC2626",  bg: "#FEE2E2" },
+    pending:     { label: t("status_pending"),     color: BROWN_MID, bg: "rgba(255,255,255,0.05)" },
+    in_progress: { label: t("status_in_progress"), color: TC,        bg: "rgba(232,92,48,0.15)" },
+    delivered:   { label: t("status_delivered"),   color: GREEN,     bg: "rgba(42,122,72,0.15)" },
+    cancelled:   { label: t("status_cancelled"),   color: "#DC2626",  bg: "rgba(220,38,38,0.15)" },
   };
   const c = config[status ?? "pending"] ?? config.pending;
   return (
     <span
       className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold"
-      style={{ background: c.bg, color: c.color }}
+      style={{ background: c.bg, color: c.color, border: `1px solid ${c.color}33` }}
     >
       {status === "in_progress" && <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />}
       {c.label}
@@ -81,15 +91,16 @@ function StepTimeline({ status }: { status?: string }) {
   ];
   const idx = status === "delivered" ? 2 : status === "in_progress" ? 1 : 0;
   return (
-    <div className="flex items-center gap-0 mt-3">
+    <div className="flex items-center gap-0 mt-3 relative z-10">
       {steps.map((s, i) => (
         <div key={s.key} className="flex items-center flex-1 last:flex-none">
           <div className="flex flex-col items-center">
             <div
-              className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold"
+              className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold shadow-sm"
               style={{
-                background: i <= idx ? TC : "#E8DDD0",
-                color: i <= idx ? "white" : "#9B7060",
+                background: i <= idx ? TC : "rgba(255,255,255,0.1)",
+                color: i <= idx ? "white" : BROWN_LIGHT,
+                border: i <= idx ? "none" : `1px solid ${BORDER}`
               }}
             >
               {i < idx ? <CheckCircle2 className="w-3.5 h-3.5" /> : i + 1}
@@ -99,7 +110,7 @@ function StepTimeline({ status }: { status?: string }) {
             </span>
           </div>
           {i < steps.length - 1 && (
-            <div className="flex-1 h-0.5 mb-4 mx-0.5" style={{ background: i < idx ? TC : "#E8DDD0" }} />
+            <div className="flex-1 h-0.5 mb-4 mx-0.5" style={{ background: i < idx ? TC : BORDER }} />
           )}
         </div>
       ))}
@@ -209,19 +220,21 @@ export default function LivreurLivraisonDetail() {
     return (
       <LivreurLayout>
         <div
-          className="flex-1 flex flex-col items-center justify-center gap-6 p-8 animate-in fade-in zoom-in-95 duration-300"
-          style={{ background: SAND }}
+          className="flex-1 flex flex-col items-center justify-center gap-6 p-8 animate-in fade-in zoom-in-95 duration-300 relative"
+          style={{ background: "linear-gradient(135deg, #1A0A06 0%, #2C1810 100%)" }}
         >
+          <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.07, backgroundImage:`url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 0l2 18 18 2-18 2-2 18-2-18-18-2 18-2z' fill='%23D4880C' fill-rule='evenodd'/%3E%3C/svg%3E")`, backgroundSize:"40px 40px" }} />
+          
           {/* Green circle with check */}
           <div
-            className="w-28 h-28 rounded-full flex items-center justify-center shadow-lg"
+            className="w-28 h-28 rounded-full flex items-center justify-center shadow-lg relative z-10"
             style={{ background: GREEN }}
           >
             <CheckCircle2 className="h-14 w-14 text-white" />
           </div>
 
           {/* Title */}
-          <div className="text-center">
+          <div className="text-center relative z-10">
             <h2 className="text-2xl font-bold mb-1" style={{ color: BROWN }}>
               {t("delivery_success_title")}
             </h2>
@@ -232,12 +245,12 @@ export default function LivreurLivraisonDetail() {
 
           {/* Earnings pill */}
           <div
-            className="flex items-center gap-3 px-8 py-5 rounded-2xl border shadow-sm"
-            style={{ background: "white", borderColor: BORDER }}
+            className="flex items-center gap-3 px-8 py-5 rounded-2xl border shadow-sm relative z-10"
+            style={GLASS_STYLE}
           >
             <div
               className="w-12 h-12 rounded-xl flex items-center justify-center"
-              style={{ background: "#FEF6E4" }}
+              style={{ background: "rgba(212,136,12,0.15)" }}
             >
               <Coins className="h-6 w-6" style={{ color: GOLD }} />
             </div>
@@ -252,7 +265,7 @@ export default function LivreurLivraisonDetail() {
           </div>
 
           {/* Loading dots */}
-          <div className="flex gap-1.5 mt-2">
+          <div className="flex gap-1.5 mt-2 relative z-10">
             {[0, 1, 2].map(i => (
               <span
                 key={i}
@@ -261,7 +274,7 @@ export default function LivreurLivraisonDetail() {
               />
             ))}
           </div>
-          <p className="text-xs" style={{ color: BROWN_LIGHT }}>{t("returning_dashboard")}</p>
+          <p className="text-xs relative z-10" style={{ color: BROWN_LIGHT }}>{t("returning_dashboard")}</p>
         </div>
       </LivreurLayout>
     );
@@ -270,10 +283,10 @@ export default function LivreurLivraisonDetail() {
   if (isLoading) {
     return (
       <LivreurLayout>
-        <div className="p-5 space-y-4">
-          <Skeleton className="h-8 w-40 rounded-lg" style={{ background: "#F5EFE4" }} />
-          <Skeleton className="h-32 w-full rounded-2xl" style={{ background: "#F5EFE4" }} />
-          <Skeleton className="h-48 w-full rounded-2xl" style={{ background: "#F5EFE4" }} />
+        <div className="p-5 space-y-4 min-h-full" style={{ background: "linear-gradient(135deg, #1A0A06 0%, #2C1810 100%)" }}>
+          <Skeleton className="h-8 w-40 rounded-lg" style={{ background: "rgba(255,255,255,0.05)" }} />
+          <Skeleton className="h-32 w-full rounded-2xl" style={{ background: "rgba(255,255,255,0.05)" }} />
+          <Skeleton className="h-48 w-full rounded-2xl" style={{ background: "rgba(255,255,255,0.05)" }} />
         </div>
       </LivreurLayout>
     );
@@ -282,10 +295,11 @@ export default function LivreurLivraisonDetail() {
   if (!delivery) {
     return (
       <LivreurLayout>
-        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-          <UtensilsCrossed className="h-16 w-16 mb-4" style={{ color: "#D0BEB0" }} />
-          <h2 className="text-xl font-bold mb-2" style={{ color: BROWN }}>{t("not_found")}</h2>
-          <Link href="/livreur/livraisons">
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center min-h-full relative" style={{ background: "linear-gradient(135deg, #1A0A06 0%, #2C1810 100%)" }}>
+          <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.07, backgroundImage:`url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 0l2 18 18 2-18 2-2 18-2-18-18-2 18-2z' fill='%23D4880C' fill-rule='evenodd'/%3E%3C/svg%3E")`, backgroundSize:"40px 40px" }} />
+          <UtensilsCrossed className="h-16 w-16 mb-4 relative z-10" style={{ color: "rgba(255,255,255,0.15)" }} />
+          <h2 className="text-xl font-bold mb-2 relative z-10" style={{ color: BROWN }}>{t("not_found")}</h2>
+          <Link href="/livreur/livraisons" className="relative z-10">
             <button className="mt-4 px-6 py-2.5 rounded-xl font-semibold text-white" style={{ background: TC }}>
               {t("back_to_deliveries")}
             </button>
@@ -299,15 +313,16 @@ export default function LivreurLivraisonDetail() {
 
   return (
     <LivreurLayout>
-      <div className="flex-1 overflow-auto" style={{ background: SAND }}>
+      <div className="flex-1 overflow-auto relative" style={{ background: "linear-gradient(135deg, #1A0A06 0%, #2C1810 100%)" }}>
+        <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.07, backgroundImage:`url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 0l2 18 18 2-18 2-2 18-2-18-18-2 18-2z' fill='%23D4880C' fill-rule='evenodd'/%3E%3C/svg%3E")`, backgroundSize:"40px 40px" }} />
 
         {/* ── Sticky header ── */}
         <div
-          className="sticky top-0 z-20 flex items-center gap-3 px-4 py-3 border-b"
-          style={{ background: "white", borderColor: BORDER }}
+          className="sticky top-0 z-20 flex items-center gap-3 px-4 py-3 border-b relative"
+          style={{ background: "rgba(26,10,6,0.8)", backdropFilter: "blur(12px)", borderColor: BORDER }}
         >
           <Link href="/livreur/livraisons">
-            <button className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: SAND }}>
+            <button className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.1)" }}>
               <ArrowLeft className="h-4 w-4" style={{ color: BROWN }} />
             </button>
           </Link>
@@ -325,7 +340,7 @@ export default function LivreurLivraisonDetail() {
               }
             }}
             className="w-8 h-8 rounded-full flex items-center justify-center mr-1"
-            style={{ background: "#FDEEE9" }}
+            style={{ background: "rgba(232,92,48,0.15)" }}
             title="Partager le lien de suivi"
           >
             <Share2 className="h-4 w-4" style={{ color: TC }} />
@@ -333,7 +348,7 @@ export default function LivreurLivraisonDetail() {
           <StatusPill status={delivery.status} />
         </div>
 
-        <div className="p-4 space-y-4 max-w-lg mx-auto pb-32">
+        <div className="p-4 space-y-4 max-w-lg mx-auto pb-32 relative z-10">
 
           {/* ── Timeline ── */}
           <StepTimeline status={delivery.status} />
@@ -342,9 +357,9 @@ export default function LivreurLivraisonDetail() {
           {delivery.status === "pending" && (
             <div
               className="rounded-2xl border p-4 flex items-center gap-3"
-              style={{ background: "#FEF6E4", borderColor: "#D4880C40" }}
+              style={{ background: "rgba(212,136,12,0.1)", borderColor: "rgba(212,136,12,0.3)" }}
             >
-              <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "#D4880C20" }}>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "rgba(212,136,12,0.2)" }}>
                 <Bike className="h-5 w-5" style={{ color: GOLD }} />
               </div>
               <div>
@@ -356,9 +371,9 @@ export default function LivreurLivraisonDetail() {
           {delivery.status === "in_progress" && (
             <div
               className="rounded-2xl border p-4 flex items-center gap-3"
-              style={{ background: "#FDEEE9", borderColor: TC + "40" }}
+              style={{ background: "rgba(232,92,48,0.1)", borderColor: "rgba(232,92,48,0.3)" }}
             >
-              <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: TC + "20" }}>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "rgba(232,92,48,0.2)" }}>
                 <Package className="h-5 w-5 animate-pulse" style={{ color: TC }} />
               </div>
               <div>
@@ -372,9 +387,9 @@ export default function LivreurLivraisonDetail() {
           {(delivery.status === "in_progress" || delivery.status === "delivered") && profile && (
             <div
               className="rounded-2xl border overflow-hidden"
-              style={{ background: "white", borderColor: BORDER }}
+              style={GLASS_STYLE}
             >
-              <div className="px-4 py-2 flex items-center gap-2 border-b" style={{ background: "#FDEEE9", borderColor: TC + "30" }}>
+              <div className="px-4 py-2 flex items-center gap-2 border-b" style={{ background: "rgba(232,92,48,0.1)", borderColor: "rgba(232,92,48,0.2)" }}>
                 <Bike className="h-3.5 w-3.5" style={{ color: TC }} />
                 <span className="text-xs font-bold uppercase tracking-wide" style={{ color: TC }}>
                   {delivery.status === "in_progress" ? t("livreur_en_route") : t("livreur_delivered")}
@@ -397,7 +412,7 @@ export default function LivreurLivraisonDetail() {
                         className="w-3.5 h-3.5"
                         style={{
                           fill: s <= Math.round(profile.rating) ? GOLD : "transparent",
-                          color: s <= Math.round(profile.rating) ? GOLD : BORDER,
+                          color: s <= Math.round(profile.rating) ? GOLD : "rgba(255,255,255,0.15)",
                         }}
                       />
                     ))}
@@ -414,7 +429,7 @@ export default function LivreurLivraisonDetail() {
           {(order.items.length > 0 || order.total) && (
             <div
               className="rounded-2xl border overflow-hidden"
-              style={{ background: "white", borderColor: BORDER }}
+              style={GLASS_STYLE}
             >
               <div className="px-4 py-3 flex items-center gap-2 border-b" style={{ borderColor: BORDER }}>
                 <ShoppingBag className="h-4 w-4" style={{ color: TC }} />
@@ -447,14 +462,14 @@ export default function LivreurLivraisonDetail() {
           )}
 
           {order.items.length === 0 && delivery.notes && !order.total && (
-            <div className="rounded-2xl border p-4" style={{ background: "white", borderColor: BORDER }}>
+            <div className="rounded-2xl border p-4" style={GLASS_STYLE}>
               <p className="text-sm font-semibold mb-1" style={{ color: BROWN_MID }}>{t("delivery_notes")}</p>
               <p className="text-sm" style={{ color: BROWN }}>{delivery.notes}</p>
             </div>
           )}
 
           {/* ── Route ── */}
-          <div className="rounded-2xl border overflow-hidden" style={{ background: "white", borderColor: BORDER }}>
+          <div className="rounded-2xl border overflow-hidden" style={GLASS_STYLE}>
             <div className="px-4 py-3 flex items-center gap-2 border-b" style={{ borderColor: BORDER }}>
               <MapPin className="h-4 w-4" style={{ color: TC }} />
               <span className="text-sm font-bold" style={{ color: BROWN }}>{t("route")}</span>
@@ -467,22 +482,22 @@ export default function LivreurLivraisonDetail() {
                     className="w-4 h-4 rounded-full border-2 flex-shrink-0"
                     style={{
                       borderColor: delivery.status === "pending" ? GOLD : BROWN_LIGHT,
-                      background: delivery.status === "pending" ? "#FEF6E4" : "#E4F5EC",
+                      background: delivery.status === "pending" ? "rgba(212,136,12,0.2)" : "rgba(42,122,72,0.2)",
                     }}
                   />
-                  <div className="w-0.5 flex-1 my-1" style={{ background: delivery.status === "pending" ? GOLD + "50" : BORDER, minHeight: 24 }} />
+                  <div className="w-0.5 flex-1 my-1" style={{ background: delivery.status === "pending" ? "rgba(212,136,12,0.3)" : BORDER, minHeight: 24 }} />
                 </div>
                 <div className="flex-1 pb-4 min-w-0">
                   <p className="text-xs font-bold uppercase tracking-wide mb-0.5" style={{ color: delivery.status === "pending" ? GOLD : BROWN_LIGHT }}>
                     {t("pickup_point")}
-                    {delivery.status === "pending" && <span className="ml-1.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold" style={{ background: GOLD + "20", color: GOLD }}>← Étape 1</span>}
+                    {delivery.status === "pending" && <span className="ml-1.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold" style={{ background: "rgba(212,136,12,0.2)", color: GOLD }}>← Étape 1</span>}
                   </p>
                   <p className="text-sm font-medium" style={{ color: BROWN }}>{delivery.pickupAddress}</p>
                   <div className="mt-2 flex gap-2 flex-wrap">
                     <button
                       onClick={() => setGpsTarget({ address: delivery.pickupAddress, label: t("gps_pickup") })}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"
-                      style={{ background: SAND, color: BROWN_MID, border: `1px solid ${BORDER}` }}
+                      style={{ background: "rgba(255,255,255,0.05)", color: BROWN_MID, border: `1px solid ${BORDER}` }}
                     >
                       <Navigation className="h-3 w-3" />
                       {t("navigate_pickup")}
@@ -493,18 +508,18 @@ export default function LivreurLivraisonDetail() {
 
               {/* ─────── INTERMEDIATE STEP: Pickup confirmation ─────── */}
               {delivery.status === "pending" && (
-                <div className="my-3 -mx-4 px-4 py-3 border-y" style={{ background: "#FFF8E8", borderColor: GOLD + "40" }}>
+                <div className="my-3 -mx-4 px-4 py-3 border-y" style={{ background: "rgba(212,136,12,0.1)", borderColor: "rgba(212,136,12,0.3)" }}>
                   <p className="text-[11px] font-extrabold uppercase tracking-wider mb-2 text-center" style={{ color: GOLD }}>
                     ✋ Étape intermédiaire
                   </p>
                   <button
                     onClick={() => setPickupConfirmOpen(true)}
                     disabled={isPending}
-                    className="w-full h-14 rounded-2xl font-extrabold text-base text-white flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-60 shadow-md"
-                    style={{ background: `linear-gradient(135deg, ${GOLD} 0%, #B8740A 100%)` }}
+                    className="w-full h-14 rounded-2xl font-extrabold text-base flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-60 shadow-md"
+                    style={{ background: GOLD_GRADIENT, color: "#1A0A06" }}
                   >
                     <Package className="h-5 w-5" />
-                    J'ai pris la commande
+                    {t("pickup_confirm_btn")}
                     <ChevronRight className="h-5 w-5" />
                   </button>
                   <p className="text-[11px] mt-2 text-center font-medium" style={{ color: BROWN_MID }}>
@@ -515,9 +530,9 @@ export default function LivreurLivraisonDetail() {
 
               {/* Marker showing pickup is done — visible after in_progress */}
               {(delivery.status === "in_progress" || delivery.status === "delivered") && (
-                <div className="my-3 -mx-4 px-4 py-2 flex items-center justify-center gap-2 border-y" style={{ background: "#E4F5EC", borderColor: GREEN + "40" }}>
-                  <CheckCircle2 className="h-4 w-4" style={{ color: GREEN }} />
-                  <span className="text-xs font-bold" style={{ color: GREEN }}>
+                <div className="my-3 -mx-4 px-4 py-2 flex items-center justify-center gap-2 border-y" style={{ background: "rgba(42,122,72,0.15)", borderColor: "rgba(42,122,72,0.3)" }}>
+                  <CheckCircle2 className="h-4 w-4" style={{ color: "#2AE86C" }} />
+                  <span className="text-xs font-bold" style={{ color: "#2AE86C" }}>
                     Commande récupérée — en route vers le client
                   </span>
                 </div>
@@ -527,13 +542,13 @@ export default function LivreurLivraisonDetail() {
               <div className="flex gap-3">
                 <div className="flex flex-col items-center pt-1">
                   <div className="w-4 h-4 rounded-full flex-shrink-0" style={{
-                    background: delivery.status === "in_progress" ? TC : delivery.status === "delivered" ? GREEN : "#D0BEB0",
+                    background: delivery.status === "in_progress" ? TC : delivery.status === "delivered" ? GREEN : "rgba(255,255,255,0.2)",
                   }} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-bold uppercase tracking-wide mb-0.5" style={{ color: delivery.status === "in_progress" ? TC : delivery.status === "delivered" ? GREEN : BROWN_LIGHT }}>
                     {t("destination")}
-                    {delivery.status === "in_progress" && <span className="ml-1.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold" style={{ background: TC + "20", color: TC }}>← Étape 2</span>}
+                    {delivery.status === "in_progress" && <span className="ml-1.5 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold" style={{ background: "rgba(232,92,48,0.2)", color: TC }}>← Étape 2</span>}
                   </p>
                   <p className="text-sm font-semibold" style={{ color: BROWN }}>{delivery.deliveryAddress}</p>
                   {delivery.status !== "pending" && (
@@ -563,100 +578,58 @@ export default function LivreurLivraisonDetail() {
             </div>
           </div>
 
-          {/* ── Customer ── */}
-          <div className="rounded-2xl border overflow-hidden" style={{ background: "white", borderColor: BORDER }}>
-            <div className="px-4 py-3 flex items-center gap-2 border-b" style={{ borderColor: BORDER }}>
-              <UtensilsCrossed className="h-4 w-4" style={{ color: TC }} />
-              <span className="text-sm font-bold" style={{ color: BROWN }}>{t("customer")}</span>
-            </div>
-            <div className="p-4 flex items-center gap-4">
-              <div
-                className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg text-white flex-shrink-0"
-                style={{ background: GOLD }}
-              >
-                {delivery.customerName.charAt(0).toUpperCase()}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-bold" style={{ color: BROWN }}>{delivery.customerName}</p>
-                {delivery.customerPhone && (
-                  <p className="text-sm font-mono" style={{ color: BROWN_LIGHT }}>{delivery.customerPhone}</p>
-                )}
-              </div>
-              {delivery.customerPhone && (
-                <a
-                  href={`tel:${delivery.customerPhone}`}
-                  className="w-11 h-11 rounded-full flex items-center justify-center text-white flex-shrink-0"
-                  style={{ background: GREEN }}
-                >
-                  <Phone className="h-5 w-5" />
-                </a>
-              )}
-            </div>
+          {/* ── Contact ── */}
+          <div className="grid grid-cols-2 gap-3">
+            <a
+              href={`tel:${delivery.customerPhone}`}
+              className="flex items-center justify-center gap-2 h-12 rounded-2xl font-bold transition-all active:scale-95"
+              style={{ background: GREEN, color: "white" }}
+            >
+              <Phone className="h-4 w-4" />
+              {t("call_customer")}
+            </a>
+            {/* WhatsApp button logic remains, just update style */}
+            <a
+              href={`https://wa.me/${delivery.customerPhone.replace(/\s+/g, "")}`}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center justify-center gap-2 h-12 rounded-2xl font-bold border transition-all active:scale-95"
+              style={{ borderColor: "#25D366", color: "#25D366", background: "rgba(37,211,102,0.1)" }}
+            >
+              <Share2 className="h-4 w-4" />
+              WhatsApp
+            </a>
           </div>
-
-          {/* ── Info extras ── */}
-          {(delivery.estimatedDeliveryTime || delivery.weight) && (
-            <div className="flex gap-3">
-              {delivery.estimatedDeliveryTime && (
-                <div className="flex-1 rounded-2xl border p-3 flex items-center gap-2" style={{ background: "white", borderColor: BORDER }}>
-                  <Clock className="h-4 w-4 flex-shrink-0" style={{ color: GOLD }} />
-                  <div>
-                    <p className="text-xs" style={{ color: BROWN_LIGHT }}>{t("est_time")}</p>
-                    <p className="text-sm font-bold" style={{ color: BROWN }}>{delivery.estimatedDeliveryTime}</p>
-                  </div>
-                </div>
-              )}
-              {delivery.weight && (
-                <div className="flex-1 rounded-2xl border p-3 flex items-center gap-2" style={{ background: "white", borderColor: BORDER }}>
-                  <ShoppingBag className="h-4 w-4 flex-shrink-0" style={{ color: TC }} />
-                  <div>
-                    <p className="text-xs" style={{ color: BROWN_LIGHT }}>{t("weight")}</p>
-                    <p className="text-sm font-bold" style={{ color: BROWN }}>{delivery.weight} {t("kg")}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ── Delivered success ── */}
-          {delivery.status === "delivered" && (
-            <div className="rounded-2xl border p-5 text-center" style={{ background: "#E4F5EC", borderColor: "#A8DFC1" }}>
-              <CheckCircle2 className="h-10 w-10 mx-auto mb-2" style={{ color: GREEN }} />
-              <h3 className="font-bold text-lg" style={{ color: GREEN }}>{t("status_delivered")}</h3>
-              <p className="text-sm mt-1" style={{ color: "#2A5C38" }}>{t("delivery_done_msg")}</p>
-            </div>
-          )}
 
         </div>
 
         {/* ── Floating action button ── */}
         {isActive && (
-          <div
-            className="fixed bottom-20 left-0 right-0 px-4 z-30"
-            style={{ maxWidth: 440, margin: "0 auto" }}
-          >
-            {delivery.status === "pending" ? (
-              <button
-                onClick={() => setPickupConfirmOpen(true)}
-                disabled={isPending}
-                className="w-full h-14 rounded-2xl font-bold text-base text-white shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-60"
-                style={{ background: GOLD }}
-              >
-                <Package className="h-5 w-5" />
-                {t("start_delivery_btn")}
-                <ChevronRight className="h-5 w-5" />
-              </button>
-            ) : delivery.status === "in_progress" ? (
-              <button
-                onClick={() => setDeliveryConfirmOpen(true)}
-                disabled={isPending}
-                className="w-full h-14 rounded-2xl font-bold text-base text-white shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-60"
-                style={{ background: GREEN }}
-              >
-                <CheckCircle2 className="h-5 w-5" />
-                {t("confirm_delivered_btn")}
-              </button>
-            ) : null}
+          <div className="fixed bottom-20 left-0 right-0 px-4 z-30 pointer-events-none" style={{ maxWidth: 440, margin: "0 auto" }}>
+            <div className="pointer-events-auto">
+              {delivery.status === "pending" ? (
+                <button
+                  onClick={() => setPickupConfirmOpen(true)}
+                  disabled={isPending}
+                  className="w-full h-14 rounded-2xl font-extrabold text-base flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 disabled:opacity-60"
+                  style={{ background: GOLD_GRADIENT, color: "#1A0A06" }}
+                >
+                  <Package className="h-5 w-5" />
+                  {t("start_delivery_btn")}
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              ) : (
+                <button
+                  onClick={() => setDeliveryConfirmOpen(true)}
+                  disabled={isPending}
+                  className="w-full h-14 rounded-2xl font-extrabold text-base text-white shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-60"
+                  style={{ background: GREEN }}
+                >
+                  <CheckCircle2 className="h-5 w-5" />
+                  {t("confirm_delivered_btn")}
+                </button>
+              )}
+            </div>
           </div>
         )}
 
@@ -668,13 +641,13 @@ export default function LivreurLivraisonDetail() {
           >
             <div
               className="rounded-t-3xl sm:rounded-3xl w-full sm:max-w-sm mx-0 sm:mx-4 overflow-hidden border animate-in slide-in-from-bottom-4 duration-300"
-              style={{ background: "white", borderColor: GOLD + "60" }}
+              style={{ background: "#1A0A06", borderColor: "rgba(255,255,255,0.15)" }}
             >
-              <div className="h-1.5 w-full" style={{ background: `linear-gradient(90deg, ${GOLD}, ${TC})` }} />
+              <div className="h-1.5 w-full" style={{ background: GOLD_GRADIENT }} />
               <div className="p-6 text-center">
                 <div
                   className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-                  style={{ background: "#FEF6E4" }}
+                  style={{ background: "rgba(212,136,12,0.15)" }}
                 >
                   <Package className="h-8 w-8" style={{ color: GOLD }} />
                 </div>
@@ -682,10 +655,10 @@ export default function LivreurLivraisonDetail() {
                 <p className="text-sm mb-2" style={{ color: BROWN_MID }}>{delivery.customerName}</p>
                 <div
                   className="rounded-xl p-3 mb-5 border text-left"
-                  style={{ background: SAND, borderColor: BORDER }}
+                  style={{ background: "rgba(255,255,255,0.05)", borderColor: BORDER }}
                 >
                   <div className="flex items-start gap-2">
-                    <div className="w-5 h-5 rounded-full border-2 flex-shrink-0 mt-0.5" style={{ borderColor: GOLD, background: "#FEF6E4" }} />
+                    <div className="w-5 h-5 rounded-full border-2 flex-shrink-0 mt-0.5" style={{ borderColor: GOLD, background: "rgba(212,136,12,0.2)" }} />
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-wide" style={{ color: BROWN_LIGHT }}>Restaurant</p>
                       <p className="text-sm font-medium" style={{ color: BROWN }}>{delivery.pickupAddress}</p>
@@ -705,15 +678,15 @@ export default function LivreurLivraisonDetail() {
                   <button
                     onClick={() => setPickupConfirmOpen(false)}
                     className="h-12 rounded-xl font-semibold border"
-                    style={{ borderColor: BORDER, color: BROWN_MID, background: SAND }}
+                    style={{ borderColor: BORDER, color: BROWN_MID, background: "rgba(255,255,255,0.05)" }}
                   >
                     {t("back")}
                   </button>
                   <button
                     onClick={handlePickupConfirm}
                     disabled={isPending}
-                    className="h-12 rounded-xl font-bold text-white disabled:opacity-60"
-                    style={{ background: GOLD }}
+                    className="h-12 rounded-xl font-bold text-[#1A0A06] disabled:opacity-60"
+                    style={{ background: GOLD_GRADIENT }}
                   >
                     {isPending ? "…" : t("pickup_confirm_btn")}
                   </button>
@@ -731,89 +704,63 @@ export default function LivreurLivraisonDetail() {
           >
             <div
               className="rounded-t-3xl sm:rounded-3xl w-full sm:max-w-sm mx-0 sm:mx-4 overflow-hidden border animate-in slide-in-from-bottom-4 duration-300"
-              style={{ background: "white", borderColor: GREEN + "40" }}
+              style={{ background: "#1A0A06", borderColor: "rgba(255,255,255,0.15)" }}
             >
-              <div className="h-1.5 w-full" style={{ background: `linear-gradient(90deg, ${GREEN}, ${GOLD})` }} />
-              <div className="p-6">
-                {/* Header */}
-                <div className="text-center mb-4">
-                  <div
-                    className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3"
-                    style={{ background: "#E4F5EC" }}
-                  >
-                    <CheckCircle2 className="h-7 w-7" style={{ color: GREEN }} />
-                  </div>
-                  <h3 className="text-xl font-bold" style={{ color: BROWN }}>{t("confirm_delivery_title")}</h3>
-                  <p className="text-sm mt-1" style={{ color: BROWN_MID }}>{delivery.customerName} · {delivery.deliveryAddress}</p>
-                </div>
-
-                {/* Anti-cheat: 4-digit confirm code from client */}
+              <div className="h-1.5 w-full" style={{ background: GREEN }} />
+              <div className="p-6 text-center">
                 <div
-                  className="rounded-2xl border overflow-hidden mb-4"
-                  style={{ borderColor: GREEN + "60", background: "#E4F5EC" }}
+                  className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+                  style={{ background: "rgba(42,122,72,0.15)" }}
                 >
-                  <div className="px-4 py-2.5 border-b" style={{ borderColor: GREEN + "30" }}>
-                    <p className="text-xs font-bold uppercase tracking-widest" style={{ color: GREEN }}>
-                      🔐 Code du client (anti-triche)
-                    </p>
-                  </div>
-                  <div className="p-4">
-                    <p className="text-xs mb-3" style={{ color: "#2A5C38" }}>
-                      Demandez le code à 4 chiffres au client et saisissez-le ci-dessous :
+                  <CheckCircle2 className="h-8 w-8" style={{ color: GREEN }} />
+                </div>
+                <h3 className="text-xl font-bold mb-2" style={{ color: BROWN }}>{t("confirm_delivered_title")}</h3>
+                <p className="text-sm mb-5" style={{ color: BROWN_MID }}>{t("confirm_delivered_sub")}</p>
+
+                {profile?.requireConfirmationCode && (
+                  <div className="mb-5">
+                    <p className="text-xs font-bold text-left mb-2 uppercase tracking-wide" style={{ color: BROWN_LIGHT }}>
+                      {t("confirm_code_label")}
                     </p>
                     <input
-                      type="number"
+                      type="text"
                       inputMode="numeric"
-                      pattern="[0-9]{4}"
-                      maxLength={4}
+                      maxLength={6}
                       value={confirmCodeInput}
-                      onChange={e => {
-                        const val = e.target.value.replace(/\D/g, "").slice(0, 4);
-                        setConfirmCodeInput(val);
-                        setConfirmCodeError("");
-                      }}
-                      placeholder="_ _ _ _"
-                      className="w-full h-14 rounded-xl border text-center text-3xl font-mono font-bold tracking-[0.5em] outline-none transition-all"
-                      style={{
-                        borderColor: confirmCodeError ? "#DC2626" : confirmCodeInput.length === 4 ? GREEN : BORDER,
-                        background: "white",
-                        color: BROWN,
-                      }}
+                      onChange={(e) => setConfirmCodeInput(e.target.value)}
+                      placeholder="· · · · · ·"
+                      className="w-full h-14 bg-white/5 border border-white/10 rounded-2xl text-center text-2xl font-black tracking-[0.5em] text-white focus:border-[#D4880C] focus:ring-0 transition-all"
                     />
                     {confirmCodeError && (
-                      <p className="text-xs mt-2 text-center font-medium" style={{ color: "#DC2626" }}>
-                        ⚠️ {confirmCodeError}
-                      </p>
+                      <p className="text-xs mt-2 font-bold" style={{ color: TC }}>{confirmCodeError}</p>
                     )}
+                    <p className="text-[10px] mt-3 italic" style={{ color: BROWN_LIGHT }}>
+                      {t("confirm_code_help")}
+                    </p>
                   </div>
-                </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-3">
                   <button
-                    onClick={() => {
-                      setDeliveryConfirmOpen(false);
-                      setConfirmCodeInput("");
-                      setConfirmCodeError("");
-                    }}
+                    onClick={() => setDeliveryConfirmOpen(false)}
                     className="h-12 rounded-xl font-semibold border"
-                    style={{ borderColor: BORDER, color: BROWN_MID, background: SAND }}
+                    style={{ borderColor: BORDER, color: BROWN_MID, background: "rgba(255,255,255,0.05)" }}
                   >
                     {t("back")}
                   </button>
                   <button
                     onClick={handleDelivered}
-                    disabled={isPending || confirmCodeInput.length !== 4}
-                    className="h-12 rounded-xl font-bold text-white disabled:opacity-50"
+                    disabled={isPending || (profile?.requireConfirmationCode && !confirmCodeInput.trim())}
+                    className="h-12 rounded-xl font-bold text-white disabled:opacity-60"
                     style={{ background: GREEN }}
                   >
-                    {isPending ? "…" : t("confirm_delivered_btn")}
+                    {isPending ? "…" : t("confirm")}
                   </button>
                 </div>
               </div>
             </div>
           </div>
         )}
-
       </div>
     </LivreurLayout>
   );

@@ -147,9 +147,45 @@
     @apply border-border;
   }
   body {
-    @apply font-sans antialiased bg-background text-foreground;
-    background-color: #FAF6EF;
+    @apply font-sans antialiased text-foreground;
+    background: linear-gradient(135deg, #1A0A06 0%, #2C1810 100%);
+    min-height: 100vh;
+    color: white;
   }
+}
+
+/* Premium Moroccan glass card */
+.pm-card {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* Gold gradient CTA */
+.pm-cta {
+  background: linear-gradient(135deg, #FADB5F 0%, #D4880C 100%);
+  color: #1A0A06;
+  font-weight: 700;
+}
+
+/* Moroccan star overlay */
+.pm-pattern {
+  background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 0l2 18 18 2-18 2-2 18-2-18-18-2 18-2z' fill='%23D4880C' fill-rule='evenodd'/%3E%3C/svg%3E");
+  background-size: 40px 40px;
+  opacity: 0.06;
+}
+
+/* Status glow pill */
+.pm-online {
+  background: rgba(42, 122, 72, 0.2);
+  border: 1px solid rgba(42, 122, 72, 0.5);
+  box-shadow: 0 0 12px rgba(42, 234, 108, 0.25);
+}
+
+/* Moroccan arch header shape */
+.pm-arch {
+  clip-path: polygon(0 0, 100% 0, 100% 85%, 50% 100%, 0 85%);
 }
 
 /* Zellige geometric pattern for decorative use */

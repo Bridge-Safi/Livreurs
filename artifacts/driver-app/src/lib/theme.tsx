@@ -40,18 +40,18 @@ const LIGHT: ThemeColors = {
 };
 
 const DARK: ThemeColors = {
-  bg: "#0F1117",
-  bgCard: "#1C1F2E",
-  bgCardHover: "#252838",
-  bgActive: "#2A1F1A",
-  border: "#2E2E3E",
-  text: "#F0E8E0",
-  textMid: "#C0A898",
-  textLight: "#7A6A62",
-  sidebar: "#141620",
-  sidebarBorder: "#252838",
-  topBar: "#141620",
-  navActive: "#2A1F1A",
+  bg: "#1A0A06",
+  bgCard: "rgba(255,255,255,0.08)",
+  bgCardHover: "rgba(255,255,255,0.12)",
+  bgActive: "rgba(212,136,12,0.15)",
+  border: "rgba(255,255,255,0.15)",
+  text: "rgba(255,255,255,0.95)",
+  textMid: "rgba(255,255,255,0.65)",
+  textLight: "rgba(255,255,255,0.40)",
+  sidebar: "rgba(26,10,6,0.85)",
+  sidebarBorder: "rgba(255,255,255,0.10)",
+  topBar: "rgba(26,10,6,0.85)",
+  navActive: "rgba(212,136,12,0.20)",
 };
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
@@ -59,7 +59,7 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
     const stored = localStorage.getItem("bridge-theme");
-    return (stored === "dark" || stored === "light") ? stored : "light";
+    return (stored === "dark" || stored === "light") ? stored : "dark";
   });
 
   useEffect(() => {

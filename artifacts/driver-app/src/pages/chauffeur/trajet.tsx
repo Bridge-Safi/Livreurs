@@ -8,7 +8,7 @@ import {
 import {
   ArrowLeft, MapPin, Phone, Clock, Car,
   CheckCircle2, Navigation, Coins, ChevronRight,
-  User, AlertCircle,
+  User, AlertCircle, Share2
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQueryClient } from "@tanstack/react-query";
@@ -17,17 +17,25 @@ import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { GpsPickerModal } from "@/components/GpsPickerModal";
 import { stopContinuousAlarm } from "@/lib/alarm";
-import { useTheme } from "@/lib/theme";
 
 const GOLD = "#D4880C";
-const GOLD_DARK = "#A86800";
+const TC = "#E85C30";
 const GREEN = "#2A7A48";
-const TC = "#C14B2A";
-const SAND = "#FAF6EF";
-const BORDER = "#E8DDD0";
-const BROWN = "#2C1810";
-const BROWN_MID = "#6B4033";
-const BROWN_LIGHT = "#9B7060";
+const SAND = "#1A0A06";
+const BORDER = "rgba(255,255,255,0.15)";
+const BROWN = "rgba(255,255,255,0.95)";
+const BROWN_MID = "rgba(255,255,255,0.65)";
+const BROWN_LIGHT = "rgba(255,255,255,0.40)";
+
+const GLASS_STYLE = {
+  background: "rgba(255,255,255,0.08)",
+  backdropFilter: "blur(20px)",
+  WebkitBackdropFilter: "blur(20px)",
+  border: "1px solid rgba(255,255,255,0.15)",
+  boxShadow: "0 8px 32px rgba(0,0,0,0.3)"
+};
+
+const GOLD_GRADIENT = "linear-gradient(135deg, #FADB5F 0%, #D4880C 100%)";
 
 function StepTimeline({ status }: { status?: string }) {
   const steps = [
@@ -37,25 +45,26 @@ function StepTimeline({ status }: { status?: string }) {
   ];
   const idx = status === "completed" ? 2 : status === "in_progress" ? 1 : 0;
   return (
-    <div className="flex items-center gap-0">
+    <div className="flex items-center gap-0 relative z-10">
       {steps.map((s, i) => (
         <div key={i} className="flex items-center flex-1 last:flex-none">
           <div className="flex flex-col items-center">
             <div
-              className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all"
+              className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all shadow-sm"
               style={{
-                background: i <= idx ? GOLD : "#E8DDD0",
+                background: i <= idx ? TC : "rgba(255,255,255,0.1)",
                 color: i <= idx ? "white" : BROWN_LIGHT,
+                border: i <= idx ? "none" : `1px solid ${BORDER}`
               }}
             >
               {i < idx ? <CheckCircle2 className="w-4 h-4" /> : i + 1}
             </div>
-            <span className="text-[10px] mt-1 text-center w-16 leading-tight" style={{ color: i <= idx ? GOLD_DARK : BROWN_LIGHT }}>
+            <span className="text-[10px] mt-1 text-center w-16 leading-tight" style={{ color: i <= idx ? TC : BROWN_LIGHT }}>
               {s.label}
             </span>
           </div>
           {i < steps.length - 1 && (
-            <div className="flex-1 h-0.5 mb-5 mx-1 transition-all" style={{ background: i < idx ? GOLD : "#E8DDD0" }} />
+            <div className="flex-1 h-0.5 mb-5 mx-1" style={{ background: i < idx ? TC : BORDER }} />
           )}
         </div>
       ))}
@@ -70,7 +79,6 @@ export default function ChauffeurTrajetDetail() {
   const queryClient = useQueryClient();
   const { t } = useI18n();
   const { chauffeur } = useAuth();
-  const { colors, isDark } = useTheme();
   const driverId = chauffeur?.id ?? 0;
 
   const [gpsTarget, setGpsTarget] = useState<{ address: string; label: string } | null>(null);
@@ -142,16 +150,17 @@ export default function ChauffeurTrajetDetail() {
   if (showEarnings) {
     return (
       <ChauffeurLayout>
-        <div className="flex-1 flex flex-col items-center justify-center gap-6 p-8 animate-in fade-in zoom-in-95 duration-300" style={{ background: SAND }}>
-          <div className="w-28 h-28 rounded-full flex items-center justify-center shadow-lg" style={{ background: GOLD }}>
+        <div className="flex-1 flex flex-col items-center justify-center gap-6 p-8 animate-in fade-in zoom-in-95 duration-300 relative" style={{ background: "linear-gradient(135deg, #1A0A06 0%, #2C1810 100%)" }}>
+          <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.07, backgroundImage:`url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 0l2 18 18 2-18 2-2 18-2-18-18-2 18-2z' fill='%23D4880C' fill-rule='evenodd'/%3E%3C/svg%3E")`, backgroundSize:"40px 40px" }} />
+          <div className="w-28 h-28 rounded-full flex items-center justify-center shadow-lg relative z-10" style={{ background: GREEN }}>
             <CheckCircle2 className="h-14 w-14 text-white" />
           </div>
-          <div className="text-center">
+          <div className="text-center relative z-10">
             <h2 className="text-2xl font-bold mb-1" style={{ color: BROWN }}>Course terminée !</h2>
             <p className="text-sm" style={{ color: BROWN_LIGHT }}>Excellente course, bonne continuation 🚖</p>
           </div>
-          <div className="flex items-center gap-3 px-8 py-5 rounded-2xl border shadow-sm" style={{ background: "white", borderColor: BORDER }}>
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: "#FEF6E4" }}>
+          <div className="flex items-center gap-3 px-8 py-5 rounded-2xl border shadow-sm relative z-10" style={GLASS_STYLE}>
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: "rgba(212,136,12,0.15)" }}>
               <Coins className="h-6 w-6" style={{ color: GOLD }} />
             </div>
             <div>
@@ -159,12 +168,12 @@ export default function ChauffeurTrajetDetail() {
               <p className="text-3xl font-extrabold" style={{ color: GOLD }}>{trip?.fare?.toFixed(0)} DH</p>
             </div>
           </div>
-          <div className="flex gap-1.5 mt-2">
+          <div className="flex gap-1.5 mt-2 relative z-10">
             {[0, 1, 2].map(i => (
               <span key={i} className="w-2 h-2 rounded-full animate-bounce" style={{ background: GOLD, animationDelay: `${i * 150}ms` }} />
             ))}
           </div>
-          <p className="text-xs" style={{ color: BROWN_LIGHT }}>Retour au tableau de bord…</p>
+          <p className="text-xs relative z-10" style={{ color: BROWN_LIGHT }}>Retour au tableau de bord…</p>
         </div>
       </ChauffeurLayout>
     );
@@ -173,10 +182,10 @@ export default function ChauffeurTrajetDetail() {
   if (isLoading) {
     return (
       <ChauffeurLayout>
-        <div className="p-5 space-y-4">
-          <Skeleton className="h-8 w-40 rounded-lg" style={{ background: "#F5EFE4" }} />
-          <Skeleton className="h-32 w-full rounded-2xl" style={{ background: "#F5EFE4" }} />
-          <Skeleton className="h-48 w-full rounded-2xl" style={{ background: "#F5EFE4" }} />
+        <div className="p-5 space-y-4 min-h-full" style={{ background: "linear-gradient(135deg, #1A0A06 0%, #2C1810 100%)" }}>
+          <Skeleton className="h-8 w-40 rounded-lg" style={{ background: "rgba(255,255,255,0.05)" }} />
+          <Skeleton className="h-32 w-full rounded-2xl" style={{ background: "rgba(255,255,255,0.05)" }} />
+          <Skeleton className="h-48 w-full rounded-2xl" style={{ background: "rgba(255,255,255,0.05)" }} />
         </div>
       </ChauffeurLayout>
     );
@@ -185,11 +194,12 @@ export default function ChauffeurTrajetDetail() {
   if (!trip) {
     return (
       <ChauffeurLayout>
-        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-          <Car className="h-16 w-16 mb-4" style={{ color: "#D0BEB0" }} />
-          <h2 className="text-xl font-bold mb-2" style={{ color: BROWN }}>Course introuvable</h2>
-          <Link href="/chauffeur/trajets">
-            <button className="mt-4 px-6 py-2.5 rounded-xl font-semibold text-white" style={{ background: GOLD }}>
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center min-h-full relative" style={{ background: "linear-gradient(135deg, #1A0A06 0%, #2C1810 100%)" }}>
+          <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.07, backgroundImage:`url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 0l2 18 18 2-18 2-2 18-2-18-18-2 18-2z' fill='%23D4880C' fill-rule='evenodd'/%3E%3C/svg%3E")`, backgroundSize:"40px 40px" }} />
+          <Car className="h-16 w-16 mb-4 relative z-10" style={{ color: "rgba(255,255,255,0.15)" }} />
+          <h2 className="text-xl font-bold mb-2 relative z-10" style={{ color: BROWN }}>Course introuvable</h2>
+          <Link href="/chauffeur/trajets" className="relative z-10">
+            <button className="mt-4 px-6 py-2.5 rounded-xl font-semibold text-white" style={{ background: TC }}>
               Retour aux trajets
             </button>
           </Link>
@@ -202,28 +212,29 @@ export default function ChauffeurTrajetDetail() {
 
   return (
     <ChauffeurLayout>
-      <div className="flex-1 overflow-auto" style={{ background: colors.bg }}>
+      <div className="flex-1 overflow-auto relative" style={{ background: "linear-gradient(135deg, #1A0A06 0%, #2C1810 100%)" }}>
+        <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.07, backgroundImage:`url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 0l2 18 18 2-18 2-2 18-2-18-18-2 18-2z' fill='%23D4880C' fill-rule='evenodd'/%3E%3C/svg%3E")`, backgroundSize:"40px 40px" }} />
 
         {/* Sticky header */}
         <div
-          className="sticky top-0 z-20 flex items-center gap-3 px-4 py-3 border-b"
-          style={{ background: colors.bgCard, borderColor: BORDER }}
+          className="sticky top-0 z-20 flex items-center gap-3 px-4 py-3 border-b relative"
+          style={{ background: "rgba(26,10,6,0.8)", backdropFilter: "blur(12px)", borderColor: BORDER }}
         >
           <Link href="/chauffeur/trajets">
-            <button className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: isDark ? "#2A2010" : SAND }}>
+            <button className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.1)" }}>
               <ArrowLeft className="h-4 w-4" style={{ color: BROWN }} />
             </button>
           </Link>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-mono" style={{ color: BROWN_LIGHT }}>Course #{trip.id.toString().padStart(5, "0")}</p>
-            <p className="text-sm font-bold truncate" style={{ color: colors.text }}>{trip.passengerName}</p>
+            <p className="text-sm font-bold truncate" style={{ color: BROWN }}>{trip.passengerName}</p>
           </div>
           <span
             className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold flex-shrink-0"
             style={
-              trip.status === "completed" ? { background: "#E4F5EC", color: GREEN } :
-              trip.status === "in_progress" ? { background: "#FEF6E4", color: GOLD_DARK } :
-              { background: SAND, color: BROWN_MID }
+              trip.status === "completed" ? { background: "rgba(42,122,72,0.15)", color: GREEN, border: `1px solid ${GREEN}33` } :
+              trip.status === "in_progress" ? { background: "rgba(212,136,12,0.15)", color: GOLD, border: `1px solid ${GOLD}33` } :
+              { background: "rgba(255,255,255,0.05)", color: BROWN_MID, border: `1px solid ${BORDER}` }
             }
           >
             {trip.status === "in_progress" && <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />}
@@ -231,62 +242,62 @@ export default function ChauffeurTrajetDetail() {
           </span>
         </div>
 
-        <div className="p-4 space-y-4 max-w-lg mx-auto pb-32">
+        <div className="p-4 space-y-4 max-w-lg mx-auto pb-32 relative z-10">
 
           {/* Timeline */}
           <StepTimeline status={trip.status} />
 
           {/* Status banner */}
           {trip.status === "scheduled" && (
-            <div className="rounded-2xl border p-4 flex items-center gap-3" style={{ background: isDark ? "#2A1A0A" : "#FEF6E4", borderColor: GOLD + "40" }}>
-              <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: GOLD + "20" }}>
+            <div className="rounded-2xl border p-4 flex items-center gap-3" style={{ background: "rgba(212,136,12,0.1)", borderColor: "rgba(212,136,12,0.3)" }}>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "rgba(212,136,12,0.2)" }}>
                 <Car className="h-5 w-5" style={{ color: GOLD }} />
               </div>
               <div>
-                <p className="text-sm font-bold" style={{ color: colors.text }}>Direction : prise en charge</p>
+                <p className="text-sm font-bold" style={{ color: BROWN }}>Direction : prise en charge</p>
                 <p className="text-xs mt-0.5" style={{ color: BROWN_MID }}>{trip.pickupAddress}</p>
               </div>
             </div>
           )}
           {trip.status === "in_progress" && (
-            <div className="rounded-2xl border p-4 flex items-center gap-3" style={{ background: isDark ? "#0A2015" : "#E4F5EC", borderColor: GREEN + "40" }}>
-              <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: GREEN + "20" }}>
+            <div className="rounded-2xl border p-4 flex items-center gap-3" style={{ background: "rgba(42,122,72,0.1)", borderColor: "rgba(42,122,72,0.3)" }}>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "rgba(42,122,72,0.2)" }}>
                 <Car className="h-5 w-5 animate-pulse" style={{ color: GREEN }} />
               </div>
               <div>
-                <p className="text-sm font-bold" style={{ color: colors.text }}>Passager à bord — en route</p>
+                <p className="text-sm font-bold" style={{ color: BROWN }}>Passager à bord — en route</p>
                 <p className="text-xs mt-0.5" style={{ color: BROWN_MID }}>{trip.dropoffAddress}</p>
               </div>
             </div>
           )}
           {trip.status === "completed" && (
-            <div className="rounded-2xl border p-5 text-center" style={{ background: "#E4F5EC", borderColor: "#A8DFC1" }}>
+            <div className="rounded-2xl border p-5 text-center" style={{ background: "rgba(42,122,72,0.15)", borderColor: "rgba(42,122,72,0.3)" }}>
               <CheckCircle2 className="h-10 w-10 mx-auto mb-2" style={{ color: GREEN }} />
               <h3 className="font-bold text-lg" style={{ color: GREEN }}>Course terminée</h3>
-              <p className="text-sm mt-1" style={{ color: "#2A5C38" }}>Tarif : {trip.fare.toFixed(0)} DH</p>
+              <p className="text-sm mt-1" style={{ color: "#2AE86C" }}>Tarif : {trip.fare.toFixed(0)} DH</p>
             </div>
           )}
 
           {/* Route */}
-          <div className="rounded-2xl border overflow-hidden" style={{ background: colors.bgCard, borderColor: BORDER }}>
+          <div className="rounded-2xl border overflow-hidden" style={GLASS_STYLE}>
             <div className="px-4 py-3 flex items-center gap-2 border-b" style={{ borderColor: BORDER }}>
-              <MapPin className="h-4 w-4" style={{ color: GOLD }} />
-              <span className="text-sm font-bold" style={{ color: colors.text }}>Itinéraire</span>
+              <MapPin className="h-4 w-4" style={{ color: TC }} />
+              <span className="text-sm font-bold" style={{ color: BROWN }}>Itinéraire</span>
             </div>
             <div className="p-4 space-y-0">
               {/* Pickup */}
               <div className="flex gap-3">
                 <div className="flex flex-col items-center pt-1">
-                  <div className="w-4 h-4 rounded-full border-2 flex-shrink-0" style={{ borderColor: GOLD, background: isDark ? "#2A1A0A" : "#FEF6E4" }} />
+                  <div className="w-4 h-4 rounded-full border-2 flex-shrink-0" style={{ borderColor: GOLD, background: "rgba(212,136,12,0.2)" }} />
                   <div className="w-0.5 flex-1 my-1" style={{ background: BORDER, minHeight: 24 }} />
                 </div>
                 <div className="flex-1 pb-4 min-w-0">
                   <p className="text-xs font-bold uppercase tracking-wide mb-0.5" style={{ color: BROWN_LIGHT }}>Prise en charge</p>
-                  <p className="text-sm font-medium" style={{ color: colors.text }}>{trip.pickupAddress}</p>
+                  <p className="text-sm font-medium" style={{ color: BROWN }}>{trip.pickupAddress}</p>
                   <button
                     onClick={() => setGpsTarget({ address: trip.pickupAddress, label: "Prise en charge" })}
                     className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"
-                    style={{ background: isDark ? "#2A1A0A" : SAND, color: BROWN_MID, border: `1px solid ${BORDER}` }}
+                    style={{ background: "rgba(255,255,255,0.05)", color: BROWN_MID, border: `1px solid ${BORDER}` }}
                   >
                     <Navigation className="h-3 w-3" />
                     Naviguer
@@ -300,7 +311,7 @@ export default function ChauffeurTrajetDetail() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-bold uppercase tracking-wide mb-0.5" style={{ color: GREEN }}>Destination</p>
-                  <p className="text-sm font-semibold" style={{ color: colors.text }}>{trip.dropoffAddress}</p>
+                  <p className="text-sm font-semibold" style={{ color: BROWN }}>{trip.dropoffAddress}</p>
                   <button
                     onClick={() => setGpsTarget({ address: trip.dropoffAddress, label: "Destination" })}
                     className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white"
@@ -315,17 +326,17 @@ export default function ChauffeurTrajetDetail() {
           </div>
 
           {/* Passenger */}
-          <div className="rounded-2xl border overflow-hidden" style={{ background: colors.bgCard, borderColor: BORDER }}>
+          <div className="rounded-2xl border overflow-hidden" style={GLASS_STYLE}>
             <div className="px-4 py-3 flex items-center gap-2 border-b" style={{ borderColor: BORDER }}>
-              <User className="h-4 w-4" style={{ color: GOLD }} />
-              <span className="text-sm font-bold" style={{ color: colors.text }}>Passager</span>
+              <User className="h-4 w-4" style={{ color: TC }} />
+              <span className="text-sm font-bold" style={{ color: BROWN }}>Passager</span>
             </div>
             <div className="p-4 flex items-center gap-4">
               <div className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg text-white flex-shrink-0" style={{ background: GOLD }}>
                 {trip.passengerName.charAt(0).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-bold" style={{ color: colors.text }}>{trip.passengerName}</p>
+                <p className="font-bold" style={{ color: BROWN }}>{trip.passengerName}</p>
                 {trip.passengerPhone && (
                   <p className="text-sm font-mono" style={{ color: BROWN_LIGHT }}>{trip.passengerPhone}</p>
                 )}
@@ -343,11 +354,11 @@ export default function ChauffeurTrajetDetail() {
           </div>
 
           {/* Fare — InDrive style breakdown */}
-          <div className="rounded-2xl border overflow-hidden" style={{ background: colors.bgCard, borderColor: BORDER }}>
+          <div className="rounded-2xl border overflow-hidden" style={GLASS_STYLE}>
             {/* Main fare row */}
-            <div className="px-4 py-3.5 flex items-center justify-between border-b" style={{ background: isDark ? "#2A1A0A" : "#FEF6E4", borderColor: GOLD + "30" }}>
+            <div className="px-4 py-3.5 flex items-center justify-between border-b" style={{ background: "rgba(212,136,12,0.1)", borderColor: "rgba(212,136,12,0.2)" }}>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: GOLD + "20" }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "rgba(212,136,12,0.2)" }}>
                   <Coins className="h-5 w-5" style={{ color: GOLD }} />
                 </div>
                 <div>
@@ -358,7 +369,7 @@ export default function ChauffeurTrajetDetail() {
               {trip.distance && trip.distance > 0 ? (
                 <div className="text-right">
                   <p className="text-xs font-medium" style={{ color: BROWN_LIGHT }}>Distance</p>
-                  <p className="text-lg font-bold" style={{ color: colors.text }}>{trip.distance.toFixed(1)} km</p>
+                  <p className="text-lg font-bold" style={{ color: BROWN }}>{trip.distance.toFixed(1)} km</p>
                 </div>
               ) : null}
             </div>
@@ -367,20 +378,20 @@ export default function ChauffeurTrajetDetail() {
               <div className="divide-y" style={{ borderColor: BORDER }}>
                 <div className="px-4 py-2.5 flex justify-between items-center">
                   <span className="text-xs" style={{ color: BROWN_LIGHT }}>Base forfaitaire</span>
-                  <span className="text-xs font-semibold" style={{ color: colors.text }}>{(trip.baseFare ?? 5).toFixed(0)} DH</span>
+                  <span className="text-xs font-semibold" style={{ color: BROWN }}>{(trip.baseFare ?? 5).toFixed(0)} DH</span>
                 </div>
                 <div className="px-4 py-2.5 flex justify-between items-center">
                   <span className="text-xs" style={{ color: BROWN_LIGHT }}>{trip.distance.toFixed(1)} km × {(trip.pricePerKm ?? 2.5).toFixed(1)} DH/km</span>
-                  <span className="text-xs font-semibold" style={{ color: colors.text }}>{(trip.distance * (trip.pricePerKm ?? 2.5)).toFixed(1)} DH</span>
+                  <span className="text-xs font-semibold" style={{ color: BROWN }}>{(trip.distance * (trip.pricePerKm ?? 2.5)).toFixed(1)} DH</span>
                 </div>
                 {trip.suggestedFare && trip.fare !== trip.suggestedFare ? (
-                  <div className="px-4 py-2.5 flex justify-between items-center" style={{ background: isDark ? "#1A0A00" : "#FFF5F0" }}>
+                  <div className="px-4 py-2.5 flex justify-between items-center" style={{ background: "rgba(232,92,48,0.1)" }}>
                     <span className="text-xs" style={{ color: TC }}>Tarif conseillé</span>
                     <span className="text-xs font-bold" style={{ color: TC }}>{trip.suggestedFare.toFixed(0)} DH</span>
                   </div>
                 ) : null}
                 {trip.negotiationStatus === "agreed" ? (
-                  <div className="px-4 py-2 flex items-center gap-2" style={{ background: isDark ? "#0A2015" : "#E4F5EC" }}>
+                  <div className="px-4 py-2 flex items-center gap-2" style={{ background: "rgba(42,122,72,0.1)" }}>
                     <CheckCircle2 className="h-3.5 w-3.5 flex-shrink-0" style={{ color: GREEN }} />
                     <span className="text-xs font-medium" style={{ color: GREEN }}>Tarif négocié accepté par le passager</span>
                   </div>
@@ -396,17 +407,17 @@ export default function ChauffeurTrajetDetail() {
 
           {/* Timing */}
           <div className="flex gap-3">
-            <div className="flex-1 rounded-2xl border p-3 flex items-center gap-2" style={{ background: colors.bgCard, borderColor: BORDER }}>
+            <div className="flex-1 rounded-2xl border p-3 flex items-center gap-2" style={GLASS_STYLE}>
               <Clock className="h-4 w-4 flex-shrink-0" style={{ color: GOLD }} />
               <div>
                 <p className="text-xs" style={{ color: BROWN_LIGHT }}>Créée</p>
-                <p className="text-sm font-bold" style={{ color: colors.text }}>
+                <p className="text-sm font-bold" style={{ color: BROWN }}>
                   {new Date(trip.createdAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
                 </p>
               </div>
             </div>
             {trip.passengerPickedUpAt && (
-              <div className="flex-1 rounded-2xl border p-3 flex items-center gap-2" style={{ background: isDark ? "#0A2015" : "#E4F5EC", borderColor: GREEN + "40" }}>
+              <div className="flex-1 rounded-2xl border p-3 flex items-center gap-2" style={{ background: "rgba(42,122,72,0.1)", borderColor: "rgba(42,122,72,0.3)" }}>
                 <Car className="h-4 w-4 flex-shrink-0" style={{ color: GREEN }} />
                 <div>
                   <p className="text-xs" style={{ color: GREEN }}>Pris en charge</p>
@@ -422,46 +433,48 @@ export default function ChauffeurTrajetDetail() {
 
         {/* Floating action button */}
         {isActive && (
-          <div className="fixed bottom-20 left-0 right-0 px-4 z-30" style={{ maxWidth: 440, margin: "0 auto" }}>
-            {trip.status === "scheduled" ? (
-              <button
-                onClick={() => setPickupConfirmOpen(true)}
-                disabled={isPending}
-                className="w-full h-14 rounded-2xl font-bold text-base text-white shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-60"
-                style={{ background: GOLD }}
-              >
-                <User className="h-5 w-5" />
-                J'ai pris en charge le passager
-                <ChevronRight className="h-5 w-5" />
-              </button>
-            ) : trip.status === "in_progress" ? (
-              <button
-                onClick={() => setCompleteConfirmOpen(true)}
-                disabled={isPending}
-                className="w-full h-14 rounded-2xl font-bold text-base text-white shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-60"
-                style={{ background: GREEN }}
-              >
-                <CheckCircle2 className="h-5 w-5" />
-                Course terminée — Arrivé à destination
-              </button>
-            ) : null}
+          <div className="fixed bottom-20 left-0 right-0 px-4 z-30 pointer-events-none" style={{ maxWidth: 440, margin: "0 auto" }}>
+            <div className="pointer-events-auto">
+              {trip.status === "scheduled" ? (
+                <button
+                  onClick={() => setPickupConfirmOpen(true)}
+                  disabled={isPending}
+                  className="w-full h-14 rounded-2xl font-extrabold text-base flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 disabled:opacity-60"
+                  style={{ background: GOLD_GRADIENT, color: "#1A0A06" }}
+                >
+                  <User className="h-5 w-5" />
+                  J'ai pris en charge le passager
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              ) : trip.status === "in_progress" ? (
+                <button
+                  onClick={() => setCompleteConfirmOpen(true)}
+                  disabled={isPending}
+                  className="w-full h-14 rounded-2xl font-extrabold text-base text-white shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-60"
+                  style={{ background: GREEN }}
+                >
+                  <CheckCircle2 className="h-5 w-5" />
+                  Course terminée — Arrivé à destination
+                </button>
+              ) : null}
+            </div>
           </div>
         )}
 
         {/* Pickup passenger confirmation modal */}
         {pickupConfirmOpen && (
           <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center" style={{ background: "rgba(44,24,16,0.7)", backdropFilter: "blur(8px)" }}>
-            <div className="rounded-t-3xl sm:rounded-3xl w-full sm:max-w-sm mx-0 sm:mx-4 overflow-hidden border animate-in slide-in-from-bottom-4 duration-300" style={{ background: "white", borderColor: GOLD + "60" }}>
-              <div className="h-1.5 w-full" style={{ background: `linear-gradient(90deg, ${GOLD}, ${TC})` }} />
+            <div className="rounded-t-3xl sm:rounded-3xl w-full sm:max-w-sm mx-0 sm:mx-4 overflow-hidden border animate-in slide-in-from-bottom-4 duration-300" style={{ background: "#1A0A06", borderColor: "rgba(255,255,255,0.15)" }}>
+              <div className="h-1.5 w-full" style={{ background: GOLD_GRADIENT }} />
               <div className="p-6 text-center">
-                <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: "#FEF6E4" }}>
+                <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: "rgba(212,136,12,0.15)" }}>
                   <User className="h-8 w-8" style={{ color: GOLD }} />
                 </div>
                 <h3 className="text-xl font-bold mb-2" style={{ color: BROWN }}>Passager à bord ?</h3>
                 <p className="text-sm mb-5" style={{ color: BROWN_MID }}>
                   Confirmez que <strong>{trip.passengerName}</strong> est bien installé dans votre véhicule.
                 </p>
-                <div className="rounded-xl p-3 mb-5 border" style={{ background: SAND, borderColor: BORDER }}>
+                <div className="rounded-xl p-3 mb-5 border" style={{ background: "rgba(255,255,255,0.05)", borderColor: BORDER }}>
                   <div className="flex items-center gap-2">
                     <AlertCircle className="h-4 w-4 flex-shrink-0" style={{ color: GOLD }} />
                     <p className="text-xs text-left" style={{ color: BROWN_MID }}>
@@ -470,10 +483,10 @@ export default function ChauffeurTrajetDetail() {
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <button onClick={() => setPickupConfirmOpen(false)} className="h-12 rounded-xl font-semibold border" style={{ borderColor: BORDER, color: BROWN_MID, background: SAND }}>
+                  <button onClick={() => setPickupConfirmOpen(false)} className="h-12 rounded-xl font-semibold border" style={{ borderColor: BORDER, color: BROWN_MID, background: "rgba(255,255,255,0.05)" }}>
                     Annuler
                   </button>
-                  <button onClick={handlePickupPassenger} disabled={isPending} className="h-12 rounded-xl font-bold text-white disabled:opacity-60" style={{ background: GOLD }}>
+                  <button onClick={handlePickupPassenger} disabled={isPending} className="h-12 rounded-xl font-bold text-[#1A0A06] disabled:opacity-60" style={{ background: GOLD_GRADIENT }}>
                     {isPending ? "…" : "Confirmer"}
                   </button>
                 </div>
@@ -485,34 +498,32 @@ export default function ChauffeurTrajetDetail() {
         {/* Complete trip confirmation modal */}
         {completeConfirmOpen && (
           <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center" style={{ background: "rgba(44,24,16,0.7)", backdropFilter: "blur(8px)" }}>
-            <div className="rounded-t-3xl sm:rounded-3xl w-full sm:max-w-sm mx-0 sm:mx-4 overflow-hidden border animate-in slide-in-from-bottom-4 duration-300" style={{ background: "white", borderColor: GREEN + "40" }}>
+            <div className="rounded-t-3xl sm:rounded-3xl w-full sm:max-w-sm mx-0 sm:mx-4 overflow-hidden border animate-in slide-in-from-bottom-4 duration-300" style={{ background: "#1A0A06", borderColor: "rgba(255,255,255,0.15)" }}>
               <div className="h-1.5 w-full" style={{ background: GREEN }} />
               <div className="p-6 text-center">
-                <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: "#E4F5EC" }}>
+                <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: "rgba(42,122,72,0.15)" }}>
                   <CheckCircle2 className="h-8 w-8" style={{ color: GREEN }} />
                 </div>
-                <h3 className="text-xl font-bold mb-2" style={{ color: BROWN }}>Terminer la course ?</h3>
-                <p className="text-sm mb-2" style={{ color: BROWN_MID }}>Vous êtes bien arrivé à :</p>
-                <div className="rounded-xl p-3 mb-5 border" style={{ background: SAND, borderColor: BORDER }}>
-                  <p className="text-sm font-medium" style={{ color: BROWN }}>{trip.dropoffAddress}</p>
-                </div>
-                <div className="rounded-xl p-3 mb-5 border flex items-center gap-2" style={{ background: isDark ? "#2A1A0A" : "#FEF6E4", borderColor: GOLD + "40" }}>
-                  <Coins className="h-5 w-5 flex-shrink-0" style={{ color: GOLD }} />
-                  <p className="text-base font-bold" style={{ color: GOLD_DARK }}>Encaissez {trip.fare.toFixed(0)} DH auprès du passager</p>
+                <h3 className="text-xl font-bold mb-2" style={{ color: BROWN }}>Arrivé à destination ?</h3>
+                <p className="text-sm mb-5" style={{ color: BROWN_MID }}>
+                  Confirmez que vous avez déposé le passager à <strong>{trip.dropoffAddress}</strong>.
+                </p>
+                <div className="rounded-xl p-4 mb-6" style={{ background: "rgba(212,136,12,0.1)", border: `1px solid ${GOLD}30` }}>
+                  <p className="text-xs uppercase font-bold tracking-widest mb-1" style={{ color: GOLD }}>Montant à encaisser</p>
+                  <p className="text-4xl font-black" style={{ color: GOLD }}>{trip.fare.toFixed(0)} DH</p>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <button onClick={() => setCompleteConfirmOpen(false)} className="h-12 rounded-xl font-semibold border" style={{ borderColor: BORDER, color: BROWN_MID, background: SAND }}>
+                  <button onClick={() => setCompleteConfirmOpen(false)} className="h-12 rounded-xl font-semibold border" style={{ borderColor: BORDER, color: BROWN_MID, background: "rgba(255,255,255,0.05)" }}>
                     Annuler
                   </button>
                   <button onClick={handleCompleteTrip} disabled={isPending} className="h-12 rounded-xl font-bold text-white disabled:opacity-60" style={{ background: GREEN }}>
-                    {isPending ? "…" : "Terminer"}
+                    {isPending ? "…" : "Terminer la course"}
                   </button>
                 </div>
               </div>
             </div>
           </div>
         )}
-
       </div>
     </ChauffeurLayout>
   );

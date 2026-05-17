@@ -13,14 +13,14 @@ import { Link } from "wouter";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 
-const TC = "#C14B2A";
+const TC = "#E85C30";
 const GREEN = "#2A7A48";
 const GOLD = "#D4880C";
-const SAND = "#FAF6EF";
-const BORDER = "#E8DDD0";
-const BROWN = "#2C1810";
-const BROWN_MID = "#6B4033";
-const BROWN_LIGHT = "#9B7060";
+const SAND = "#1A0A06";
+const BORDER = "rgba(255,255,255,0.15)";
+const BROWN = "rgba(255,255,255,0.95)";
+const BROWN_MID = "rgba(255,255,255,0.65)";
+const BROWN_LIGHT = "rgba(255,255,255,0.40)";
 
 function getLevel(deliveries: number): { name: string; color: string; bg: string } {
   if (deliveries >= 400) return { name: "Platine", color: "#6D28D9", bg: "#EDE9FE" };
@@ -66,12 +66,17 @@ export default function LivreurDashboard() {
 
   return (
     <LivreurLayout>
-      <div className="flex-1 overflow-auto" style={{ background: SAND }}>
+      <div className="flex-1 overflow-auto relative" style={{ background: "linear-gradient(135deg, #1A0A06 0%, #2C1810 100%)" }}>
+        {/* Moroccan star pattern overlay */}
+        <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.07, backgroundImage:`url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 0l2 18 18 2-18 2-2 18-2-18-18-2 18-2z' fill='%23D4880C' fill-rule='evenodd'/%3E%3C/svg%3E")`, backgroundSize:"40px 40px" }} />
 
         {/* ── Hero header ── */}
         <div
           className="relative px-5 pt-6 pb-8 overflow-hidden"
-          style={{ background: `linear-gradient(135deg, ${TC} 0%, #8B2A1A 60%, ${BROWN} 100%)` }}
+          style={{ 
+            background: `linear-gradient(135deg, rgba(232,92,48,0.4) 0%, rgba(26,10,6,0.8) 100%)`,
+            clipPath: "polygon(0 0, 100% 0, 100% 85%, 50% 100%, 0 85%)"
+          }}
         >
           {/* Zellige pattern */}
           <div className="absolute inset-0 opacity-10 pointer-events-none" style={{
@@ -131,17 +136,17 @@ export default function LivreurDashboard() {
         {/* ── Floating stats cards ── */}
         <div className="px-4 -mt-5 relative z-10">
           <div
-            className="rounded-2xl border p-4 grid grid-cols-4 gap-1"
-            style={{ background: "white", borderColor: BORDER, boxShadow: "0 4px 20px rgba(44,24,16,0.12)" }}
+            className="rounded-2xl p-4 grid grid-cols-4 gap-1"
+            style={{ background:"rgba(255,255,255,0.08)", backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", border:`1px solid ${BORDER}`, boxShadow:"0 8px 32px rgba(0,0,0,0.3)" }}
           >
             {[
-              { icon: Package, label: t("total_today"), value: stats?.totalToday ?? 0, color: TC, bg: "#FDEEE9" },
-              { icon: Bike, label: t("in_progress"), value: stats?.inProgress ?? 0, color: "#2563EB", bg: "#EFF6FF" },
-              { icon: CheckCircle2, label: t("completed"), value: stats?.completedToday ?? 0, color: GREEN, bg: "#E4F5EC" },
-              { icon: TrendingUp, label: "MAD", value: `${stats?.earningsToday ?? 0}`, color: GOLD, bg: "#FEF6E4" },
+              { icon: Package, label: t("total_today"), value: stats?.totalToday ?? 0, color: TC, bg: "rgba(232,92,48,0.15)" },
+              { icon: Bike, label: t("in_progress"), value: stats?.inProgress ?? 0, color: "#3B82F6", bg: "rgba(59,130,246,0.15)" },
+              { icon: CheckCircle2, label: t("completed"), value: stats?.completedToday ?? 0, color: GREEN, bg: "rgba(42,122,72,0.15)" },
+              { icon: TrendingUp, label: "MAD", value: `${stats?.earningsToday ?? 0}`, color: GOLD, bg: "rgba(212,136,12,0.15)" },
             ].map((card, i) => (
               <div key={i} className="flex flex-col items-center gap-1 py-1">
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: card.bg }}>
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center border" style={{ borderColor: `${card.color}40`, background: card.bg }}>
                   <card.icon className="h-4 w-4" style={{ color: card.color }} />
                 </div>
                 <div className="text-lg font-bold leading-none" style={{ color: BROWN }}>
@@ -158,8 +163,8 @@ export default function LivreurDashboard() {
           {/* ── Rating card ── */}
           {profile && (
             <div
-              className="rounded-2xl border p-4 flex items-center gap-4"
-              style={{ background: "white", borderColor: BORDER }}
+              className="rounded-2xl p-4 flex items-center gap-4"
+              style={{ background:"rgba(255,255,255,0.08)", backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", border:`1px solid ${BORDER}`, boxShadow:"0 8px 32px rgba(0,0,0,0.3)" }}
             >
               <div className="flex-1">
                 <p className="text-xs font-semibold mb-1" style={{ color: BROWN_LIGHT }}>{t("rating_global")}</p>
@@ -203,8 +208,8 @@ export default function LivreurDashboard() {
 
             {deliveriesLoading ? (
               <div className="space-y-3">
-                <Skeleton className="h-28 w-full rounded-2xl" style={{ background: "#F5EFE4" }} />
-                <Skeleton className="h-28 w-full rounded-2xl" style={{ background: "#F5EFE4" }} />
+                <Skeleton className="h-28 w-full rounded-2xl" style={{ background: "rgba(255,255,255,0.05)" }} />
+                <Skeleton className="h-28 w-full rounded-2xl" style={{ background: "rgba(255,255,255,0.05)" }} />
               </div>
             ) : deliveries && deliveries.length > 0 ? (
               <div className="space-y-3">
@@ -213,8 +218,8 @@ export default function LivreurDashboard() {
                   return (
                     <Link key={delivery.id} href={`/livreur/livraison/${delivery.id}`}>
                       <div
-                        className="rounded-2xl border overflow-hidden active:scale-[0.99] transition-transform cursor-pointer"
-                        style={{ background: "white", borderColor: BORDER }}
+                        className="rounded-2xl overflow-hidden active:scale-[0.99] transition-transform cursor-pointer"
+                        style={{ background:"rgba(255,255,255,0.08)", backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", border:`1px solid ${BORDER}`, boxShadow:"0 8px 32px rgba(0,0,0,0.3)" }}
                       >
                         <div className="h-0.5 w-full" style={{ background: TC }} />
                         <div className="p-4">
@@ -232,7 +237,7 @@ export default function LivreurDashboard() {
                           {items.length > 0 && (
                             <div className="flex flex-wrap gap-1 mb-2">
                               {items.map((item, i) => (
-                                <span key={i} className="px-2 py-0.5 rounded-full text-xs" style={{ background: SAND, color: BROWN_MID }}>
+                                <span key={i} className="px-2 py-0.5 rounded-full text-xs" style={{ background: "rgba(255,255,255,0.05)", color: BROWN_MID }}>
                                   {item}
                                 </span>
                               ))}
@@ -277,9 +282,9 @@ export default function LivreurDashboard() {
             ) : (
               <div
                 className="text-center py-12 rounded-2xl border border-dashed"
-                style={{ borderColor: BORDER, background: "white" }}
+                style={{ borderColor: "rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.03)" }}
               >
-                <Package className="mx-auto h-10 w-10 mb-3" style={{ color: "#D0BEB0" }} />
+                <Package className="mx-auto h-10 w-10 mb-3" style={{ color: "rgba(255,255,255,0.2)" }} />
                 <h3 className="text-sm font-semibold" style={{ color: BROWN_MID }}>{t("no_active")}</h3>
                 <p className="text-xs mt-1" style={{ color: BROWN_LIGHT }}>{t("day_summary")}</p>
               </div>
