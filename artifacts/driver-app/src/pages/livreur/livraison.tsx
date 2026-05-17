@@ -19,24 +19,21 @@ import { useAuth } from "@/lib/auth";
 import { GpsPickerModal } from "@/components/GpsPickerModal";
 import { stopContinuousAlarm } from "@/lib/alarm";
 
-const TC = "#E85C30";
+const TC = "#C14B2A";
 const GREEN = "#2A7A48";
 const GOLD = "#D4880C";
-const SAND = "#1A0A06";
-const BORDER = "rgba(255,255,255,0.15)";
-const BROWN = "rgba(255,255,255,0.95)";
-const BROWN_MID = "rgba(255,255,255,0.65)";
-const BROWN_LIGHT = "rgba(255,255,255,0.40)";
+const BORDER = "#E2E8F0";
+const BROWN = "#1E293B";
+const BROWN_MID = "#475569";
+const BROWN_LIGHT = "#94A3B8";
 
 const GLASS_STYLE = {
-  background: "rgba(255,255,255,0.08)",
-  backdropFilter: "blur(20px)",
-  WebkitBackdropFilter: "blur(20px)",
-  border: "1px solid rgba(255,255,255,0.15)",
-  boxShadow: "0 8px 32px rgba(0,0,0,0.3)"
+  background: "#FFFFFF",
+  border: "1px solid #E2E8F0",
+  boxShadow: "0 4px 20px rgba(0,0,0,0.06)"
 };
 
-const GOLD_GRADIENT = "linear-gradient(135deg, #FADB5F 0%, #D4880C 100%)";
+const GOLD_GRADIENT = "linear-gradient(135deg, #C14B2A 0%, #D4880C 100%)";
 
 interface ParsedOrder {
   items: string[];
@@ -98,7 +95,7 @@ function StepTimeline({ status }: { status?: string }) {
             <div
               className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold shadow-sm"
               style={{
-                background: i <= idx ? TC : "rgba(255,255,255,0.1)",
+                background: i <= idx ? TC : "#F1F5F9",
                 color: i <= idx ? "white" : BROWN_LIGHT,
                 border: i <= idx ? "none" : `1px solid ${BORDER}`
               }}
@@ -220,21 +217,14 @@ export default function LivreurLivraisonDetail() {
     return (
       <LivreurLayout>
         <div
-          className="flex-1 flex flex-col items-center justify-center gap-6 p-8 animate-in fade-in zoom-in-95 duration-300 relative"
-          style={{ background: "linear-gradient(135deg, #1A0A06 0%, #2C1810 100%)" }}
+          className="flex-1 flex flex-col items-center justify-center gap-6 p-8 animate-in fade-in zoom-in-95 duration-300"
+          style={{ background: "#F8F9FA" }}
         >
-          <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.07, backgroundImage:`url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 0l2 18 18 2-18 2-2 18-2-18-18-2 18-2z' fill='%23D4880C' fill-rule='evenodd'/%3E%3C/svg%3E")`, backgroundSize:"40px 40px" }} />
-          
-          {/* Green circle with check */}
-          <div
-            className="w-28 h-28 rounded-full flex items-center justify-center shadow-lg relative z-10"
-            style={{ background: GREEN }}
-          >
+          <div className="w-28 h-28 rounded-full flex items-center justify-center shadow-lg" style={{ background: GREEN }}>
             <CheckCircle2 className="h-14 w-14 text-white" />
           </div>
 
-          {/* Title */}
-          <div className="text-center relative z-10">
+          <div className="text-center">
             <h2 className="text-2xl font-bold mb-1" style={{ color: BROWN }}>
               {t("delivery_success_title")}
             </h2>
@@ -243,15 +233,8 @@ export default function LivreurLivraisonDetail() {
             </p>
           </div>
 
-          {/* Earnings pill */}
-          <div
-            className="flex items-center gap-3 px-8 py-5 rounded-2xl border shadow-sm relative z-10"
-            style={GLASS_STYLE}
-          >
-            <div
-              className="w-12 h-12 rounded-xl flex items-center justify-center"
-              style={{ background: "rgba(212,136,12,0.15)" }}
-            >
+          <div className="flex items-center gap-3 px-8 py-5 rounded-2xl" style={GLASS_STYLE}>
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: "#FEF6E4" }}>
               <Coins className="h-6 w-6" style={{ color: GOLD }} />
             </div>
             <div>
@@ -264,8 +247,7 @@ export default function LivreurLivraisonDetail() {
             </div>
           </div>
 
-          {/* Loading dots */}
-          <div className="flex gap-1.5 mt-2 relative z-10">
+          <div className="flex gap-1.5 mt-2">
             {[0, 1, 2].map(i => (
               <span
                 key={i}
@@ -274,7 +256,7 @@ export default function LivreurLivraisonDetail() {
               />
             ))}
           </div>
-          <p className="text-xs relative z-10" style={{ color: BROWN_LIGHT }}>{t("returning_dashboard")}</p>
+          <p className="text-xs" style={{ color: BROWN_LIGHT }}>{t("returning_dashboard")}</p>
         </div>
       </LivreurLayout>
     );
@@ -283,10 +265,10 @@ export default function LivreurLivraisonDetail() {
   if (isLoading) {
     return (
       <LivreurLayout>
-        <div className="p-5 space-y-4 min-h-full" style={{ background: "linear-gradient(135deg, #1A0A06 0%, #2C1810 100%)" }}>
-          <Skeleton className="h-8 w-40 rounded-lg" style={{ background: "rgba(255,255,255,0.05)" }} />
-          <Skeleton className="h-32 w-full rounded-2xl" style={{ background: "rgba(255,255,255,0.05)" }} />
-          <Skeleton className="h-48 w-full rounded-2xl" style={{ background: "rgba(255,255,255,0.05)" }} />
+        <div className="p-5 space-y-4 min-h-full" style={{ background: "#F8F9FA" }}>
+          <Skeleton className="h-8 w-40 rounded-lg" />
+          <Skeleton className="h-32 w-full rounded-2xl" />
+          <Skeleton className="h-48 w-full rounded-2xl" />
         </div>
       </LivreurLayout>
     );
@@ -295,9 +277,8 @@ export default function LivreurLivraisonDetail() {
   if (!delivery) {
     return (
       <LivreurLayout>
-        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center min-h-full relative" style={{ background: "linear-gradient(135deg, #1A0A06 0%, #2C1810 100%)" }}>
-          <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.07, backgroundImage:`url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 0l2 18 18 2-18 2-2 18-2-18-18-2 18-2z' fill='%23D4880C' fill-rule='evenodd'/%3E%3C/svg%3E")`, backgroundSize:"40px 40px" }} />
-          <UtensilsCrossed className="h-16 w-16 mb-4 relative z-10" style={{ color: "rgba(255,255,255,0.15)" }} />
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center min-h-full" style={{ background: "#F8F9FA" }}>
+          <UtensilsCrossed className="h-16 w-16 mb-4" style={{ color: BORDER }} />
           <h2 className="text-xl font-bold mb-2 relative z-10" style={{ color: BROWN }}>{t("not_found")}</h2>
           <Link href="/livreur/livraisons" className="relative z-10">
             <button className="mt-4 px-6 py-2.5 rounded-xl font-semibold text-white" style={{ background: TC }}>
@@ -313,16 +294,15 @@ export default function LivreurLivraisonDetail() {
 
   return (
     <LivreurLayout>
-      <div className="flex-1 overflow-auto relative" style={{ background: "linear-gradient(135deg, #1A0A06 0%, #2C1810 100%)" }}>
-        <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.07, backgroundImage:`url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 0l2 18 18 2-18 2-2 18-2-18-18-2 18-2z' fill='%23D4880C' fill-rule='evenodd'/%3E%3C/svg%3E")`, backgroundSize:"40px 40px" }} />
+      <div className="flex-1 overflow-auto relative" style={{ background: "#F8F9FA" }}>
 
         {/* ── Sticky header ── */}
         <div
-          className="sticky top-0 z-20 flex items-center gap-3 px-4 py-3 border-b relative"
-          style={{ background: "rgba(26,10,6,0.8)", backdropFilter: "blur(12px)", borderColor: BORDER }}
+          className="sticky top-0 z-20 flex items-center gap-3 px-4 py-3 border-b bg-white"
+          style={{ borderColor: BORDER }}
         >
           <Link href="/livreur/livraisons">
-            <button className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.1)" }}>
+            <button className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "#F1F5F9" }}>
               <ArrowLeft className="h-4 w-4" style={{ color: BROWN }} />
             </button>
           </Link>
@@ -340,7 +320,7 @@ export default function LivreurLivraisonDetail() {
               }
             }}
             className="w-8 h-8 rounded-full flex items-center justify-center mr-1"
-            style={{ background: "rgba(232,92,48,0.15)" }}
+            style={{ background: "#FDEEE9" }}
             title="Partager le lien de suivi"
           >
             <Share2 className="h-4 w-4" style={{ color: TC }} />
@@ -497,7 +477,7 @@ export default function LivreurLivraisonDetail() {
                     <button
                       onClick={() => setGpsTarget({ address: delivery.pickupAddress, label: t("gps_pickup") })}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"
-                      style={{ background: "rgba(255,255,255,0.05)", color: BROWN_MID, border: `1px solid ${BORDER}` }}
+                      style={{ background: "#F8F9FA", color: BROWN_MID, border: `1px solid ${BORDER}` }}
                     >
                       <Navigation className="h-3 w-3" />
                       {t("navigate_pickup")}

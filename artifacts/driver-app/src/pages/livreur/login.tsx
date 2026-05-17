@@ -5,13 +5,12 @@ import { useI18n } from "@/lib/i18n";
 import { subscribeToPush, isPushSupported } from "@/lib/push";
 import { ArrowLeft, Mail, Lock, Eye, EyeOff } from "lucide-react";
 
-const TC = "#E85C30";
-const SAND = "#1A0A06";
-const BORDER = "rgba(255,255,255,0.15)";
-const BROWN = "rgba(255,255,255,0.95)";
-const BROWN_MID = "rgba(255,255,255,0.65)";
-const BROWN_LIGHT = "rgba(255,255,255,0.40)";
+const TC = "#C14B2A";
 const GOLD = "#D4880C";
+const BROWN = "#1E293B";
+const BROWN_MID = "#475569";
+const BROWN_LIGHT = "#94A3B8";
+const BORDER = "#E2E8F0";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -57,98 +56,103 @@ export default function LivreurLogin() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-8 relative overflow-hidden" style={{ background: "linear-gradient(135deg, #1A0A06 0%, #2C1810 100%)" }}>
-      {/* Moroccan star pattern overlay */}
-      <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.07, backgroundImage:`url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 0l2 18 18 2-18 2-2 18-2-18-18-2 18-2z' fill='%23D4880C' fill-rule='evenodd'/%3E%3C/svg%3E")`, backgroundSize:"40px 40px" }} />
+    <div className="min-h-screen flex flex-col relative overflow-hidden" style={{ background: "#F8F9FA" }}>
+      {/* Gradient header */}
+      <div
+        className="relative pt-14 pb-20 flex flex-col items-center overflow-hidden"
+        style={{ background: "linear-gradient(135deg, #C14B2A 0%, #D4880C 100%)", borderRadius: "0 0 32px 32px" }}
+      >
+        <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.10, backgroundImage:`url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 0l2 18 18 2-18 2-2 18-2-18-18-2 18-2z' fill='%23ffffff' fill-rule='evenodd'/%3E%3C/svg%3E")`, backgroundSize:"40px 40px" }} />
+        <img src="/bridge-logo.png" alt="Bridge" className="w-20 h-20 mx-auto object-contain mb-3 relative z-10" />
+        <h1 className="text-2xl font-black text-white relative z-10">{t("livreur_title")}</h1>
+        <p className="text-sm mt-1 text-white/70 relative z-10">Connectez-vous à votre espace</p>
+      </div>
 
-      <div className="fixed top-0 left-0 right-0 h-1 z-20" style={{ backgroundImage: "repeating-linear-gradient(90deg,#E85C30 0,#E85C30 20px,#D4880C 20px,#D4880C 40px,#2A7A48 40px,#2A7A48 60px,#D4880C 60px,#D4880C 80px)" }} />
-
-      <div className="w-full max-w-sm relative z-10">
-        <div className="text-center mb-8">
-          <img src="/bridge-logo.png" alt="Bridge" className="w-20 h-20 mx-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.1)] mb-3" />
-          <h1 className="text-2xl font-bold" style={{ color: BROWN }}>{t("livreur_title")}</h1>
-          <p className="text-sm mt-1" style={{ color: BROWN_LIGHT }}>Connectez-vous à votre espace</p>
-        </div>
-
-        <div className="rounded-2xl overflow-hidden mb-4" style={{ background:"rgba(255,255,255,0.08)", backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)", border:`1px solid ${BORDER}`, boxShadow:"0 8px 32px rgba(0,0,0,0.3)" }}>
-          {/* Email */}
-          <div className="border-b" style={{ borderColor: BORDER }}>
-            <div className="px-4 py-2 flex items-center gap-3" style={{ background: "rgba(255,255,255,0.05)" }}>
-              <Mail className="h-4 w-4 flex-shrink-0" style={{ color: TC }} />
-              <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: BROWN_MID }}>Adresse email</span>
+      <div className="flex-1 flex flex-col items-center justify-start px-5 pt-6 pb-8">
+        <div className="w-full max-w-sm">
+          {/* Form card */}
+          <div className="rounded-2xl overflow-hidden mb-4 bg-white" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.10)", border: `1px solid ${BORDER}` }}>
+            {/* Email */}
+            <div className="border-b" style={{ borderColor: BORDER }}>
+              <div className="px-4 py-2 flex items-center gap-3" style={{ background: "#F8F9FA" }}>
+                <Mail className="h-4 w-4 flex-shrink-0" style={{ color: TC }} />
+                <span className="text-xs font-bold uppercase tracking-wide" style={{ color: BROWN_MID }}>Adresse email</span>
+              </div>
+              <div className="px-4">
+                <input
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  autoFocus
+                  placeholder="exemple@email.com"
+                  value={email}
+                  onChange={e => { setEmail(e.target.value); setError(""); }}
+                  onKeyDown={e => e.key === "Enter" && handleSubmit()}
+                  className="w-full text-base outline-none py-3 bg-transparent placeholder:text-slate-300"
+                  style={{ color: BROWN }}
+                />
+              </div>
             </div>
-            <div className="px-4">
-              <input
-                type="email"
-                inputMode="email"
-                autoComplete="email"
-                autoFocus
-                placeholder="exemple@email.com"
-                value={email}
-                onChange={e => { setEmail(e.target.value); setError(""); }}
-                onKeyDown={e => e.key === "Enter" && handleSubmit()}
-                className="w-full text-base outline-none py-3 bg-transparent text-white placeholder:text-white/30"
-              />
+
+            {/* Password */}
+            <div>
+              <div className="px-4 py-2 flex items-center gap-3" style={{ background: "#F8F9FA" }}>
+                <Lock className="h-4 w-4 flex-shrink-0" style={{ color: TC }} />
+                <span className="text-xs font-bold uppercase tracking-wide" style={{ color: BROWN_MID }}>Mot de passe</span>
+              </div>
+              <div className="px-4 flex items-center">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={e => { setPassword(e.target.value); setError(""); }}
+                  onKeyDown={e => e.key === "Enter" && handleSubmit()}
+                  className="flex-1 text-base outline-none py-3 bg-transparent placeholder:text-slate-300"
+                  style={{ color: BROWN }}
+                />
+                <button onClick={() => setShowPassword(v => !v)} className="p-1" style={{ color: BROWN_LIGHT }}>
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Password */}
-          <div>
-            <div className="px-4 py-2 flex items-center gap-3" style={{ background: "rgba(255,255,255,0.05)" }}>
-              <Lock className="h-4 w-4 flex-shrink-0" style={{ color: TC }} />
-              <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: BROWN_MID }}>Mot de passe</span>
-            </div>
-            <div className="px-4 flex items-center">
-              <input
-                type={showPassword ? "text" : "password"}
-                autoComplete="current-password"
-                placeholder="••••••••"
-                value={password}
-                onChange={e => { setPassword(e.target.value); setError(""); }}
-                onKeyDown={e => e.key === "Enter" && handleSubmit()}
-                className="flex-1 text-base outline-none py-3 bg-transparent text-white placeholder:text-white/30"
-              />
-              <button onClick={() => setShowPassword(v => !v)} className="p-1" style={{ color: BROWN_LIGHT }}>
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
-          </div>
+          {error && (
+            <p className="text-center text-sm font-semibold mb-4 px-2" style={{ color: TC }}>{error}</p>
+          )}
+
+          <button
+            onClick={handleSubmit}
+            disabled={loading || !email.trim() || !password}
+            className="w-full h-14 rounded-2xl font-black text-lg text-white transition-all active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2 shadow-lg"
+            style={{ background: "linear-gradient(135deg, #C14B2A 0%, #D4880C 100%)" }}
+          >
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Connexion…
+              </span>
+            ) : "Se connecter"}
+          </button>
+
+          <button
+            onClick={() => navigate("/forgot-password?role=livreur")}
+            className="mt-3 w-full text-sm py-2 text-center font-medium"
+            style={{ color: BROWN_MID }}
+          >
+            Mot de passe oublié ?
+          </button>
+
+          <button
+            onClick={() => navigate("/")}
+            className="mt-2 w-full text-sm py-3 flex items-center justify-center gap-2"
+            style={{ color: BROWN_LIGHT }}
+          >
+            <ArrowLeft className="h-4 w-4" />
+            {t("login_back_home")}
+          </button>
         </div>
-
-        {error && (
-          <p className="text-center text-sm font-medium mb-4 px-2" style={{ color: TC }}>{error}</p>
-        )}
-
-        <button
-          onClick={handleSubmit}
-          disabled={loading || !email.trim() || !password}
-          className="w-full h-14 rounded-2xl font-bold text-lg text-[#1A0A06] transition-all active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2 shadow-lg"
-          style={{ background: "linear-gradient(135deg, #FADB5F 0%, #D4880C 100%)" }}
-        >
-          {loading ? (
-            <span className="flex items-center gap-2">
-              <span className="w-4 h-4 border-2 border-[#1A0A06] border-t-transparent rounded-full animate-spin" />
-              Connexion…
-            </span>
-          ) : "Se connecter"}
-        </button>
-
-        <button
-          onClick={() => navigate("/forgot-password?role=livreur")}
-          className="mt-3 w-full text-sm py-2 text-center"
-          style={{ color: BROWN_MID }}
-        >
-          Mot de passe oublié ?
-        </button>
-
-        <button
-          onClick={() => navigate("/")}
-          className="mt-2 w-full text-sm py-3 flex items-center justify-center gap-2"
-          style={{ color: BROWN_LIGHT }}
-        >
-          <ArrowLeft className="h-4 w-4" />
-          {t("login_back_home")}
-        </button>
       </div>
     </div>
   );

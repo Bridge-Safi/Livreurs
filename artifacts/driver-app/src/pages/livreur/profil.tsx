@@ -17,24 +17,21 @@ import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { useLocation } from "wouter";
 
-const TC = "#E85C30";
+const TC = "#C14B2A";
 const GREEN = "#2A7A48";
 const GOLD = "#D4880C";
-const SAND = "#1A0A06";
-const BORDER = "rgba(255,255,255,0.15)";
-const BROWN = "rgba(255,255,255,0.95)";
-const BROWN_MID = "rgba(255,255,255,0.65)";
-const BROWN_LIGHT = "rgba(255,255,255,0.40)";
+const BORDER = "#E2E8F0";
+const BROWN = "#1E293B";
+const BROWN_MID = "#475569";
+const BROWN_LIGHT = "#94A3B8";
 
 const GLASS_STYLE = {
-  background: "rgba(255,255,255,0.08)",
-  backdropFilter: "blur(20px)",
-  WebkitBackdropFilter: "blur(20px)",
-  border: "1px solid rgba(255,255,255,0.15)",
-  boxShadow: "0 8px 32px rgba(0,0,0,0.3)"
+  background: "#FFFFFF",
+  border: "1px solid #E2E8F0",
+  boxShadow: "0 4px 20px rgba(0,0,0,0.06)"
 };
 
-const GOLD_GRADIENT = "linear-gradient(135deg, #FADB5F 0%, #D4880C 100%)";
+const GOLD_GRADIENT = "linear-gradient(135deg, #C14B2A 0%, #D4880C 100%)";
 
 type Status = "available" | "busy" | "offline";
 
@@ -157,14 +154,13 @@ export default function LivreurProfil() {
 
   return (
     <LivreurLayout>
-      <div className="flex-1 overflow-auto relative" style={{ background: "linear-gradient(135deg, #1A0A06 0%, #2C1810 100%)" }}>
-        <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.07, backgroundImage:`url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 0l2 18 18 2-18 2-2 18-2-18-18-2 18-2z' fill='%23D4880C' fill-rule='evenodd'/%3E%3C/svg%3E")`, backgroundSize:"40px 40px" }} />
+      <div className="flex-1 overflow-auto relative" style={{ background: "#F8F9FA" }}>
 
         {isLoading || !profile ? (
           <div className="p-5 space-y-4">
-            <Skeleton className="h-48 w-full rounded-2xl" style={{ background: "rgba(255,255,255,0.05)" }} />
-            <Skeleton className="h-32 w-full rounded-2xl" style={{ background: "rgba(255,255,255,0.05)" }} />
-            <Skeleton className="h-32 w-full rounded-2xl" style={{ background: "rgba(255,255,255,0.05)" }} />
+            <Skeleton className="h-48 w-full rounded-2xl" />
+            <Skeleton className="h-32 w-full rounded-2xl" />
+            <Skeleton className="h-32 w-full rounded-2xl" />
           </div>
         ) : (() => {
           const level = getLevel(profile.totalDeliveries);
@@ -174,22 +170,13 @@ export default function LivreurProfil() {
             <div className="p-4 space-y-4 max-w-lg mx-auto relative z-10">
 
               {/* ── Hero card ── */}
-              <div
-                className="rounded-2xl overflow-hidden border"
-                style={{ ...GLASS_STYLE, background: "rgba(26,10,6,0.4)" }}
-              >
+              <div className="rounded-2xl overflow-hidden" style={GLASS_STYLE}>
                 {/* Top decorative area */}
                 <div
-                  className="h-24 relative"
-                  style={{
-                    background: `linear-gradient(135deg, ${TC} 0%, #8B2A1A 60%, #1A0A06 100%)`,
-                    clipPath: "polygon(0 0, 100% 0, 100% 85%, 50% 100%, 0 85%)"
-                  }}
+                  className="h-24 relative overflow-hidden"
+                  style={{ background: "linear-gradient(135deg, #C14B2A 0%, #D4880C 100%)" }}
                 >
-                  <div className="absolute inset-0 opacity-10" style={{
-                    backgroundImage: "repeating-linear-gradient(45deg, #D4880C 0, #D4880C 2px, transparent 0, transparent 50%)",
-                    backgroundSize: "16px 16px",
-                  }} />
+                  <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.10, backgroundImage:`url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 0l2 18 18 2-18 2-2 18-2-18-18-2 18-2z' fill='%23ffffff' fill-rule='evenodd'/%3E%3C/svg%3E")`, backgroundSize:"40px 40px" }} />
                   {/* Settings & Logout */}
                   <div className="absolute top-3 right-3 flex gap-2">
                     <button
@@ -326,16 +313,16 @@ export default function LivreurProfil() {
 
               {/* ── Stats grid ── */}
               <div className="grid grid-cols-3 gap-3">
-                <div className="rounded-2xl border p-4 text-center" style={GLASS_STYLE}>
-                  <div className="text-2xl font-bold" style={{ color: TC }}>{profile.totalDeliveries}</div>
+                <div className="rounded-2xl p-4 text-center" style={{ background: "#FFF0F0", border: "1px solid #FF4B4B22" }}>
+                  <div className="text-2xl font-bold" style={{ color: "#FF4B4B" }}>{profile.totalDeliveries}</div>
                   <div className="text-xs mt-1" style={{ color: BROWN_LIGHT }}>{t("total_deliveries")}</div>
                 </div>
-                <div className="rounded-2xl border p-4 text-center" style={GLASS_STYLE}>
+                <div className="rounded-2xl p-4 text-center" style={{ background: "#FFFBEB", border: "1px solid #F59E0B22" }}>
                   <div className="text-2xl font-bold" style={{ color: GOLD }}>{profile.rating.toFixed(1)}</div>
                   <div className="text-xs mt-1" style={{ color: BROWN_LIGHT }}>{t("rating_global")}</div>
                 </div>
-                <div className="rounded-2xl border p-4 text-center" style={GLASS_STYLE}>
-                  <div className="text-2xl font-bold" style={{ color: "#2AE86C" }}>98%</div>
+                <div className="rounded-2xl p-4 text-center" style={{ background: "#ECFDF5", border: "1px solid #10B98122" }}>
+                  <div className="text-2xl font-bold" style={{ color: "#10B981" }}>98%</div>
                   <div className="text-xs mt-1" style={{ color: BROWN_LIGHT }}>{t("success_rate")}</div>
                 </div>
               </div>
@@ -386,7 +373,7 @@ export default function LivreurProfil() {
                     </p>
                     {profile.totalDeliveries < BONUS_THRESHOLD && (
                       <>
-                        <div className="h-2 w-full rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.05)" }}>
+                        <div className="h-2 w-full rounded-full overflow-hidden" style={{ background: BORDER }}>
                           <div
                             className="h-full rounded-full transition-all duration-700"
                             style={{
@@ -475,14 +462,14 @@ export default function LivreurProfil() {
                           </span>
                           <span>{target} Dh</span>
                         </div>
-                        <div className="h-3 w-full rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.05)" }}>
+                        <div className="h-3 w-full rounded-full overflow-hidden" style={{ background: BORDER }}>
                           <div
                             className="h-full rounded-full transition-all duration-500"
                             style={{
                               width: `${pct}%`,
                               background: pct >= 100
                                 ? `linear-gradient(90deg, #2A7A48, #2AE86C)`
-                                : `linear-gradient(90deg, ${GOLD}, #FADB5F)`,
+                                : `linear-gradient(90deg, ${GOLD}, #F59E0B)`,
                             }}
                           />
                         </div>
