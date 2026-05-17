@@ -27,7 +27,7 @@ import {
   AcceptDriverOfferBody,
 } from "@workspace/api-zod";
 import { serializeTrip } from "../lib/serializers";
-import { sendPushToAllDrivers } from "./push";
+import { sendPushToCarDrivers, sendPushToMotoDrivers } from "./push";
 
 const PRICE_PER_KM = 2.5;
 const BASE_FARE = 5;
@@ -92,13 +92,17 @@ router.get("/trips/pending-dispatch", async (req, res): Promise<void> => {
     return;
   }
 
+  // Filter trips by driver vehicleType (car | moto)
+  const driverVehicleType = driver?.vehicleType ?? "car";
+
   const allDispatching = await db
     .select()
     .from(tripsTable)
     .where(
       and(
         ne(tripsTable.dispatchPhase, "none"),
-        ne(tripsTable.dispatchPhase, "accepted")
+        ne(tripsTable.dispatchPhase, "accepted"),
+        eq(tripsTable.vehicleType, driverVehicleType)
       )
     );
 
@@ -161,10 +165,11 @@ router.post("/trips/:id/dispatch", async (req, res): Promise<void> => {
     .where(eq(tripsTable.id, params.data.id))
     .returning();
 
-  req.log.info({ tripId: params.data.id }, "Ride broadcast to all drivers");
+  req.log.info({ tripId: params.data.id, vehicleType: updated.vehicleType }, "Ride broadcast to drivers");
 
-  sendPushToAllDrivers({
-    title: "🚖 Nouvelle course — Bridge Safi",
+  const pushFn = updated.vehicleType === "moto" ? sendPushToMotoDrivers : sendPushToCarDrivers;
+  pushFn({
+    title: updated.vehicleType === "moto" ? "🛵 Nouvelle course moto — Bridge Scooter" : "🚖 Nouvelle course — Bridge Taxi",
     body: `${updated.passengerName} · ${updated.pickupAddress} → ${updated.dropoffAddress} — 5 min pour accepter`,
     url: "/chauffeur",
   }).catch(() => {});
@@ -367,10 +372,11 @@ router.post("/trips", async (req, res): Promise<void> => {
     })
     .returning();
 
-  req.log.info({ tripId: trip.id, distance, suggestedFare }, "Trip created — auto-dispatched to all drivers");
+  req.log.info({ tripId: trip.id, distance, suggestedFare, vehicleType: parsed.data.vehicleType ?? "car" }, "Trip created — auto-dispatched");
 
-  sendPushToAllDrivers({
-    title: "🚖 Nouvelle course — Bridge Safi",
+  const pushFnCreate = (parsed.data.vehicleType ?? "car") === "moto" ? sendPushToMotoDrivers : sendPushToCarDrivers;
+  pushFnCreate({
+    title: (parsed.data.vehicleType ?? "car") === "moto" ? "🛵 Nouvelle course moto — Bridge Scooter" : "🚖 Nouvelle course — Bridge Taxi",
     body: `${trip.passengerName} · ${trip.pickupAddress} → ${trip.dropoffAddress} — ${suggestedFare} DH · 5 min pour accepter`,
     url: "/chauffeur",
   }).catch(() => {});

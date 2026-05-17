@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import webpush from "web-push";
 import { eq, isNotNull } from "drizzle-orm";
-import { db, pushSubscriptionsTable } from "@workspace/db";
+import { db, pushSubscriptionsTable, driversTable } from "@workspace/db";
 
 const router: IRouter = Router();
 
@@ -125,6 +125,50 @@ export async function sendPushToAllDrivers(payload: {
     .from(pushSubscriptionsTable)
     .where(isNotNull(pushSubscriptionsTable.driverId));
   await sendPushBatch(subs, payload);
+}
+
+export async function sendPushToCarDrivers(payload: {
+  title: string;
+  body: string;
+  url?: string;
+  urgent?: boolean;
+}) {
+  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) return;
+  const rows = await db
+    .select({
+      id: pushSubscriptionsTable.id,
+      endpoint: pushSubscriptionsTable.endpoint,
+      subscription: pushSubscriptionsTable.subscription,
+      delivererId: pushSubscriptionsTable.delivererId,
+      driverId: pushSubscriptionsTable.driverId,
+      createdAt: pushSubscriptionsTable.createdAt,
+    })
+    .from(pushSubscriptionsTable)
+    .innerJoin(driversTable, eq(pushSubscriptionsTable.driverId, driversTable.id))
+    .where(eq(driversTable.vehicleType, "car"));
+  await sendPushBatch(rows, payload);
+}
+
+export async function sendPushToMotoDrivers(payload: {
+  title: string;
+  body: string;
+  url?: string;
+  urgent?: boolean;
+}) {
+  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) return;
+  const rows = await db
+    .select({
+      id: pushSubscriptionsTable.id,
+      endpoint: pushSubscriptionsTable.endpoint,
+      subscription: pushSubscriptionsTable.subscription,
+      delivererId: pushSubscriptionsTable.delivererId,
+      driverId: pushSubscriptionsTable.driverId,
+      createdAt: pushSubscriptionsTable.createdAt,
+    })
+    .from(pushSubscriptionsTable)
+    .innerJoin(driversTable, eq(pushSubscriptionsTable.driverId, driversTable.id))
+    .where(eq(driversTable.vehicleType, "moto"));
+  await sendPushBatch(rows, payload);
 }
 
 export async function sendPushToAllDeliverers(payload: {

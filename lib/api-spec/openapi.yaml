@@ -941,6 +941,9 @@ components:
           type: number
         baseFare:
           type: number
+        vehicleType:
+          type: string
+          enum: [car, moto]
       required:
         - id
         - passengerName
@@ -1012,6 +1015,9 @@ components:
           type: integer
         scheduledAt:
           type: string
+        vehicleType:
+          type: string
+          enum: [car, moto]
       required:
         - passengerName
         - pickupAddress

@@ -13,6 +13,7 @@ export const driversTable = pgTable("drivers", {
   status: text("status").notNull().default("available"),
   totalTrips: integer("total_trips").notNull().default(0),
   rating: real("rating").notNull().default(5.0),
+  vehicleType: text("vehicle_type").notNull().default("car"),
   pin: text("pin").notNull().default("5678"),
   password: text("password"),
   photoUrl: text("photo_url"),

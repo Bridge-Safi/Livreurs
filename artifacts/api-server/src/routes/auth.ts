@@ -85,6 +85,7 @@ router.post("/auth/login", async (req, res): Promise<void> => {
       phone: user.phone,
       vehicleModel: user.vehicleModel,
       vehiclePlate: user.vehiclePlate,
+      vehicleType: user.vehicleType,
       status: user.status,
     });
   }

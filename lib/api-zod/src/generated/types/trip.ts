@@ -7,6 +7,7 @@
  */
 import type { TripNegotiationStatus } from "./tripNegotiationStatus";
 import type { TripStatus } from "./tripStatus";
+import type { TripVehicleType } from "./tripVehicleType";
 
 export interface Trip {
   id: number;
@@ -32,4 +33,5 @@ export interface Trip {
   negotiationStatus?: TripNegotiationStatus;
   pricePerKm?: number;
   baseFare?: number;
+  vehicleType?: TripVehicleType;
 }

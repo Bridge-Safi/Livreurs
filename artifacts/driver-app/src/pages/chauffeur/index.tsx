@@ -68,8 +68,8 @@ export default function ChauffeurDashboard() {
           {statCards.map((card, i) => (
             <div
               key={i}
-              className="rounded-2xl bg-white p-4"
-              style={{ boxShadow: `0 4px 20px ${card.color}22`, border: `1px solid ${card.color}22` }}
+              className="rounded-2xl p-4"
+              style={{ background: "rgba(255,255,255,0.08)", boxShadow: `0 4px 20px ${card.color}22`, border: `1px solid ${card.color}40` }}
             >
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: card.bg }}>
@@ -102,8 +102,8 @@ export default function ChauffeurDashboard() {
               {trips.map(trip => (
                 <div
                   key={trip.id}
-                  className="rounded-2xl overflow-hidden bg-white"
-                  style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.08)", border: `1px solid ${BORDER}` }}
+                  className="rounded-2xl overflow-hidden"
+                  style={{ background: "rgba(255,255,255,0.08)", border: `1px solid ${BORDER}`, boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}
                 >
                   <div className="h-1 w-full" style={{ background: "linear-gradient(90deg, #D4880C, #C14B2A)" }} />
 
@@ -112,7 +112,7 @@ export default function ChauffeurDashboard() {
                       <div className="flex items-center gap-3">
                         <div
                           className="h-10 w-10 rounded-full flex items-center justify-center font-bold text-sm border"
-                          style={{ background: "#FEF6E4", color: GOLD, borderColor: "#D4880C33" }}
+                          style={{ background: "rgba(212,136,12,0.15)", color: GOLD, borderColor: "#D4880C33" }}
                         >
                           {trip.passengerName.charAt(0)}
                         </div>
@@ -123,7 +123,7 @@ export default function ChauffeurDashboard() {
                       </div>
                       <span
                         className="text-xs font-bold px-2 py-1 rounded-full"
-                        style={{ background: "#EFF6FF", color: "#3B82F6" }}
+                        style={{ background: "rgba(59,130,246,0.2)", color: "#60A5FA" }}
                       >
                         {t("trip_in_progress_label")}
                       </span>
@@ -167,12 +167,12 @@ export default function ChauffeurDashboard() {
             </div>
           ) : (
             <div
-              className="text-center py-12 max-w-2xl rounded-2xl border border-dashed bg-white"
-              style={{ borderColor: BORDER }}
+              className="text-center py-12 max-w-2xl rounded-2xl border border-dashed"
+              style={{ borderColor: BORDER, background: "rgba(255,255,255,0.05)" }}
             >
               <div
                 className="h-14 w-14 rounded-full flex items-center justify-center mx-auto mb-3"
-                style={{ background: "#FEF6E4" }}
+                style={{ background: "rgba(212,136,12,0.15)" }}
               >
                 <Navigation className="h-7 w-7" style={{ color: GOLD }} />
               </div>

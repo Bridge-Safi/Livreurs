@@ -16,6 +16,7 @@ import LivreurLivraisons from "@/pages/livreur/livraisons";
 import LivreurLivraisonDetail from "@/pages/livreur/livraison";
 import LivreurProfil from "@/pages/livreur/profil";
 import ChauffeurLogin from "@/pages/chauffeur/login";
+import MotoLogin from "@/pages/moto/login";
 import ChauffeurDashboard from "@/pages/chauffeur/index";
 import ChauffeurTrajets from "@/pages/chauffeur/trajets";
 import ChauffeurTrajetDetail from "@/pages/chauffeur/trajet";
@@ -56,6 +57,7 @@ function Router() {
 
       {/* Chauffeur Auth */}
       <Route path="/chauffeur/login" component={ChauffeurLogin} />
+      <Route path="/moto/login" component={MotoLogin} />
 
       {/* Chauffeur Routes (protected) */}
       <Route path="/chauffeur">{() => <ChauffeurGuard component={ChauffeurDashboard} />}</Route>

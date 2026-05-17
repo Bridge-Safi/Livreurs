@@ -204,6 +204,14 @@ export const TripNegotiationStatus = {
   agreed: "agreed",
 } as const;
 
+export type TripVehicleType =
+  (typeof TripVehicleType)[keyof typeof TripVehicleType];
+
+export const TripVehicleType = {
+  car: "car",
+  moto: "moto",
+} as const;
+
 export interface Trip {
   id: number;
   passengerName: string;
@@ -228,6 +236,7 @@ export interface Trip {
   negotiationStatus?: TripNegotiationStatus;
   pricePerKm?: number;
   baseFare?: number;
+  vehicleType?: TripVehicleType;
 }
 
 export interface PendingRideDispatch {
@@ -251,6 +260,14 @@ export interface CounterOfferBody {
   driverOffer: number;
 }
 
+export type CreateTripBodyVehicleType =
+  (typeof CreateTripBodyVehicleType)[keyof typeof CreateTripBodyVehicleType];
+
+export const CreateTripBodyVehicleType = {
+  car: "car",
+  moto: "moto",
+} as const;
+
 export interface CreateTripBody {
   passengerName: string;
   passengerPhone?: string;
@@ -260,6 +277,7 @@ export interface CreateTripBody {
   distance?: number;
   driverId?: number;
   scheduledAt?: string;
+  vehicleType?: CreateTripBodyVehicleType;
 }
 
 export type UpdateTripBodyStatus =

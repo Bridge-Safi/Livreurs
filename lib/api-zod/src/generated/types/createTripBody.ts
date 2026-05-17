@@ -5,6 +5,7 @@
  * Driver and Delivery App API
  * OpenAPI spec version: 0.1.0
  */
+import type { CreateTripBodyVehicleType } from "./createTripBodyVehicleType";
 
 export interface CreateTripBody {
   passengerName: string;
@@ -15,4 +16,5 @@ export interface CreateTripBody {
   distance?: number;
   driverId?: number;
   scheduledAt?: string;
+  vehicleType?: CreateTripBodyVehicleType;
 }

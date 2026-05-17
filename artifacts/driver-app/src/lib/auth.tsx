@@ -5,6 +5,7 @@ export interface BridgeUser {
   name: string;
   phone?: string;
   role: "livreur" | "chauffeur";
+  vehicleType?: "car" | "moto";
 }
 
 interface AuthContextValue {

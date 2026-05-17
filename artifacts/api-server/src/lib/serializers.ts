@@ -58,6 +58,7 @@ export function serializeDriver(d: Driver) {
     licenseNumber: d.licenseNumber,
     vehicleModel: d.vehicleModel,
     vehiclePlate: d.vehiclePlate,
+    vehicleType: d.vehicleType,
     status: d.status,
     totalTrips: d.totalTrips,
     rating: d.rating,
@@ -91,5 +92,6 @@ export function serializeTrip(t: Trip) {
     negotiationStatus: (t.negotiationStatus ?? "open") as "open" | "countered" | "agreed",
     pricePerKm: t.pricePerKm ?? 2.5,
     baseFare: t.baseFare ?? 5,
+    vehicleType: (t.vehicleType ?? "car") as "car" | "moto",
   };
 }

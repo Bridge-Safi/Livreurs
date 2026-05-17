@@ -28,6 +28,7 @@ export const tripsTable = pgTable("trips", {
   negotiationStatus: text("negotiation_status").default("open"), // open | countered | agreed
   pricePerKm: real("price_per_km").default(2.5), // DH/km at booking time
   baseFare: real("base_fare").default(5),         // base flat DH
+  vehicleType: text("vehicle_type").notNull().default("car"), // car | moto
 });
 
 export const insertTripSchema = createInsertSchema(tripsTable).omit({ id: true, createdAt: true, updatedAt: true });

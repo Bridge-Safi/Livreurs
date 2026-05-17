@@ -570,7 +570,7 @@ export default function LivreurLivraisonDetail() {
             </a>
             {/* WhatsApp button logic remains, just update style */}
             <a
-              href={`https://wa.me/${delivery.customerPhone.replace(/\s+/g, "")}`}
+              href={`https://wa.me/${delivery.customerPhone?.replace(/\s+/g, "") ?? ""}`}
               target="_blank"
               rel="noreferrer"
               className="flex items-center justify-center gap-2 h-12 rounded-2xl font-bold border transition-all active:scale-95"
@@ -694,13 +694,13 @@ export default function LivreurLivraisonDetail() {
                 >
                   <CheckCircle2 className="h-8 w-8" style={{ color: GREEN }} />
                 </div>
-                <h3 className="text-xl font-bold mb-2" style={{ color: BROWN }}>{t("confirm_delivered_title")}</h3>
-                <p className="text-sm mb-5" style={{ color: BROWN_MID }}>{t("confirm_delivered_sub")}</p>
+                <h3 className="text-xl font-bold mb-2" style={{ color: BROWN }}>{t("confirm_delivered")}</h3>
+                <p className="text-sm mb-5" style={{ color: BROWN_MID }}>{t("confirm_delivered_btn")}</p>
 
-                {profile?.requireConfirmationCode && (
+                {!!delivery.confirmCode && (
                   <div className="mb-5">
                     <p className="text-xs font-bold text-left mb-2 uppercase tracking-wide" style={{ color: BROWN_LIGHT }}>
-                      {t("confirm_code_label")}
+                      Code de confirmation client
                     </p>
                     <input
                       type="text"
@@ -715,7 +715,7 @@ export default function LivreurLivraisonDetail() {
                       <p className="text-xs mt-2 font-bold" style={{ color: TC }}>{confirmCodeError}</p>
                     )}
                     <p className="text-[10px] mt-3 italic" style={{ color: BROWN_LIGHT }}>
-                      {t("confirm_code_help")}
+                      Demandez ce code au client pour confirmer la livraison
                     </p>
                   </div>
                 )}
@@ -730,11 +730,11 @@ export default function LivreurLivraisonDetail() {
                   </button>
                   <button
                     onClick={handleDelivered}
-                    disabled={isPending || (profile?.requireConfirmationCode && !confirmCodeInput.trim())}
+                    disabled={isPending || (!!delivery.confirmCode && !confirmCodeInput.trim())}
                     className="h-12 rounded-xl font-bold text-white disabled:opacity-60"
                     style={{ background: GREEN }}
                   >
-                    {isPending ? "…" : t("confirm")}
+                    {isPending ? "…" : t("confirm_delivered_btn")}
                   </button>
                 </div>
               </div>

@@ -477,6 +477,7 @@ export const ListTripsResponseItem = zod.object({
   negotiationStatus: zod.enum(["open", "countered", "agreed"]).optional(),
   pricePerKm: zod.number().optional(),
   baseFare: zod.number().optional(),
+  vehicleType: zod.enum(["car", "moto"]).optional(),
 });
 export const ListTripsResponse = zod.array(ListTripsResponseItem);
 
@@ -492,6 +493,7 @@ export const CreateTripBody = zod.object({
   distance: zod.number().optional(),
   driverId: zod.number().optional(),
   scheduledAt: zod.string().optional(),
+  vehicleType: zod.enum(["car", "moto"]).optional(),
 });
 
 /**
@@ -528,6 +530,7 @@ export const GetMyPendingRideResponse = zod.object({
       negotiationStatus: zod.enum(["open", "countered", "agreed"]).optional(),
       pricePerKm: zod.number().optional(),
       baseFare: zod.number().optional(),
+      vehicleType: zod.enum(["car", "moto"]).optional(),
     })
     .optional(),
   expiresAt: zod.string().optional(),
@@ -566,6 +569,7 @@ export const DispatchRideResponse = zod.object({
   negotiationStatus: zod.enum(["open", "countered", "agreed"]).optional(),
   pricePerKm: zod.number().optional(),
   baseFare: zod.number().optional(),
+  vehicleType: zod.enum(["car", "moto"]).optional(),
 });
 
 /**
@@ -603,6 +607,7 @@ export const AcceptRideResponse = zod.object({
   negotiationStatus: zod.enum(["open", "countered", "agreed"]).optional(),
   pricePerKm: zod.number().optional(),
   baseFare: zod.number().optional(),
+  vehicleType: zod.enum(["car", "moto"]).optional(),
 });
 
 /**
@@ -640,6 +645,7 @@ export const RefuseRideResponse = zod.object({
   negotiationStatus: zod.enum(["open", "countered", "agreed"]).optional(),
   pricePerKm: zod.number().optional(),
   baseFare: zod.number().optional(),
+  vehicleType: zod.enum(["car", "moto"]).optional(),
 });
 
 /**
@@ -678,6 +684,7 @@ export const CounterOfferRideResponse = zod.object({
   negotiationStatus: zod.enum(["open", "countered", "agreed"]).optional(),
   pricePerKm: zod.number().optional(),
   baseFare: zod.number().optional(),
+  vehicleType: zod.enum(["car", "moto"]).optional(),
 });
 
 /**
@@ -715,6 +722,7 @@ export const AcceptDriverOfferResponse = zod.object({
   negotiationStatus: zod.enum(["open", "countered", "agreed"]).optional(),
   pricePerKm: zod.number().optional(),
   baseFare: zod.number().optional(),
+  vehicleType: zod.enum(["car", "moto"]).optional(),
 });
 
 /**
@@ -752,6 +760,7 @@ export const PickupPassengerResponse = zod.object({
   negotiationStatus: zod.enum(["open", "countered", "agreed"]).optional(),
   pricePerKm: zod.number().optional(),
   baseFare: zod.number().optional(),
+  vehicleType: zod.enum(["car", "moto"]).optional(),
 });
 
 /**
@@ -785,6 +794,7 @@ export const GetTripResponse = zod.object({
   negotiationStatus: zod.enum(["open", "countered", "agreed"]).optional(),
   pricePerKm: zod.number().optional(),
   baseFare: zod.number().optional(),
+  vehicleType: zod.enum(["car", "moto"]).optional(),
 });
 
 /**
@@ -827,6 +837,7 @@ export const UpdateTripResponse = zod.object({
   negotiationStatus: zod.enum(["open", "countered", "agreed"]).optional(),
   pricePerKm: zod.number().optional(),
   baseFare: zod.number().optional(),
+  vehicleType: zod.enum(["car", "moto"]).optional(),
 });
 
 /**

@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { UtensilsCrossed, Car, ChevronRight } from "lucide-react";
+import { UtensilsCrossed, Car, Bike, ChevronRight } from "lucide-react";
 import { useI18n, LANGUAGES, type Lang } from "@/lib/i18n";
 
 const TC = "#E85C30";
@@ -92,6 +92,26 @@ export default function RoleSelection() {
                 <p className="text-sm mt-0.5" style={{ color: BROWN_MID }}>{t("role_chauffeur_desc")}</p>
               </div>
               <ChevronRight className="w-5 h-5 flex-shrink-0 transition-transform group-hover:translate-x-1" style={{ color: GOLD }} />
+            </div>
+          </div>
+        </Link>
+
+        {/* Moto Chauffeur Card */}
+        <Link href="/moto/login" className="block group">
+          <div
+            className="relative overflow-hidden rounded-2xl transition-all duration-200 active:scale-[0.98]"
+            style={{ background: "rgba(255,255,255,0.07)", boxShadow: "0 8px 32px rgba(0,0,0,0.4)", border: `1px solid ${BORDER}` }}
+          >
+            <div className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-2xl" style={{ background: GREEN }} />
+            <div className="relative p-5 flex items-center gap-4">
+              <div className="flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center" style={{ background: "rgba(42,122,72,0.15)" }}>
+                <Bike className="w-7 h-7" style={{ color: GREEN }} />
+              </div>
+              <div className="flex-1">
+                <h2 className="text-base font-black" style={{ color: BROWN }}>Moto Chauffeur</h2>
+                <p className="text-sm mt-0.5" style={{ color: BROWN_MID }}>Courses moto — Bridge Scooter</p>
+              </div>
+              <ChevronRight className="w-5 h-5 flex-shrink-0 transition-transform group-hover:translate-x-1" style={{ color: GREEN }} />
             </div>
           </div>
         </Link>
