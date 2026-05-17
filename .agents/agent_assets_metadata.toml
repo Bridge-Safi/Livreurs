@@ -1,0 +1,32 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "hQZXk6eLU7g6m5e6OSX1f"
+uri = "file://artifacts/driver-app/public/bridge-icon-b.png"
+type = "image"
+title = "bridge B app icon moroccan"
+
+[[generated]]
+id = "xRR-QQoPicSvuJ5WKyYwB"
+uri = "file://artifacts/driver-app/public/bridge-logo-official.png"
+type = "image"
+title = "bridge official seal morocco safi"
+
+[[generated]]
+id = "g_cJ1Le2Ixsoy-wCVyNqh"
+uri = "file://artifacts/driver-app/public/bridge-logo-livreur.png"
+type = "image"
+title = "bridge livreur delivery badge morocco"
+
+[[generated]]
+id = "PmCkkWuXUS5HTjXFnDIBF"
+uri = "file://artifacts/driver-app/public/bridge-logo-chauffeur.png"
+type = "image"
+title = "bridge taxi confort badge morocco gold"
+
+[[generated]]
+id = "ZbgRWVL-ZhZ6U1LpdzZrr"
+uri = "file://artifacts/driver-app/public/bridge-logo-resto.png"
+type = "image"
+title = "bridge restaurant partner badge morocco"
