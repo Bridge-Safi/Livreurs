@@ -21,13 +21,13 @@ import { fr } from "date-fns/locale";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 
-const TC = "#C14B2A";
+const TC = "#E85C30";
 const GOLD = "#D4880C";
 const GREEN = "#2A7A48";
-const BROWN = "#1E293B";
-const BROWN_MID = "#475569";
-const BROWN_LIGHT = "#94A3B8";
-const BORDER = "#E2E8F0";
+const BROWN = "rgba(255,255,255,0.95)";
+const BROWN_MID = "rgba(255,255,255,0.65)";
+const BROWN_LIGHT = "rgba(255,255,255,0.40)";
+const BORDER = "rgba(255,255,255,0.15)";
 
 export default function ChauffeurTrajets() {
   const queryClient = useQueryClient();
@@ -72,7 +72,7 @@ export default function ChauffeurTrajets() {
 
   return (
     <ChauffeurLayout>
-      <div className="flex-1 overflow-auto relative min-h-full" style={{ background: "#F8F9FA" }}>
+      <div className="flex-1 overflow-auto relative min-h-full" style={{ background: "rgba(255,255,255,0.06)" }}>
 
         {/* Gold gradient header */}
         <div
@@ -92,13 +92,13 @@ export default function ChauffeurTrajets() {
         <div className="px-4 -mt-5 relative z-10 space-y-4 pb-6">
 
           {/* Filters */}
-          <div className="flex flex-col md:flex-row gap-3 items-center p-4 rounded-2xl bg-white" style={{ border: `1px solid ${BORDER}`, boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
+          <div className="flex flex-col md:flex-row gap-3 items-center p-4 rounded-2xl bg-white" style={{ border: `1px solid ${BORDER}`, boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
             <div className="relative w-full md:w-96">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: BROWN_LIGHT }} />
               <Input
                 placeholder={t("search_trips")}
                 className="pl-10"
-                style={{ background: "#F8F9FA", color: BROWN, border: `1px solid ${BORDER}` }}
+                style={{ background: "rgba(255,255,255,0.06)", color: BROWN, border: `1px solid ${BORDER}` }}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -106,7 +106,7 @@ export default function ChauffeurTrajets() {
             <div className="flex w-full md:w-auto items-center gap-2 ml-auto">
               <Filter className="h-4 w-4 shrink-0" style={{ color: BROWN_LIGHT }} />
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[180px]" style={{ background: "#F8F9FA", color: BROWN, border: `1px solid ${BORDER}` }}>
+                <SelectTrigger className="w-[180px]" style={{ background: "rgba(255,255,255,0.06)", color: BROWN, border: `1px solid ${BORDER}` }}>
                   <SelectValue placeholder={t("filter_all")} />
                 </SelectTrigger>
                 <SelectContent>
@@ -128,14 +128,14 @@ export default function ChauffeurTrajets() {
               ))
             ) : filteredTrips && filteredTrips.length > 0 ? (
               filteredTrips.map(trip => (
-                <Card key={trip.id} className="overflow-hidden border-0 bg-white" style={{ border: `1px solid ${BORDER}`, boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
+                <Card key={trip.id} className="overflow-hidden border-0 bg-white" style={{ border: `1px solid ${BORDER}`, boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
                   <CardContent className="p-0">
                     <div className="flex flex-col md:flex-row">
                       <div className="p-5 flex-1 flex flex-col justify-center">
                         <div className="flex justify-between items-start mb-3">
                           <div className="flex items-center gap-3">
                             <h3 className="text-lg font-semibold" style={{ color: BROWN }}>{trip.passengerName}</h3>
-                            <span className="text-sm font-medium px-2 py-0.5 rounded border" style={{ background: "#F8F9FA", borderColor: BORDER, color: BROWN_MID }}>
+                            <span className="text-sm font-medium px-2 py-0.5 rounded border" style={{ background: "rgba(255,255,255,0.06)", borderColor: BORDER, color: BROWN_MID }}>
                               {trip.fare} Dh
                             </span>
                           </div>
@@ -172,7 +172,7 @@ export default function ChauffeurTrajets() {
 
                       <div
                         className="p-5 border-t md:border-t-0 md:border-l flex flex-row md:flex-col gap-3 justify-center items-center md:w-48"
-                        style={{ borderColor: BORDER, background: "#F8F9FA" }}
+                        style={{ borderColor: BORDER, background: "rgba(255,255,255,0.06)" }}
                       >
                         {trip.status === "scheduled" && (
                           <Button
@@ -197,7 +197,7 @@ export default function ChauffeurTrajets() {
                         )}
 
                         <Link href={`/chauffeur/trajet/${trip.id}`} className="w-full">
-                          <Button variant="outline" className="w-full" style={{ borderColor: BORDER, color: BROWN_MID, background: "white" }}>
+                          <Button variant="outline" className="w-full" style={{ borderColor: BORDER, color: BROWN_MID, background: "rgba(255,255,255,0.08)" }}>
                             {t("details")}
                           </Button>
                         </Link>

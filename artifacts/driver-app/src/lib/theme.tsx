@@ -59,7 +59,7 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
     const stored = localStorage.getItem("bridge-theme");
-    return (stored === "dark" || stored === "light") ? stored : "light";
+    return (stored === "dark" || stored === "light") ? stored : "dark";
   });
 
   useEffect(() => {

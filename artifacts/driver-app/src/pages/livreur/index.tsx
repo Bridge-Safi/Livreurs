@@ -13,13 +13,13 @@ import { Link } from "wouter";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 
-const TC = "#C14B2A";
+const TC = "#E85C30";
 const GREEN = "#2A7A48";
 const GOLD = "#D4880C";
-const BROWN = "#1E293B";
-const BROWN_MID = "#475569";
-const BROWN_LIGHT = "#94A3B8";
-const BORDER = "#E2E8F0";
+const BROWN = "rgba(255,255,255,0.95)";
+const BROWN_MID = "rgba(255,255,255,0.65)";
+const BROWN_LIGHT = "rgba(255,255,255,0.40)";
+const BORDER = "rgba(255,255,255,0.15)";
 
 function getLevel(deliveries: number): { name: string; color: string; bg: string } {
   if (deliveries >= 400) return { name: "Platine", color: "#6D28D9", bg: "#EDE9FE" };
@@ -65,7 +65,7 @@ export default function LivreurDashboard() {
 
   return (
     <LivreurLayout>
-      <div className="flex-1 overflow-auto relative" style={{ background: "#F8F9FA" }}>
+      <div className="flex-1 overflow-auto relative" style={{ background: "rgba(255,255,255,0.06)" }}>
 
         {/* ── TC→Gold gradient header ── */}
         <div
@@ -221,7 +221,7 @@ export default function LivreurDashboard() {
                           {items.length > 0 && (
                             <div className="flex flex-wrap gap-1 mb-2">
                               {items.map((item, i) => (
-                                <span key={i} className="px-2 py-0.5 rounded-full text-xs" style={{ background: "#F8F9FA", color: BROWN_MID, border: `1px solid ${BORDER}` }}>
+                                <span key={i} className="px-2 py-0.5 rounded-full text-xs" style={{ background: "rgba(255,255,255,0.06)", color: BROWN_MID, border: `1px solid ${BORDER}` }}>
                                   {item}
                                 </span>
                               ))}

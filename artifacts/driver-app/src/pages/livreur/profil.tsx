@@ -17,21 +17,21 @@ import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { useLocation } from "wouter";
 
-const TC = "#C14B2A";
+const TC = "#E85C30";
 const GREEN = "#2A7A48";
 const GOLD = "#D4880C";
-const BORDER = "#E2E8F0";
-const BROWN = "#1E293B";
-const BROWN_MID = "#475569";
-const BROWN_LIGHT = "#94A3B8";
+const BORDER = "rgba(255,255,255,0.15)";
+const BROWN = "rgba(255,255,255,0.95)";
+const BROWN_MID = "rgba(255,255,255,0.65)";
+const BROWN_LIGHT = "rgba(255,255,255,0.40)";
 
 const GLASS_STYLE = {
-  background: "#FFFFFF",
-  border: "1px solid #E2E8F0",
-  boxShadow: "0 4px 20px rgba(0,0,0,0.06)"
+  background: "rgba(255,255,255,0.08)",
+  border: "1px solid rgba(255,255,255,0.12)",
+  boxShadow: "0 8px 32px rgba(0,0,0,0.4)"
 };
 
-const GOLD_GRADIENT = "linear-gradient(135deg, #C14B2A 0%, #D4880C 100%)";
+const GOLD_GRADIENT = "linear-gradient(135deg, #FADB5F 0%, #D4880C 100%)";
 
 type Status = "available" | "busy" | "offline";
 
@@ -154,7 +154,7 @@ export default function LivreurProfil() {
 
   return (
     <LivreurLayout>
-      <div className="flex-1 overflow-auto relative" style={{ background: "#F8F9FA" }}>
+      <div className="flex-1 overflow-auto relative" style={{ background: "transparent" }}>
 
         {isLoading || !profile ? (
           <div className="p-5 space-y-4">

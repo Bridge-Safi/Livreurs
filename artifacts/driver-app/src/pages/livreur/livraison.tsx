@@ -19,21 +19,21 @@ import { useAuth } from "@/lib/auth";
 import { GpsPickerModal } from "@/components/GpsPickerModal";
 import { stopContinuousAlarm } from "@/lib/alarm";
 
-const TC = "#C14B2A";
+const TC = "#E85C30";
 const GREEN = "#2A7A48";
 const GOLD = "#D4880C";
-const BORDER = "#E2E8F0";
-const BROWN = "#1E293B";
-const BROWN_MID = "#475569";
-const BROWN_LIGHT = "#94A3B8";
+const BORDER = "rgba(255,255,255,0.15)";
+const BROWN = "rgba(255,255,255,0.95)";
+const BROWN_MID = "rgba(255,255,255,0.65)";
+const BROWN_LIGHT = "rgba(255,255,255,0.40)";
 
 const GLASS_STYLE = {
-  background: "#FFFFFF",
-  border: "1px solid #E2E8F0",
-  boxShadow: "0 4px 20px rgba(0,0,0,0.06)"
+  background: "rgba(255,255,255,0.08)",
+  border: "1px solid rgba(255,255,255,0.12)",
+  boxShadow: "0 8px 32px rgba(0,0,0,0.4)"
 };
 
-const GOLD_GRADIENT = "linear-gradient(135deg, #C14B2A 0%, #D4880C 100%)";
+const GOLD_GRADIENT = "linear-gradient(135deg, #FADB5F 0%, #D4880C 100%)";
 
 interface ParsedOrder {
   items: string[];
@@ -218,7 +218,7 @@ export default function LivreurLivraisonDetail() {
       <LivreurLayout>
         <div
           className="flex-1 flex flex-col items-center justify-center gap-6 p-8 animate-in fade-in zoom-in-95 duration-300"
-          style={{ background: "#F8F9FA" }}
+          style={{ background: "transparent" }}
         >
           <div className="w-28 h-28 rounded-full flex items-center justify-center shadow-lg" style={{ background: GREEN }}>
             <CheckCircle2 className="h-14 w-14 text-white" />
@@ -265,7 +265,7 @@ export default function LivreurLivraisonDetail() {
   if (isLoading) {
     return (
       <LivreurLayout>
-        <div className="p-5 space-y-4 min-h-full" style={{ background: "#F8F9FA" }}>
+        <div className="p-5 space-y-4 min-h-full" style={{ background: "transparent" }}>
           <Skeleton className="h-8 w-40 rounded-lg" />
           <Skeleton className="h-32 w-full rounded-2xl" />
           <Skeleton className="h-48 w-full rounded-2xl" />
@@ -277,7 +277,7 @@ export default function LivreurLivraisonDetail() {
   if (!delivery) {
     return (
       <LivreurLayout>
-        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center min-h-full" style={{ background: "#F8F9FA" }}>
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center min-h-full" style={{ background: "transparent" }}>
           <UtensilsCrossed className="h-16 w-16 mb-4" style={{ color: BORDER }} />
           <h2 className="text-xl font-bold mb-2 relative z-10" style={{ color: BROWN }}>{t("not_found")}</h2>
           <Link href="/livreur/livraisons" className="relative z-10">
@@ -294,7 +294,7 @@ export default function LivreurLivraisonDetail() {
 
   return (
     <LivreurLayout>
-      <div className="flex-1 overflow-auto relative" style={{ background: "#F8F9FA" }}>
+      <div className="flex-1 overflow-auto relative" style={{ background: "transparent" }}>
 
         {/* ── Sticky header ── */}
         <div
@@ -477,7 +477,7 @@ export default function LivreurLivraisonDetail() {
                     <button
                       onClick={() => setGpsTarget({ address: delivery.pickupAddress, label: t("gps_pickup") })}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"
-                      style={{ background: "#F8F9FA", color: BROWN_MID, border: `1px solid ${BORDER}` }}
+                      style={{ background: "rgba(255,255,255,0.06)", color: BROWN_MID, border: `1px solid ${BORDER}` }}
                     >
                       <Navigation className="h-3 w-3" />
                       {t("navigate_pickup")}

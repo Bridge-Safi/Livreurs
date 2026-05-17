@@ -5,12 +5,12 @@ import { useI18n } from "@/lib/i18n";
 import { subscribeToPush, isPushSupported } from "@/lib/push";
 import { ArrowLeft, Mail, Lock, Eye, EyeOff } from "lucide-react";
 
-const TC = "#C14B2A";
+const TC = "#E85C30";
 const GOLD = "#D4880C";
-const BROWN = "#1E293B";
-const BROWN_MID = "#475569";
-const BROWN_LIGHT = "#94A3B8";
-const BORDER = "#E2E8F0";
+const BROWN = "rgba(255,255,255,0.95)";
+const BROWN_MID = "rgba(255,255,255,0.65)";
+const BROWN_LIGHT = "rgba(255,255,255,0.40)";
+const BORDER = "rgba(255,255,255,0.15)";
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -56,7 +56,7 @@ export default function LivreurLogin() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden" style={{ background: "#F8F9FA" }}>
+    <div className="min-h-screen flex flex-col relative overflow-hidden" style={{ background: "#1A0A06" }}>
       {/* Gradient header */}
       <div
         className="relative pt-14 pb-20 flex flex-col items-center overflow-hidden"
@@ -71,10 +71,10 @@ export default function LivreurLogin() {
       <div className="flex-1 flex flex-col items-center justify-start px-5 pt-6 pb-8">
         <div className="w-full max-w-sm">
           {/* Form card */}
-          <div className="rounded-2xl overflow-hidden mb-4 bg-white" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.10)", border: `1px solid ${BORDER}` }}>
+          <div className="rounded-2xl overflow-hidden mb-4" style={{ background: "rgba(255,255,255,0.07)", boxShadow: "0 8px 32px rgba(0,0,0,0.10)", border: `1px solid ${BORDER}` }}>
             {/* Email */}
             <div className="border-b" style={{ borderColor: BORDER }}>
-              <div className="px-4 py-2 flex items-center gap-3" style={{ background: "#F8F9FA" }}>
+              <div className="px-4 py-2 flex items-center gap-3" style={{ background: "rgba(255,255,255,0.06)" }}>
                 <Mail className="h-4 w-4 flex-shrink-0" style={{ color: TC }} />
                 <span className="text-xs font-bold uppercase tracking-wide" style={{ color: BROWN_MID }}>Adresse email</span>
               </div>
@@ -96,7 +96,7 @@ export default function LivreurLogin() {
 
             {/* Password */}
             <div>
-              <div className="px-4 py-2 flex items-center gap-3" style={{ background: "#F8F9FA" }}>
+              <div className="px-4 py-2 flex items-center gap-3" style={{ background: "rgba(255,255,255,0.06)" }}>
                 <Lock className="h-4 w-4 flex-shrink-0" style={{ color: TC }} />
                 <span className="text-xs font-bold uppercase tracking-wide" style={{ color: BROWN_MID }}>Mot de passe</span>
               </div>

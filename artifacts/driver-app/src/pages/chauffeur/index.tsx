@@ -9,11 +9,11 @@ import { useAuth } from "@/lib/auth";
 
 const GOLD = "#D4880C";
 const GREEN = "#2A7A48";
-const TC = "#C14B2A";
-const BROWN = "#1E293B";
-const BROWN_MID = "#475569";
-const BROWN_LIGHT = "#94A3B8";
-const BORDER = "#E2E8F0";
+const TC = "#E85C30";
+const BROWN = "rgba(255,255,255,0.95)";
+const BROWN_MID = "rgba(255,255,255,0.65)";
+const BROWN_LIGHT = "rgba(255,255,255,0.40)";
+const BORDER = "rgba(255,255,255,0.15)";
 
 export default function ChauffeurDashboard() {
   const queryClient = useQueryClient();
@@ -49,7 +49,7 @@ export default function ChauffeurDashboard() {
 
   return (
     <ChauffeurLayout>
-      <div className="flex-1 overflow-auto relative" style={{ background: "#F8F9FA" }}>
+      <div className="flex-1 overflow-auto relative" style={{ background: "rgba(255,255,255,0.06)" }}>
 
         {/* Gold→TC gradient header */}
         <div
@@ -147,7 +147,7 @@ export default function ChauffeurDashboard() {
                     <Link href={`/chauffeur/trajet/${trip.id}`} className="flex-1">
                       <button
                         className="w-full py-2 rounded-xl border text-sm font-semibold"
-                        style={{ borderColor: BORDER, color: BROWN, background: "#F8F9FA" }}
+                        style={{ borderColor: BORDER, color: BROWN, background: "rgba(255,255,255,0.06)" }}
                       >
                         {t("details")}
                       </button>

@@ -5,7 +5,7 @@ import { useI18n } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme";
 import { useCreateTrip, useCreateDelivery } from "@workspace/api-client-react";
 
-const TC = "#C14B2A";
+const TC = "#E85C30";
 const GOLD = "#D4880C";
 const GREEN = "#2A7A48";
 const SAND = "#FAF6EF";

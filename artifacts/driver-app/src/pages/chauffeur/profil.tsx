@@ -11,20 +11,20 @@ import { useAuth } from "@/lib/auth";
 import { useLocation } from "wouter";
 
 const GOLD = "#D4880C";
-const TC = "#C14B2A";
+const TC = "#E85C30";
 const GREEN = "#2A7A48";
-const BORDER = "#E2E8F0";
-const BROWN = "#1E293B";
-const BROWN_MID = "#475569";
-const BROWN_LIGHT = "#94A3B8";
+const BORDER = "rgba(255,255,255,0.15)";
+const BROWN = "rgba(255,255,255,0.95)";
+const BROWN_MID = "rgba(255,255,255,0.65)";
+const BROWN_LIGHT = "rgba(255,255,255,0.40)";
 
 const GLASS_STYLE = {
-  background: "#FFFFFF",
-  border: "1px solid #E2E8F0",
-  boxShadow: "0 4px 20px rgba(0,0,0,0.06)"
+  background: "rgba(255,255,255,0.08)",
+  border: "1px solid rgba(255,255,255,0.12)",
+  boxShadow: "0 8px 32px rgba(0,0,0,0.4)"
 };
 
-const GOLD_GRADIENT = "linear-gradient(135deg, #D4880C 0%, #C14B2A 100%)";
+const GOLD_GRADIENT = "linear-gradient(135deg, #D4880C 0%, #FADB5F 100%)";
 
 type DriverStatus = "available" | "busy" | "offline";
 
@@ -95,7 +95,7 @@ export default function ChauffeurProfil() {
 
   return (
     <ChauffeurLayout>
-      <div className="flex-1 overflow-auto relative" style={{ background: "#F8F9FA" }}>
+      <div className="flex-1 overflow-auto relative" style={{ background: "transparent" }}>
 
         {isLoading || !profile ? (
           <div className="p-5 space-y-4">
@@ -250,7 +250,7 @@ export default function ChauffeurProfil() {
                   </div>
                   <div
                     className="px-3 py-1.5 rounded-xl border font-mono text-sm font-bold tracking-widest"
-                    style={{ background: "#F8F9FA", borderColor: BORDER, color: BROWN_MID }}
+                    style={{ background: "rgba(255,255,255,0.06)", borderColor: BORDER, color: BROWN_MID }}
                   >
                     {profile.vehiclePlate}
                   </div>
@@ -260,7 +260,7 @@ export default function ChauffeurProfil() {
                   <p className="text-xs mb-1" style={{ color: BROWN_LIGHT }}>{t("vtc_card")}</p>
                   <div
                     className="px-3 py-2 rounded-xl border font-mono text-sm font-semibold inline-block"
-                    style={{ background: "#F8F9FA", borderColor: BORDER, color: BROWN_MID }}
+                    style={{ background: "rgba(255,255,255,0.06)", borderColor: BORDER, color: BROWN_MID }}
                   >
                     {profile.licenseNumber}
                   </div>
@@ -283,11 +283,11 @@ export default function ChauffeurProfil() {
                   <div className="h-full rounded-full" style={{ width: "100%", background: GOLD_GRADIENT }} />
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-3">
-                  <div className="p-3 rounded-xl border text-center" style={{ background: "#F8F9FA", borderColor: BORDER }}>
+                  <div className="p-3 rounded-xl border text-center" style={{ background: "rgba(255,255,255,0.06)", borderColor: BORDER }}>
                     <CheckCircle2 className="h-5 w-5 mx-auto mb-1" style={{ color: "#10B981" }} />
                     <p className="text-xs font-semibold" style={{ color: BROWN_MID }}>{t("level_gold")}</p>
                   </div>
-                  <div className="p-3 rounded-xl border text-center" style={{ background: "#F8F9FA", borderColor: BORDER }}>
+                  <div className="p-3 rounded-xl border text-center" style={{ background: "rgba(255,255,255,0.06)", borderColor: BORDER }}>
                     <p className="text-xl font-bold" style={{ color: BROWN }}>{profile.rating.toFixed(1)}/5</p>
                     <p className="text-xs" style={{ color: BROWN_LIGHT }}>{t("last_30_days")}</p>
                   </div>
