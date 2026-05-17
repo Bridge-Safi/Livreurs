@@ -95,7 +95,7 @@ function StepTimeline({ status }: { status?: string }) {
             <div
               className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold shadow-sm"
               style={{
-                background: i <= idx ? TC : "#F1F5F9",
+                background: i <= idx ? TC : "rgba(255,255,255,0.08)",
                 color: i <= idx ? "white" : BROWN_LIGHT,
                 border: i <= idx ? "none" : `1px solid ${BORDER}`
               }}
@@ -234,7 +234,7 @@ export default function LivreurLivraisonDetail() {
           </div>
 
           <div className="flex items-center gap-3 px-8 py-5 rounded-2xl" style={GLASS_STYLE}>
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: "#FEF6E4" }}>
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: "rgba(212,136,12,0.15)" }}>
               <Coins className="h-6 w-6" style={{ color: GOLD }} />
             </div>
             <div>
@@ -298,11 +298,11 @@ export default function LivreurLivraisonDetail() {
 
         {/* ── Sticky header ── */}
         <div
-          className="sticky top-0 z-20 flex items-center gap-3 px-4 py-3 border-b bg-white"
-          style={{ borderColor: BORDER }}
+          className="sticky top-0 z-20 flex items-center gap-3 px-4 py-3 border-b"
+          style={{ borderColor: BORDER, background: "rgba(26,10,6,0.85)", backdropFilter: "blur(12px)" }}
         >
           <Link href="/livreur/livraisons">
-            <button className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "#F1F5F9" }}>
+            <button className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.1)" }}>
               <ArrowLeft className="h-4 w-4" style={{ color: BROWN }} />
             </button>
           </Link>
@@ -320,7 +320,7 @@ export default function LivreurLivraisonDetail() {
               }
             }}
             className="w-8 h-8 rounded-full flex items-center justify-center mr-1"
-            style={{ background: "#FDEEE9" }}
+            style={{ background: "rgba(232,92,48,0.15)" }}
             title="Partager le lien de suivi"
           >
             <Share2 className="h-4 w-4" style={{ color: TC }} />

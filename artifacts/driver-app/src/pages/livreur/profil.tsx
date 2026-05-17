@@ -313,17 +313,17 @@ export default function LivreurProfil() {
 
               {/* ── Stats grid ── */}
               <div className="grid grid-cols-3 gap-3">
-                <div className="rounded-2xl p-4 text-center" style={{ background: "#FFF0F0", border: "1px solid #FF4B4B22" }}>
-                  <div className="text-2xl font-bold" style={{ color: "#FF4B4B" }}>{profile.totalDeliveries}</div>
-                  <div className="text-xs mt-1" style={{ color: BROWN_LIGHT }}>{t("total_deliveries")}</div>
+                <div className="rounded-2xl p-4 text-center" style={{ background: "rgba(255,75,75,0.12)", border: "1px solid rgba(255,75,75,0.3)" }}>
+                  <div className="text-2xl font-bold" style={{ color: "#FF6B6B" }}>{profile.totalDeliveries}</div>
+                  <div className="text-xs mt-1" style={{ color: BROWN_MID }}>{t("total_deliveries")}</div>
                 </div>
-                <div className="rounded-2xl p-4 text-center" style={{ background: "#FFFBEB", border: "1px solid #F59E0B22" }}>
+                <div className="rounded-2xl p-4 text-center" style={{ background: "rgba(212,136,12,0.12)", border: "1px solid rgba(212,136,12,0.3)" }}>
                   <div className="text-2xl font-bold" style={{ color: GOLD }}>{profile.rating.toFixed(1)}</div>
-                  <div className="text-xs mt-1" style={{ color: BROWN_LIGHT }}>{t("rating_global")}</div>
+                  <div className="text-xs mt-1" style={{ color: BROWN_MID }}>{t("rating_global")}</div>
                 </div>
-                <div className="rounded-2xl p-4 text-center" style={{ background: "#ECFDF5", border: "1px solid #10B98122" }}>
+                <div className="rounded-2xl p-4 text-center" style={{ background: "rgba(16,185,129,0.12)", border: "1px solid rgba(16,185,129,0.3)" }}>
                   <div className="text-2xl font-bold" style={{ color: "#10B981" }}>98%</div>
-                  <div className="text-xs mt-1" style={{ color: BROWN_LIGHT }}>{t("success_rate")}</div>
+                  <div className="text-xs mt-1" style={{ color: BROWN_MID }}>{t("success_rate")}</div>
                 </div>
               </div>
 

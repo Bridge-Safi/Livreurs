@@ -208,8 +208,8 @@ export default function ChauffeurTrajets() {
               ))
             ) : (
               <div
-                className="text-center py-16 rounded-2xl border border-dashed bg-white"
-                style={{ borderColor: BORDER }}
+                className="text-center py-16 rounded-2xl border border-dashed"
+                style={{ background: "rgba(255,255,255,0.05)", borderColor: BORDER }}
               >
                 <MapPin className="mx-auto h-12 w-12 mb-4" style={{ color: BORDER }} />
                 <h3 className="text-lg font-medium" style={{ color: BROWN_MID }}>{t("no_trips")}</h3>

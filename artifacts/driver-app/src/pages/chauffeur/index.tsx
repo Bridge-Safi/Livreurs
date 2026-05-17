@@ -135,7 +135,7 @@ export default function ChauffeurDashboard() {
                         <p className="text-sm" style={{ color: BROWN_MID }}>{trip.pickupAddress}</p>
                       </div>
                       <div className="flex items-center gap-3">
-                        <div className="w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center" style={{ borderColor: GOLD, background: "#FEF6E4" }}>
+                        <div className="w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center" style={{ borderColor: GOLD, background: "rgba(212,136,12,0.15)" }}>
                           <div className="w-1.5 h-1.5 rounded-full" style={{ background: GOLD }} />
                         </div>
                         <p className="text-sm font-medium" style={{ color: BROWN }}>{trip.dropoffAddress}</p>

@@ -203,8 +203,8 @@ export default function LivreurDashboard() {
                   return (
                     <Link key={delivery.id} href={`/livreur/livraison/${delivery.id}`}>
                       <div
-                        className="rounded-2xl overflow-hidden bg-white active:scale-[0.99] transition-transform cursor-pointer"
-                        style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.08)", border: `1px solid ${BORDER}` }}
+                        className="rounded-2xl overflow-hidden active:scale-[0.99] transition-transform cursor-pointer"
+                        style={{ background: "rgba(255,255,255,0.08)", boxShadow: "0 4px 20px rgba(0,0,0,0.4)", border: `1px solid ${BORDER}` }}
                       >
                         <div className="h-1 w-full" style={{ background: "linear-gradient(90deg, #C14B2A, #D4880C)" }} />
                         <div className="p-4">
@@ -213,7 +213,7 @@ export default function LivreurDashboard() {
                               <p className="font-mono text-xs" style={{ color: BROWN_LIGHT }}>{delivery.trackingNumber}</p>
                               <h3 className="font-bold text-base mt-0.5 truncate" style={{ color: BROWN }}>{delivery.customerName}</h3>
                             </div>
-                            <span className="flex-shrink-0 px-2 py-1 rounded-full text-xs font-bold" style={{ background: "#FDEEE9", color: TC }}>
+                            <span className="flex-shrink-0 px-2 py-1 rounded-full text-xs font-bold" style={{ background: "rgba(232,92,48,0.2)", color: TC }}>
                               {t("status_in_progress")}
                             </span>
                           </div>
@@ -240,7 +240,7 @@ export default function LivreurDashboard() {
                                   href={`tel:${delivery.customerPhone}`}
                                   onClick={e => e.stopPropagation()}
                                   className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold"
-                                  style={{ background: "#ECFDF5", color: "#10B981" }}
+                                  style={{ background: "rgba(16,185,129,0.15)", color: "#10B981" }}
                                 >
                                   <Phone className="h-3 w-3" />
                                   {t("call_customer")}
@@ -265,8 +265,8 @@ export default function LivreurDashboard() {
               </div>
             ) : (
               <div
-                className="text-center py-12 rounded-2xl border border-dashed bg-white"
-                style={{ borderColor: BORDER }}
+                className="text-center py-12 rounded-2xl border border-dashed"
+                style={{ borderColor: BORDER, background: "rgba(255,255,255,0.05)" }}
               >
                 <Package className="mx-auto h-10 w-10 mb-3" style={{ color: BORDER }} />
                 <h3 className="text-sm font-semibold" style={{ color: BROWN_MID }}>{t("no_active")}</h3>

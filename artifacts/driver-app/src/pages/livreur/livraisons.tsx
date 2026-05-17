@@ -165,8 +165,8 @@ export default function LivreurLivraisons() {
               filteredDeliveries.map(delivery => (
                 <div
                   key={delivery.id}
-                  className="rounded-2xl overflow-hidden flex flex-col md:flex-row bg-white"
-                  style={{ border: `1px solid ${BORDER}`, boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}
+                  className="rounded-2xl overflow-hidden flex flex-col md:flex-row"
+                  style={{ background: "rgba(255,255,255,0.08)", border: `1px solid ${BORDER}`, boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}
                 >
                   <div
                     className="w-full md:w-1 h-1 md:h-auto flex-shrink-0"
@@ -239,8 +239,8 @@ export default function LivreurLivraisons() {
               ))
             ) : (
               <div
-                className="text-center py-14 rounded-2xl border border-dashed bg-white"
-                style={{ borderColor: BORDER }}
+                className="text-center py-14 rounded-2xl border border-dashed"
+                style={{ background: "rgba(255,255,255,0.05)", borderColor: BORDER }}
               >
                 <Package className="mx-auto h-10 w-10 mb-3" style={{ color: BORDER }} />
                 <h3 className="text-base font-semibold" style={{ color: BROWN_MID }}>{t("no_active")}</h3>

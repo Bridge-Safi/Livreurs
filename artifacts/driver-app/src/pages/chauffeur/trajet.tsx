@@ -49,7 +49,7 @@ function StepTimeline({ status }: { status?: string }) {
             <div
               className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all shadow-sm"
               style={{
-                background: i <= idx ? TC : "#F1F5F9",
+                background: i <= idx ? TC : "rgba(255,255,255,0.08)",
                 color: i <= idx ? "white" : BROWN_LIGHT,
                 border: i <= idx ? "none" : `1px solid ${BORDER}`
               }}
@@ -156,7 +156,7 @@ export default function ChauffeurTrajetDetail() {
             <p className="text-sm" style={{ color: BROWN_LIGHT }}>Excellente course, bonne continuation 🚖</p>
           </div>
           <div className="flex items-center gap-3 px-8 py-5 rounded-2xl" style={GLASS_STYLE}>
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: "#FEF6E4" }}>
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: "rgba(212,136,12,0.15)" }}>
               <Coins className="h-6 w-6" style={{ color: GOLD }} />
             </div>
             <div>
@@ -211,11 +211,11 @@ export default function ChauffeurTrajetDetail() {
 
         {/* Sticky header */}
         <div
-          className="sticky top-0 z-20 flex items-center gap-3 px-4 py-3 border-b bg-white"
-          style={{ borderColor: BORDER }}
+          className="sticky top-0 z-20 flex items-center gap-3 px-4 py-3 border-b"
+          style={{ borderColor: BORDER, background: "rgba(26,10,6,0.85)", backdropFilter: "blur(12px)" }}
         >
           <Link href="/chauffeur/trajets">
-            <button className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "#F1F5F9" }}>
+            <button className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.1)" }}>
               <ArrowLeft className="h-4 w-4" style={{ color: BROWN }} />
             </button>
           </Link>
@@ -226,9 +226,9 @@ export default function ChauffeurTrajetDetail() {
           <span
             className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold flex-shrink-0"
             style={
-              trip.status === "completed" ? { background: "#ECFDF5", color: GREEN, border: `1px solid ${GREEN}33` } :
-              trip.status === "in_progress" ? { background: "#FEF6E4", color: GOLD, border: `1px solid ${GOLD}33` } :
-              { background: "#F1F5F9", color: BROWN_MID, border: `1px solid ${BORDER}` }
+              trip.status === "completed" ? { background: "rgba(42,122,72,0.2)", color: "#2AE86C", border: `1px solid rgba(42,122,72,0.4)` } :
+              trip.status === "in_progress" ? { background: "rgba(212,136,12,0.2)", color: GOLD, border: `1px solid rgba(212,136,12,0.4)` } :
+              { background: "rgba(255,255,255,0.08)", color: BROWN_MID, border: `1px solid ${BORDER}` }
             }
           >
             {trip.status === "in_progress" && <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />}
