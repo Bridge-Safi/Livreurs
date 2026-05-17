@@ -4,6 +4,7 @@ title = "Driver & Delivery App"
 version = "1.0.0"
 id = "artifacts/driver-app"
 router = "path"
+feedbackWidget = true
 
 [[integratedSkills]]
 name = "react-vite"
