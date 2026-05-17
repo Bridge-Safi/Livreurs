@@ -1,6 +1,6 @@
 import { ReactNode, useCallback } from "react";
 import { Link, useLocation } from "wouter";
-import { Home, Package, User, LogOut, Camera, Sun, Moon, Wifi, WifiOff } from "lucide-react";
+import { Home, Package, User, LogOut, Camera, Wifi, WifiOff } from "lucide-react";
 import { useI18n, LANGUAGES, type Lang } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { useTheme } from "@/lib/theme";
@@ -17,7 +17,7 @@ export function LivreurLayout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
   const { t, lang, setLang } = useI18n();
   const { livreur, logoutLivreur } = useAuth();
-  const { colors, isDark, toggleTheme } = useTheme();
+  const { colors, isDark } = useTheme();
   const livreurId = livreur?.id ?? 0;
   const queryClient = useQueryClient();
   const pendingDispatch = useDispatchPoller(livreurId);
@@ -141,15 +141,6 @@ export function LivreurLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
 
-          {/* Dark mode toggle */}
-          <button
-            onClick={toggleTheme}
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all text-sm font-medium border"
-            style={{ color: colors.textMid, borderColor: colors.border, background: colors.bgCard }}
-          >
-            {isDark ? <Sun className="h-4 w-4 text-yellow-400" /> : <Moon className="h-4 w-4" style={{ color: colors.textLight }} />}
-            <span>{isDark ? "Mode clair" : "Mode sombre"}</span>
-          </button>
         </div>
 
         <div className="p-3 pb-5 border-t" style={{ borderColor: colors.border }}>
@@ -192,18 +183,6 @@ export function LivreurLayout({ children }: { children: ReactNode }) {
               {isOnline
                 ? <><Wifi className="h-3.5 w-3.5" />{livreurStatus === "busy" ? "En livraison" : "En ligne"}</>
                 : <><WifiOff className="h-3.5 w-3.5" />Hors-ligne</>
-              }
-            </button>
-
-            {/* Theme toggle mobile */}
-            <button
-              onClick={toggleTheme}
-              className="w-8 h-8 rounded-full flex items-center justify-center border transition-all"
-              style={{ borderColor: colors.border, background: colors.bgCard }}
-            >
-              {isDark
-                ? <Sun className="h-4 w-4 text-yellow-400" />
-                : <Moon className="h-4 w-4" style={{ color: colors.textLight }} />
               }
             </button>
 
