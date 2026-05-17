@@ -1,82 +1,86 @@
-// Premium Moroccan design tokens — applied globally
+// Vibrant Modern design tokens — Moroccan TC→Gold gradient header, white cards, vivid stats
+import type React from "react";
+
 export const PM = {
   // Backgrounds
-  BG: "linear-gradient(135deg, #1A0A06 0%, #2C1810 100%)",
-  BG_SOLID: "#1A0A06",
-  BG_CARD: "rgba(255,255,255,0.08)",
-  BG_CARD_HOVER: "rgba(255,255,255,0.12)",
-  BG_HEADER: "linear-gradient(160deg, #2C1810 0%, #1A0A06 100%)",
+  BG: "#F8F9FA",
+  BG_SOLID: "#F8F9FA",
+  BG_CARD: "#FFFFFF",
+  BG_CARD_HOVER: "#F8FAFC",
+  BG_HEADER: "linear-gradient(135deg, #C14B2A 0%, #D4880C 100%)",
 
   // Accents
-  TC: "#E85C30",          // terracotta (brighter)
-  TC_DIM: "rgba(232,92,48,0.2)",
+  TC: "#C14B2A",
+  TC_DIM: "rgba(193,75,42,0.12)",
   GOLD: "#D4880C",
-  GOLD_LIGHT: "#FADB5F",
+  GOLD_LIGHT: "#FEF6E4",
   GREEN: "#2A7A48",
-  GREEN_GLOW: "#2AE86C",
+  GREEN_GLOW: "#10B981",
 
-  // Text
-  TEXT: "rgba(255,255,255,0.95)",
-  TEXT_MID: "rgba(255,255,255,0.65)",
-  TEXT_LIGHT: "rgba(255,255,255,0.40)",
+  // Vibrant stat card colors
+  STAT_RED: "#FF4B4B",
+  STAT_BLUE: "#3B82F6",
+  STAT_GREEN: "#10B981",
+  STAT_AMBER: "#F59E0B",
+
+  // Text (dark on light)
+  TEXT: "#1E293B",
+  TEXT_MID: "#475569",
+  TEXT_LIGHT: "#94A3B8",
 
   // Borders
-  BORDER: "rgba(255,255,255,0.15)",
-  BORDER_GOLD: "rgba(212,136,12,0.35)",
+  BORDER: "#E2E8F0",
+  BORDER_GOLD: "rgba(212,136,12,0.30)",
 
-  // Card styles (use as style object)
+  // Card styles (white with shadow)
   CARD: {
-    background: "rgba(255,255,255,0.08)",
-    backdropFilter: "blur(20px)",
-    WebkitBackdropFilter: "blur(20px)",
-    border: "1px solid rgba(255,255,255,0.15)",
+    background: "#FFFFFF",
+    borderRadius: "24px",
+    boxShadow: "0 8px 32px rgba(0,0,0,0.10)",
+    border: "1px solid #F1F5F9",
   } as React.CSSProperties,
 
   CARD_GOLD: {
-    background: "rgba(255,255,255,0.08)",
-    backdropFilter: "blur(20px)",
-    WebkitBackdropFilter: "blur(20px)",
-    border: "1px solid rgba(255,255,255,0.15)",
-    borderLeft: "4px solid #D4880C",
+    background: "#FFFFFF",
+    borderRadius: "24px",
+    boxShadow: "0 8px 32px rgba(0,0,0,0.10)",
+    border: "1px solid #F1F5F9",
+    borderLeft: "4px solid #C14B2A",
   } as React.CSSProperties,
 
-  // CTA button (gold gradient)
+  // CTA button (TC→Gold gradient, white text)
   CTA: {
-    background: "linear-gradient(135deg, #FADB5F 0%, #D4880C 100%)",
-    color: "#1A0A06",
-    fontWeight: 700,
+    background: "linear-gradient(135deg, #C14B2A 0%, #D4880C 100%)",
+    color: "#FFFFFF",
+    fontWeight: 800,
   } as React.CSSProperties,
 
   // Online status pill
   ONLINE: {
-    background: "rgba(42,122,72,0.2)",
-    border: "1px solid rgba(42,122,72,0.5)",
-    boxShadow: "0 0 12px rgba(42,234,108,0.25)",
+    background: "rgba(16,185,129,0.12)",
+    border: "1px solid rgba(16,185,129,0.40)",
   } as React.CSSProperties,
 
-  // Moroccan star pattern
+  // Moroccan star pattern (white stars, used inside gradient headers)
   STAR_PATTERN: {
-    backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 0l2 18 18 2-18 2-2 18-2-18-18-2 18-2z' fill='%23D4880C' fill-rule='evenodd'/%3E%3C/svg%3E")`,
+    backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 0l2 18 18 2-18 2-2 18-2-18-18-2 18-2z' fill='%23ffffff' fill-rule='evenodd'/%3E%3C/svg%3E")`,
     backgroundSize: "40px 40px",
   } as React.CSSProperties,
 
-  // Bottom nav
+  // Bottom nav (white, rounded top)
   NAV: {
-    background: "rgba(26,10,6,0.90)",
-    backdropFilter: "blur(20px)",
-    WebkitBackdropFilter: "blur(20px)",
-    borderTop: "1px solid rgba(255,255,255,0.10)",
+    background: "#FFFFFF",
+    borderTop: "1px solid #F1F5F9",
+    boxShadow: "0 -10px 40px rgba(0,0,0,0.08)",
   } as React.CSSProperties,
 } as const;
 
-// For pages still using simple color constants
-export const TC   = PM.TC;
-export const GOLD = PM.GOLD;
-export const GREEN = PM.GREEN;
-export const SAND = PM.BG_SOLID;
-export const BORDER = PM.BORDER;
-export const BROWN = PM.TEXT;
+// Shorthand exports for pages
+export const TC        = PM.TC;
+export const GOLD      = PM.GOLD;
+export const GREEN     = PM.GREEN;
+export const SAND      = PM.BG;
+export const BORDER    = PM.BORDER;
+export const BROWN     = PM.TEXT;
 export const BROWN_MID = PM.TEXT_MID;
 export const BROWN_LIGHT = PM.TEXT_LIGHT;
-
-import type React from "react";

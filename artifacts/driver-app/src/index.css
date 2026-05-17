@@ -147,26 +147,26 @@
     @apply border-border;
   }
   body {
-    @apply font-sans antialiased text-foreground;
-    background: linear-gradient(135deg, #1A0A06 0%, #2C1810 100%);
+    @apply font-sans antialiased;
+    background: #F8F9FA;
     min-height: 100vh;
-    color: white;
+    color: #1E293B;
   }
 }
 
-/* Premium Moroccan glass card */
+/* Vibrant Modern white card */
 .pm-card {
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: #FFFFFF;
+  border-radius: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.10);
+  border: 1px solid #F1F5F9;
 }
 
-/* Gold gradient CTA */
+/* TC→Gold gradient CTA */
 .pm-cta {
-  background: linear-gradient(135deg, #FADB5F 0%, #D4880C 100%);
-  color: #1A0A06;
-  font-weight: 700;
+  background: linear-gradient(135deg, #C14B2A 0%, #D4880C 100%);
+  color: #FFFFFF;
+  font-weight: 800;
 }
 
 /* Moroccan star overlay */
