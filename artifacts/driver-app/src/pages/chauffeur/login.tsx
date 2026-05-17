@@ -132,8 +132,16 @@ export default function ChauffeurLogin() {
         </button>
 
         <button
+          onClick={() => navigate("/forgot-password?role=chauffeur")}
+          className="mt-3 w-full text-sm py-2 text-center"
+          style={{ color: BROWN_LIGHT }}
+        >
+          Mot de passe oublié ?
+        </button>
+
+        <button
           onClick={() => navigate("/")}
-          className="mt-6 w-full text-sm py-3 flex items-center justify-center gap-2"
+          className="mt-2 w-full text-sm py-3 flex items-center justify-center gap-2"
           style={{ color: BROWN_LIGHT }}
         >
           <ArrowLeft className="h-4 w-4" />

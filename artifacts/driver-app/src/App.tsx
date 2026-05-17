@@ -22,6 +22,8 @@ import ChauffeurTrajetDetail from "@/pages/chauffeur/trajet";
 import ChauffeurProfil from "@/pages/chauffeur/profil";
 import SuiviPage from "@/pages/suivi";
 import CommandePage from "@/pages/commande";
+import ForgotPassword from "@/pages/forgot-password";
+import ResetPassword from "@/pages/reset-password";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
@@ -60,6 +62,10 @@ function Router() {
       <Route path="/chauffeur/trajets">{() => <ChauffeurGuard component={ChauffeurTrajets} />}</Route>
       <Route path="/chauffeur/trajet/:id">{() => <ChauffeurGuard component={ChauffeurTrajetDetail} />}</Route>
       <Route path="/chauffeur/profil">{() => <ChauffeurGuard component={ChauffeurProfil} />}</Route>
+
+      {/* Password reset (public) */}
+      <Route path="/forgot-password" component={ForgotPassword} />
+      <Route path="/reset-password" component={ResetPassword} />
 
       {/* Public order page */}
       <Route path="/commande" component={CommandePage} />
