@@ -123,29 +123,6 @@ export default function RoleSelection() {
           ))}
         </div>
 
-        {/* Commander button */}
-        <div className="mt-1">
-          <p className="text-center text-xs mb-3 font-medium" style={{ color: BROWN_LIGHT }}>
-            Vous êtes un client ?
-          </p>
-          <Link href="/commande" className="block">
-            <div
-              className="relative overflow-hidden rounded-2xl transition-all duration-200 active:scale-[0.98]"
-              style={{ background: "linear-gradient(135deg, #C14B2A 0%, #D4880C 100%)" }}
-            >
-              <div className="relative px-5 py-4 flex items-center gap-4">
-                <div className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.2)" }}>
-                  <span className="text-2xl">📲</span>
-                </div>
-                <div className="flex-1">
-                  <h2 className="text-base font-black text-white">Passer une commande</h2>
-                  <p className="text-xs mt-0.5 text-white/70">Taxi · Restaurant · Tabac · Pharmacie · Fleurs</p>
-                </div>
-                <ChevronRight className="w-5 h-5 flex-shrink-0 text-white/70" />
-              </div>
-            </div>
-          </Link>
-        </div>
       </div>
     </div>
   );
