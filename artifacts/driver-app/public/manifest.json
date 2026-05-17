@@ -4,7 +4,7 @@
   "description": "Plateforme logistique pour Safi, Maroc",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0D1B3E",
+  "background_color": "#1A0A06",
   "theme_color": "#D4880C",
   "orientation": "portrait",
   "icons": [

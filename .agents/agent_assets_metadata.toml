@@ -30,3 +30,15 @@ id = "ZbgRWVL-ZhZ6U1LpdzZrr"
 uri = "file://artifacts/driver-app/public/bridge-logo-resto.png"
 type = "image"
 title = "bridge restaurant partner badge morocco"
+
+[[generated]]
+id = "P_9WBEuNbaTCT4EhIwsxT"
+uri = "file://artifacts/driver-app/public/bridge-icon-app.png"
+type = "image"
+title = "bridge app icon colored scene moroccan"
+
+[[generated]]
+id = "ykzq008Qu7fd83xbmFUzN"
+uri = "file://artifacts/driver-app/public/bridge-icon-b2.png"
+type = "image"
+title = "bridge B icon moroccan geometric colored"
