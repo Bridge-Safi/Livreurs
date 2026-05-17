@@ -6,8 +6,6 @@ import crypto from "node:crypto";
 
 const router: IRouter = Router();
 
-const PIN_ONLY_IDS = new Set([1, 2]);
-
 function normalizeEmail(raw: string): string {
   return raw.trim().toLowerCase();
 }
@@ -28,7 +26,7 @@ router.get("/auth/drivers", async (req, res): Promise<void> => {
   res.json(drivers);
 });
 
-// ── POST /auth/login — Email + password OR PIN ────────────────────────────
+// ── POST /auth/login — Email + password ──────────────────────────────────
 router.post("/auth/login", async (req, res): Promise<void> => {
   const { email, password, role } = req.body as { email?: string; password?: string; role?: string };
   if (!email || !password || !role || !["livreur", "chauffeur"].includes(role)) {
@@ -44,22 +42,14 @@ router.post("/auth/login", async (req, res): Promise<void> => {
       res.status(404).json({ success: false, error: "Email non reconnu. Contactez votre responsable." });
       return;
     }
-    // PIN-only admins (id 1 & 2)
-    if (PIN_ONLY_IDS.has(user.id)) {
-      if (password !== user.pin) {
-        res.status(401).json({ success: false, error: "Mot de passe incorrect" });
-        return;
-      }
-    } else {
-      if (!user.password) {
-        res.status(401).json({ success: false, error: "Aucun mot de passe défini. Contactez votre responsable." });
-        return;
-      }
-      const ok = await bcrypt.compare(password, user.password);
-      if (!ok) {
-        res.status(401).json({ success: false, error: "Mot de passe incorrect" });
-        return;
-      }
+    if (!user.password) {
+      res.status(401).json({ success: false, error: "Aucun mot de passe défini. Contactez votre responsable." });
+      return;
+    }
+    const ok = await bcrypt.compare(password, user.password);
+    if (!ok) {
+      res.status(401).json({ success: false, error: "Mot de passe incorrect" });
+      return;
     }
     req.log.info({ userId: user.id, role }, "Login success");
     res.json({
@@ -77,21 +67,14 @@ router.post("/auth/login", async (req, res): Promise<void> => {
       res.status(404).json({ success: false, error: "Email non reconnu. Contactez votre responsable." });
       return;
     }
-    if (PIN_ONLY_IDS.has(user.id)) {
-      if (password !== user.pin) {
-        res.status(401).json({ success: false, error: "Mot de passe incorrect" });
-        return;
-      }
-    } else {
-      if (!user.password) {
-        res.status(401).json({ success: false, error: "Aucun mot de passe défini. Contactez votre responsable." });
-        return;
-      }
-      const ok = await bcrypt.compare(password, user.password);
-      if (!ok) {
-        res.status(401).json({ success: false, error: "Mot de passe incorrect" });
-        return;
-      }
+    if (!user.password) {
+      res.status(401).json({ success: false, error: "Aucun mot de passe défini. Contactez votre responsable." });
+      return;
+    }
+    const ok = await bcrypt.compare(password, user.password);
+    if (!ok) {
+      res.status(401).json({ success: false, error: "Mot de passe incorrect" });
+      return;
     }
     req.log.info({ userId: user.id, role }, "Login success");
     res.json({
@@ -149,6 +132,167 @@ router.post("/auth/set-password", async (req, res): Promise<void> => {
   res.json({ success: true });
 });
 
+// ── Email helpers ──────────────────────────────────────────────────────────
+
+function buildResetEmailHtml(opts: {
+  name: string;
+  role: "livreur" | "chauffeur";
+  resetUrl: string;
+}): string {
+  const isLivreur = opts.role === "livreur";
+  const accentColor = isLivreur ? "#C14B2A" : "#D4880C";
+  const accentLight = isLivreur ? "#FFF0EB" : "#FEF6E4";
+  const roleLabel = isLivreur ? "Livreur de Repas" : "Taxi Confort";
+
+  const logoSvg = isLivreur
+    ? `<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <rect width="64" height="64" rx="16" fill="${accentColor}"/>
+        <text x="32" y="20" text-anchor="middle" font-family="Arial,sans-serif" font-size="9" font-weight="bold" fill="white" letter-spacing="1">BRIDGE</text>
+        <rect x="10" y="26" width="44" height="22" rx="4" fill="white" opacity="0.15"/>
+        <path d="M12 38 Q20 26 32 26 Q44 26 52 38" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <circle cx="20" cy="42" r="4" fill="white"/>
+        <circle cx="44" cy="42" r="4" fill="white"/>
+        <path d="M24 42 L40 42" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+        <rect x="28" y="28" width="8" height="10" rx="2" fill="white" opacity="0.9"/>
+        <text x="32" y="53" text-anchor="middle" font-family="Arial,sans-serif" font-size="7" font-weight="bold" fill="white" opacity="0.9">LIVREUR</text>
+      </svg>`
+    : `<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <rect width="64" height="64" rx="16" fill="${accentColor}"/>
+        <text x="32" y="20" text-anchor="middle" font-family="Arial,sans-serif" font-size="9" font-weight="bold" fill="white" letter-spacing="1">BRIDGE</text>
+        <path d="M10 40 Q12 28 22 28 L42 28 Q52 28 54 40 L54 43 Q54 46 51 46 L13 46 Q10 46 10 43 Z" fill="white" opacity="0.2"/>
+        <path d="M12 40 Q14 30 22 30 L42 30 Q50 30 52 40" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <rect x="18" y="30" width="10" height="8" rx="2" fill="white" opacity="0.9"/>
+        <rect x="36" y="30" width="10" height="8" rx="2" fill="white" opacity="0.9"/>
+        <circle cx="19" cy="46" r="5" fill="white"/>
+        <circle cx="19" cy="46" r="2" fill="${accentColor}"/>
+        <circle cx="45" cy="46" r="5" fill="white"/>
+        <circle cx="45" cy="46" r="2" fill="${accentColor}"/>
+        <text x="32" y="53" text-anchor="middle" font-family="Arial,sans-serif" font-size="7" font-weight="bold" fill="white" opacity="0.9">TAXI</text>
+      </svg>`;
+
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Réinitialisation — Bridge Safi</title></head>
+<body style="margin:0;padding:0;background:#F0EBE3;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#F0EBE3;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="100%" style="max-width:520px;" cellpadding="0" cellspacing="0">
+
+        <!-- Header -->
+        <tr><td align="center" style="padding-bottom:28px;">
+          ${logoSvg}
+          <div style="margin-top:12px;">
+            <span style="font-size:22px;font-weight:800;color:#2C1810;letter-spacing:-0.5px;">Bridge Safi</span>
+            <div style="margin-top:4px;">
+              <span style="display:inline-block;background:${accentColor};color:white;font-size:11px;font-weight:700;padding:3px 12px;border-radius:20px;letter-spacing:0.5px;text-transform:uppercase;">
+                ${roleLabel}
+              </span>
+            </div>
+          </div>
+        </td></tr>
+
+        <!-- Card -->
+        <tr><td style="background:white;border-radius:20px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+          <!-- Card top stripe -->
+          <div style="height:5px;background:linear-gradient(90deg,#C14B2A,#D4880C,#2A7A48,#D4880C,#C14B2A);"></div>
+
+          <div style="padding:36px 32px;">
+
+            <!-- Greeting -->
+            <p style="margin:0 0 8px;font-size:24px;font-weight:700;color:#2C1810;">Bonjour, ${opts.name} 👋</p>
+            <p style="margin:0 0 28px;font-size:15px;color:#6B4033;line-height:1.6;">
+              Tu as demandé à réinitialiser ton mot de passe <strong style="color:#2C1810;">Bridge ${roleLabel}</strong>.<br>
+              Clique sur le bouton ci-dessous — ce lien est valable <strong>30&nbsp;minutes</strong>.
+            </p>
+
+            <!-- CTA Button -->
+            <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:8px 0 32px;">
+              <a href="${opts.resetUrl}"
+                style="display:inline-block;background:${accentColor};color:white;text-decoration:none;
+                       padding:16px 40px;border-radius:14px;font-size:16px;font-weight:700;
+                       letter-spacing:0.3px;box-shadow:0 4px 16px ${accentColor}55;">
+                🔑 &nbsp;Changer mon mot de passe
+              </a>
+            </td></tr></table>
+
+            <!-- Divider -->
+            <div style="border-top:1px solid #F0EBE3;margin-bottom:24px;"></div>
+
+            <!-- Security note -->
+            <table cellpadding="0" cellspacing="0"><tr>
+              <td style="vertical-align:top;padding-right:12px;">
+                <div style="width:36px;height:36px;background:${accentLight};border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;text-align:center;line-height:36px;">🔒</div>
+              </td>
+              <td>
+                <p style="margin:0;font-size:13px;color:#9B7060;line-height:1.6;">
+                  Si tu n'as pas demandé cette réinitialisation, ignore cet email — ton mot de passe reste inchangé.<br>
+                  <span style="color:#C14B2A;font-weight:600;">Ne partage jamais ce lien avec quelqu'un d'autre.</span>
+                </p>
+              </td>
+            </tr></table>
+
+          </div>
+        </td></tr>
+
+        <!-- Footer -->
+        <tr><td align="center" style="padding-top:24px;">
+          <div style="display:inline-flex;gap:6px;margin-bottom:10px;">
+            <span style="width:8px;height:8px;border-radius:50%;background:#C14B2A;display:inline-block;"></span>
+            <span style="width:8px;height:8px;border-radius:50%;background:#D4880C;display:inline-block;"></span>
+            <span style="width:8px;height:8px;border-radius:50%;background:#2A7A48;display:inline-block;"></span>
+          </div>
+          <p style="margin:0;font-size:12px;color:#B0A090;">Bridge Safi — Safi, Maroc 🇲🇦</p>
+          <p style="margin:4px 0 0;font-size:11px;color:#C0B0A0;">livreur.safi-bridge.ma</p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+async function sendInfobipEmail(opts: {
+  to: string;
+  subject: string;
+  html: string;
+  log: typeof console;
+}): Promise<boolean> {
+  const baseUrl = process.env["INFOBIP_BASE_URL"] || "";
+  const apiKey = process.env["INFOBIP_API_KEY"] || "";
+  if (!baseUrl || !apiKey) {
+    opts.log.error("Missing INFOBIP_BASE_URL or INFOBIP_API_KEY");
+    return false;
+  }
+
+  const form = new FormData();
+  form.append("from", "Bridge Safi <no-reply@safi-bridge.ma>");
+  form.append("to", opts.to);
+  form.append("subject", opts.subject);
+  form.append("html", opts.html);
+
+  try {
+    const res = await fetch(`https://${baseUrl}/email/3/send`, {
+      method: "POST",
+      headers: {
+        "Authorization": `App ${apiKey}`,
+        "Accept": "application/json",
+      },
+      body: form,
+    });
+    const body = await res.text();
+    if (!res.ok) {
+      opts.log.error(`Infobip error ${res.status}: ${body}`);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    opts.log.error(`Infobip fetch failed: ${err}`);
+    return false;
+  }
+}
+
 // ── POST /auth/forgot-password ─────────────────────────────────────────────
 router.post("/auth/forgot-password", async (req, res): Promise<void> => {
   const { email, role } = req.body as { email?: string; role?: string };
@@ -163,67 +307,27 @@ router.post("/auth/forgot-password", async (req, res): Promise<void> => {
 
   // Always return success to avoid email enumeration
   if (!user) {
+    req.log.warn({ email: normalizedEmail, role }, "Forgot-password: email not found");
     res.json({ success: true });
     return;
   }
 
   const token = crypto.randomBytes(32).toString("hex");
-  const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 min
+  const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
 
   await db.insert(passwordResetTokensTable).values({ email: normalizedEmail, role, token, expiresAt });
 
-  const INFOBIP_BASE_URL = process.env["INFOBIP_BASE_URL"] || "";
-  const INFOBIP_API_KEY = process.env["INFOBIP_API_KEY"] || "";
+  const resetUrl = `https://livreur.safi-bridge.ma/reset-password?token=${token}&role=${role}`;
+  const html = buildResetEmailHtml({ name: user.name, role: role as "livreur" | "chauffeur", resetUrl });
+  const subject = role === "livreur"
+    ? "🚴 Réinitialisation de ton mot de passe — Bridge Livreur"
+    : "🚗 Réinitialisation de ton mot de passe — Bridge Taxi";
 
-  const appUrl = `https://livreur.safi-bridge.ma`;
-  const resetUrl = `${appUrl}/reset-password?token=${token}&role=${role}`;
-  const roleLabel = role === "livreur" ? "Livreur de Repas" : "Taxi Confort";
-
-  try {
-    const emailRes = await fetch(`https://${INFOBIP_BASE_URL}/email/3/send`, {
-      method: "POST",
-      headers: {
-        "Authorization": `App ${INFOBIP_API_KEY}`,
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-      },
-      body: JSON.stringify({
-        from: "Bridge Safi <no-reply@safi-bridge.ma>",
-        to: [{ to: normalizedEmail, placeholders: { firstName: user.name } }],
-        subject: "Réinitialisation de votre mot de passe — Bridge Safi",
-        htmlBody: `
-          <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#FAF6EF;">
-            <div style="text-align:center;margin-bottom:24px;">
-              <h1 style="color:#2C1810;font-size:22px;margin:0;">Bridge Safi</h1>
-              <p style="color:#9B7060;font-size:13px;margin:4px 0 0;">${roleLabel}</p>
-            </div>
-            <div style="background:white;border-radius:16px;padding:28px;border:1px solid #E8DDD0;">
-              <p style="color:#2C1810;font-size:16px;margin:0 0 12px;">Bonjour ${user.name},</p>
-              <p style="color:#6B4033;font-size:14px;margin:0 0 24px;">
-                Tu as demandé à réinitialiser ton mot de passe Bridge. Clique sur le bouton ci-dessous. Ce lien est valable <strong>30 minutes</strong>.
-              </p>
-              <div style="text-align:center;margin:24px 0;">
-                <a href="${resetUrl}" style="background:#C14B2A;color:white;text-decoration:none;padding:14px 32px;border-radius:12px;font-weight:bold;font-size:15px;display:inline-block;">
-                  Changer mon mot de passe
-                </a>
-              </div>
-              <p style="color:#9B7060;font-size:12px;margin:16px 0 0;text-align:center;">
-                Si tu n'as pas demandé cela, ignore cet email.
-              </p>
-            </div>
-          </div>
-        `,
-      }),
-    });
-
-    if (!emailRes.ok) {
-      const errText = await emailRes.text();
-      req.log.error({ status: emailRes.status, body: errText }, "Infobip email failed");
-    } else {
-      req.log.info({ email: normalizedEmail, role }, "Password reset email sent");
-    }
-  } catch (err) {
-    req.log.error({ err }, "Failed to send reset email");
+  const ok = await sendInfobipEmail({ to: normalizedEmail, subject, html, log: console });
+  if (ok) {
+    req.log.info({ email: normalizedEmail, role }, "Password reset email sent");
+  } else {
+    req.log.error({ email: normalizedEmail, role }, "Password reset email failed");
   }
 
   res.json({ success: true });
