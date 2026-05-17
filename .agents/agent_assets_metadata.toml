@@ -1,5 +1,4 @@
 uploads = []
-outputs = []
 
 [[generated]]
 id = "hQZXk6eLU7g6m5e6OSX1f"
@@ -42,3 +41,87 @@ id = "ykzq008Qu7fd83xbmFUzN"
 uri = "file://artifacts/driver-app/public/bridge-icon-b2.png"
 type = "image"
 title = "bridge B icon moroccan geometric colored"
+
+[[generated]]
+id = "nUmiSxO-lcmqzM-gW4AoH"
+uri = "file://artifacts/driver-app/public/logo-bridge-main.png"
+type = "image"
+title = "bridge main logo safi.bridge.ma"
+
+[[generated]]
+id = "8bXGp8u5Jp6eSNchj9oUN"
+uri = "file://artifacts/driver-app/public/logo-livreur-chauffeur.png"
+type = "image"
+title = "bridge livreur chauffeur merged logo"
+
+[[generated]]
+id = "IbzenpM2ydNPZzMoHITiE"
+uri = "file://artifacts/driver-app/public/logo-restaurant.png"
+type = "image"
+title = "bridge restaurant partner logo"
+
+[[generated]]
+id = "AENsTgOUPpF47uyyXwXNk"
+uri = "file://artifacts/driver-app/public/logo-manager.png"
+type = "image"
+title = "bridge manager admin logo"
+
+[[generated]]
+id = "W0cD_waJTpSwAXxP6fn7w"
+uri = "file://artifacts/driver-app/public/bridge-store-icon.png"
+type = "image"
+title = "bridge app store icon 1024"
+
+[[generated]]
+id = "5KALJ0ZdVuCr3c4MjmEbM"
+uri = "file://artifacts/driver-app/public/store-feature-graphic.png"
+type = "image"
+title = "bridge play store feature graphic"
+
+[[generated]]
+id = "LVmdh3cu6i8_OrQ1P7V_9"
+uri = "file://artifacts/driver-app/public/store-screenshot-promo.png"
+type = "image"
+title = "bridge app store promo screenshot"
+
+[[outputs]]
+id = "c4fPMVUYR5DeQUIlfa0fg"
+uri = "file://artifacts/driver-app/public/logo-bridge-main.png"
+type = "image"
+title = "🌉 Logo Principal — safi.bridge.ma"
+
+[[outputs]]
+id = "7Pumo-XtqZvdDxnl7VnlR"
+uri = "file://artifacts/driver-app/public/logo-livreur-chauffeur.png"
+type = "image"
+title = "🛵🚕 Livreur & Taxi Confort — livreur.safi-bridge.ma"
+
+[[outputs]]
+id = "bkndq1XeHpOK4HFmt7DH6"
+uri = "file://artifacts/driver-app/public/logo-restaurant.png"
+type = "image"
+title = "🍽️ Partenaire Restaurant — restaurant.safi-bridge.ma"
+
+[[outputs]]
+id = "St3SzpCu1SanWI9jMhmy0"
+uri = "file://artifacts/driver-app/public/logo-manager.png"
+type = "image"
+title = "👔 Manager — manager.safi-bridge.ma"
+
+[[outputs]]
+id = "AoT3Ei1ftrl_OA6Has04q"
+uri = "file://artifacts/driver-app/public/bridge-store-icon.png"
+type = "image"
+title = "📱 Icône App Store / Play Store (1024×1024)"
+
+[[outputs]]
+id = "F1_RNIiQXQ9eKY_XMQcMl"
+uri = "file://artifacts/driver-app/public/store-feature-graphic.png"
+type = "image"
+title = "🖼️ Feature Graphic Play Store (paysage)"
+
+[[outputs]]
+id = "IZw_utEqMunsMis_1Rd4U"
+uri = "file://artifacts/driver-app/public/store-screenshot-promo.png"
+type = "image"
+title = "📸 Visuel Promo App Store (portrait)"
