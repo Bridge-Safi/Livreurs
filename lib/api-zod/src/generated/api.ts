@@ -39,7 +39,7 @@ export const ListDeliveriesResponseItem = zod.object({
   delivererId: zod.number().optional(),
   estimatedDeliveryTime: zod.string().optional(),
   serviceType: zod
-    .enum(["eats", "tabac", "pharmacie", "fleurs", "autre"])
+    .enum(["eats", "tabac", "pharmacie", "fleurs", "autre", "click_collect"])
     .optional(),
   confirmCode: zod.string().optional(),
   pickedUpAt: zod.string().optional(),
@@ -63,7 +63,7 @@ export const CreateDeliveryBody = zod.object({
   delivererId: zod.number().optional(),
   estimatedDeliveryTime: zod.string().optional(),
   serviceType: zod
-    .enum(["eats", "tabac", "pharmacie", "fleurs", "autre"])
+    .enum(["eats", "tabac", "pharmacie", "fleurs", "autre", "click_collect"])
     .optional(),
 });
 
@@ -91,7 +91,14 @@ export const GetMyPendingDispatchResponse = zod.object({
       delivererId: zod.number().optional(),
       estimatedDeliveryTime: zod.string().optional(),
       serviceType: zod
-        .enum(["eats", "tabac", "pharmacie", "fleurs", "autre"])
+        .enum([
+          "eats",
+          "tabac",
+          "pharmacie",
+          "fleurs",
+          "autre",
+          "click_collect",
+        ])
         .optional(),
       confirmCode: zod.string().optional(),
       pickedUpAt: zod.string().optional(),
@@ -127,7 +134,7 @@ export const DispatchDeliveryResponse = zod.object({
     delivererId: zod.number().optional(),
     estimatedDeliveryTime: zod.string().optional(),
     serviceType: zod
-      .enum(["eats", "tabac", "pharmacie", "fleurs", "autre"])
+      .enum(["eats", "tabac", "pharmacie", "fleurs", "autre", "click_collect"])
       .optional(),
     confirmCode: zod.string().optional(),
     pickedUpAt: zod.string().optional(),
@@ -165,7 +172,7 @@ export const AcceptDeliveryResponse = zod.object({
   delivererId: zod.number().optional(),
   estimatedDeliveryTime: zod.string().optional(),
   serviceType: zod
-    .enum(["eats", "tabac", "pharmacie", "fleurs", "autre"])
+    .enum(["eats", "tabac", "pharmacie", "fleurs", "autre", "click_collect"])
     .optional(),
   confirmCode: zod.string().optional(),
   pickedUpAt: zod.string().optional(),
@@ -198,7 +205,7 @@ export const RefuseDeliveryResponse = zod.object({
   delivererId: zod.number().optional(),
   estimatedDeliveryTime: zod.string().optional(),
   serviceType: zod
-    .enum(["eats", "tabac", "pharmacie", "fleurs", "autre"])
+    .enum(["eats", "tabac", "pharmacie", "fleurs", "autre", "click_collect"])
     .optional(),
   confirmCode: zod.string().optional(),
   pickedUpAt: zod.string().optional(),
@@ -233,7 +240,7 @@ export const ConfirmDeliveredResponse = zod.object({
   delivererId: zod.number().optional(),
   estimatedDeliveryTime: zod.string().optional(),
   serviceType: zod
-    .enum(["eats", "tabac", "pharmacie", "fleurs", "autre"])
+    .enum(["eats", "tabac", "pharmacie", "fleurs", "autre", "click_collect"])
     .optional(),
   confirmCode: zod.string().optional(),
   pickedUpAt: zod.string().optional(),
@@ -269,7 +276,14 @@ export const GetPendingDispatchResponse = zod.object({
       delivererId: zod.number().optional(),
       estimatedDeliveryTime: zod.string().optional(),
       serviceType: zod
-        .enum(["eats", "tabac", "pharmacie", "fleurs", "autre"])
+        .enum([
+          "eats",
+          "tabac",
+          "pharmacie",
+          "fleurs",
+          "autre",
+          "click_collect",
+        ])
         .optional(),
       confirmCode: zod.string().optional(),
       pickedUpAt: zod.string().optional(),
@@ -303,7 +317,7 @@ export const GetDeliveryResponse = zod.object({
   delivererId: zod.number().optional(),
   estimatedDeliveryTime: zod.string().optional(),
   serviceType: zod
-    .enum(["eats", "tabac", "pharmacie", "fleurs", "autre"])
+    .enum(["eats", "tabac", "pharmacie", "fleurs", "autre", "click_collect"])
     .optional(),
   confirmCode: zod.string().optional(),
   pickedUpAt: zod.string().optional(),
@@ -340,7 +354,7 @@ export const UpdateDeliveryResponse = zod.object({
   delivererId: zod.number().optional(),
   estimatedDeliveryTime: zod.string().optional(),
   serviceType: zod
-    .enum(["eats", "tabac", "pharmacie", "fleurs", "autre"])
+    .enum(["eats", "tabac", "pharmacie", "fleurs", "autre", "click_collect"])
     .optional(),
   confirmCode: zod.string().optional(),
   pickedUpAt: zod.string().optional(),

@@ -74,11 +74,12 @@ export default function LivreurLivraisons() {
 
   const serviceBadge = (serviceType: string | null | undefined) => {
     const map: Record<string, { label: string; color: string; bg: string; icon: any }> = {
-      eats:      { label: "Bridge Eats",  color: TC,        bg: "#FDEEE9", icon: UtensilsCrossed },
-      tabac:     { label: "Tabac",        color: BROWN_MID, bg: "#F1F5F9", icon: Cigarette },
-      pharmacie: { label: "Pharmacie",    color: "#2A7A48", bg: "#ECFDF5", icon: Pill },
-      fleurs:    { label: "Fleurs",       color: "#9B3EAA", bg: "#F5E8FA", icon: Flower2 },
-      autre:     { label: "Autre",        color: BROWN_LIGHT, bg: "#F8F9FA", icon: Package },
+      eats:          { label: "Bridge Eats",    color: TC,          bg: "#FDEEE9", icon: UtensilsCrossed },
+      tabac:         { label: "Tabac",          color: BROWN_MID,   bg: "#F1F5F9", icon: Cigarette },
+      pharmacie:     { label: "Pharmacie",      color: "#2A7A48",   bg: "#ECFDF5", icon: Pill },
+      fleurs:        { label: "Fleurs",         color: "#9B3EAA",   bg: "#F5E8FA", icon: Flower2 },
+      autre:         { label: "Autre",          color: BROWN_LIGHT, bg: "#F8F9FA", icon: Package },
+      click_collect: { label: "Click & Collect",color: "#D4880C",   bg: "#FEF3C7", icon: Package },
     };
     const s = map[serviceType ?? "eats"] ?? map["eats"];
     const Icon = s.icon;

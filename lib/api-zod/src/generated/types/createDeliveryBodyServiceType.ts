@@ -15,4 +15,5 @@ export const CreateDeliveryBodyServiceType = {
   pharmacie: "pharmacie",
   fleurs: "fleurs",
   autre: "autre",
+  click_collect: "click_collect",
 } as const;

@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, ne, count } from "drizzle-orm";
+import { eq, and, ne, or, isNull, count } from "drizzle-orm";
 import { db, deliveriesTable, deliverersTable } from "@workspace/db";
 import {
   DispatchDeliveryParams,
@@ -44,13 +44,18 @@ router.get("/deliveries/pending-dispatch", async (req, res): Promise<void> => {
     return;
   }
 
+  // click_collect = client vient chercher lui-même → jamais dispatché aux livreurs
   const allDispatching = await db
     .select()
     .from(deliveriesTable)
     .where(
       and(
         ne(deliveriesTable.dispatchPhase, "none"),
-        ne(deliveriesTable.dispatchPhase, "accepted")
+        ne(deliveriesTable.dispatchPhase, "accepted"),
+        or(
+          isNull(deliveriesTable.serviceType),
+          ne(deliveriesTable.serviceType, "click_collect")
+        )
       )
     );
 
