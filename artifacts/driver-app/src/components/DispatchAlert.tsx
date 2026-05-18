@@ -69,7 +69,12 @@ export function DispatchAlert({ delivererId }: DispatchAlertProps) {
     { delivererId, status: "in_progress" },
     { query: { queryKey: getListDeliveriesQueryKey({ delivererId, status: "in_progress" }) } }
   );
-  const activeCount = activeDeliveries?.length ?? 0;
+  // Also count pending (accepted but not yet picked up) toward the 3-order cap
+  const { data: pendingAccepted } = useListDeliveries(
+    { delivererId, status: "pending" },
+    { query: { queryKey: getListDeliveriesQueryKey({ delivererId, status: "pending" }) } }
+  );
+  const activeCount = (activeDeliveries?.length ?? 0) + (pendingAccepted?.length ?? 0);
 
   const acceptMutation = useAcceptDelivery();
   const refuseMutation = useRefuseDelivery();

@@ -2,7 +2,7 @@ import { useParams } from "wouter";
 import { useEffect, useState } from "react";
 import {
   MapPin, Phone, Star, Bike, CheckCircle2, Clock,
-  Package, Loader2, AlertCircle, Navigation, Timer,
+  Package, Loader2, AlertCircle, Navigation, Timer, ChefHat,
 } from "lucide-react";
 import { TrackingMap, geocodeAddress } from "@/components/TrackingMap";
 
@@ -16,15 +16,16 @@ const BROWN_MID = "#6B4033";
 const BROWN_LIGHT = "#9B7060";
 
 const STATUS_STEPS = [
-  { key: "pending",     label: "En attente",   icon: Clock },
-  { key: "in_progress", label: "En route",     icon: Bike },
-  { key: "delivered",   label: "Livré ✓",      icon: CheckCircle2 },
+  { key: "pending",     label: "Reçue",           icon: Package },
+  { key: "preparing",   label: "En préparation",   icon: ChefHat },
+  { key: "in_progress", label: "En chemin",        icon: Bike },
+  { key: "delivered",   label: "Livrée",           icon: CheckCircle2 },
 ];
 
 function statusIndex(status: string) {
-  if (status === "delivered" || status === "cancelled") return 2;
-  if (status === "in_progress") return 1;
-  return 0;
+  if (status === "delivered" || status === "cancelled") return 3;
+  if (status === "in_progress") return 2;
+  return 0; // pending → REÇUE active, EN PRÉPARATION grisé
 }
 
 interface TrackingData {

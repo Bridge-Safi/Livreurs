@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, ne, or, isNull, count } from "drizzle-orm";
+import { eq, and, ne, or, isNull, count, inArray } from "drizzle-orm";
 import { db, deliveriesTable, deliverersTable } from "@workspace/db";
 import {
   DispatchDeliveryParams,
@@ -44,7 +44,9 @@ router.get("/deliveries/pending-dispatch", async (req, res): Promise<void> => {
     return;
   }
 
-  // click_collect = client vient chercher lui-même → jamais dispatché aux livreurs
+  // Seuls les serviceTypes "food delivery" vont aux livreurs.
+  // click_collect, taxi, moto et tout type inconnu sont exclus.
+  const FOOD_SERVICE_TYPES = ["eats", "tabac", "pharmacie", "fleurs", "autre"];
   const allDispatching = await db
     .select()
     .from(deliveriesTable)
@@ -54,7 +56,7 @@ router.get("/deliveries/pending-dispatch", async (req, res): Promise<void> => {
         ne(deliveriesTable.dispatchPhase, "accepted"),
         or(
           isNull(deliveriesTable.serviceType),
-          ne(deliveriesTable.serviceType, "click_collect")
+          inArray(deliveriesTable.serviceType, FOOD_SERVICE_TYPES)
         )
       )
     );
@@ -158,13 +160,16 @@ router.post("/deliveries/:id/accept", async (req, res): Promise<void> => {
     return;
   }
 
-  // Enforce max 3 simultaneous deliveries
+  // Enforce max 3 simultaneous deliveries (pending accepted + in_progress)
   const [{ activeCount }] = await db
     .select({ activeCount: count() })
     .from(deliveriesTable)
     .where(and(
       eq(deliveriesTable.delivererId, body.data.delivererId),
-      eq(deliveriesTable.status, "in_progress")
+      or(
+        eq(deliveriesTable.status, "pending"),
+        eq(deliveriesTable.status, "in_progress")
+      )
     ));
 
   if (activeCount >= 3) {
@@ -172,11 +177,12 @@ router.post("/deliveries/:id/accept", async (req, res): Promise<void> => {
     return;
   }
 
+  // Status stays "pending" — livreur must physically pick up and press
+  // "Commande récupérée" to transition to "in_progress"
   const [updated] = await db
     .update(deliveriesTable)
     .set({
       delivererId: body.data.delivererId,
-      status: "in_progress",
       dispatchPhase: "accepted",
       updatedAt: new Date(),
     })
@@ -269,13 +275,16 @@ router.post("/deliveries/:id/confirm-delivered", async (req, res): Promise<void>
     .where(eq(deliveriesTable.id, params.data.id))
     .returning();
 
-  // Check remaining active deliveries (excluding this one just delivered)
+  // Check remaining active deliveries (pending accepted + in_progress)
   const [{ remainingCount }] = await db
     .select({ remainingCount: count() })
     .from(deliveriesTable)
     .where(and(
       eq(deliveriesTable.delivererId, delivererId),
-      eq(deliveriesTable.status, "in_progress")
+      or(
+        eq(deliveriesTable.status, "pending"),
+        eq(deliveriesTable.status, "in_progress")
+      )
     ));
 
   await db

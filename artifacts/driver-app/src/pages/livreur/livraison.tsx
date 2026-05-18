@@ -488,22 +488,18 @@ export default function LivreurLivraisonDetail() {
 
               {/* ─────── INTERMEDIATE STEP: Pickup confirmation ─────── */}
               {delivery.status === "pending" && (
-                <div className="my-3 -mx-4 px-4 py-3 border-y" style={{ background: "rgba(212,136,12,0.1)", borderColor: "rgba(212,136,12,0.3)" }}>
-                  <p className="text-[11px] font-extrabold uppercase tracking-wider mb-2 text-center" style={{ color: GOLD }}>
-                    ✋ Étape intermédiaire
-                  </p>
+                <div className="my-3 -mx-4 px-4 py-3 border-y" style={{ background: "rgba(42,122,72,0.12)", borderColor: "rgba(42,122,72,0.35)" }}>
                   <button
                     onClick={() => setPickupConfirmOpen(true)}
                     disabled={isPending}
-                    className="w-full h-14 rounded-2xl font-extrabold text-base flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-60 shadow-md"
-                    style={{ background: GOLD_GRADIENT, color: "#1A0A06" }}
+                    className="w-full h-16 rounded-2xl font-extrabold text-lg flex items-center justify-center gap-3 transition-all active:scale-95 disabled:opacity-60 shadow-lg"
+                    style={{ background: "linear-gradient(135deg, #2A7A48 0%, #1a5c35 100%)", color: "white" }}
                   >
-                    <Package className="h-5 w-5" />
-                    {t("pickup_confirm_btn")}
-                    <ChevronRight className="h-5 w-5" />
+                    <CheckCircle2 className="h-6 w-6" />
+                    {t("start_delivery_btn")}
                   </button>
                   <p className="text-[11px] mt-2 text-center font-medium" style={{ color: BROWN_MID }}>
-                    Appuyez après avoir récupéré la commande au restaurant. Le client sera notifié et verra votre position en temps réel.
+                    Appuyez une fois la commande récupérée au restaurant.
                   </p>
                 </div>
               )}
@@ -592,11 +588,10 @@ export default function LivreurLivraisonDetail() {
                   onClick={() => setPickupConfirmOpen(true)}
                   disabled={isPending}
                   className="w-full h-14 rounded-2xl font-extrabold text-base flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 disabled:opacity-60"
-                  style={{ background: GOLD_GRADIENT, color: "#1A0A06" }}
+                  style={{ background: "linear-gradient(135deg, #2A7A48 0%, #1a5c35 100%)", color: "white" }}
                 >
-                  <Package className="h-5 w-5" />
+                  <CheckCircle2 className="h-5 w-5" />
                   {t("start_delivery_btn")}
-                  <ChevronRight className="h-5 w-5" />
                 </button>
               ) : (
                 <button

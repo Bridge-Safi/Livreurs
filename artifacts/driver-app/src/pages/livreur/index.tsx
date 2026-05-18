@@ -52,10 +52,16 @@ export default function LivreurDashboard() {
     { query: { queryKey: getGetDeliveryStatsQueryKey({ delivererId: LIVREUR_ID }) } }
   );
 
-  const { data: deliveries, isLoading: deliveriesLoading } = useListDeliveries(
+  const { data: inProgressDeliveries, isLoading: deliveriesLoading } = useListDeliveries(
     { delivererId: LIVREUR_ID, status: "in_progress" },
-    { query: { queryKey: getListDeliveriesQueryKey({ delivererId: LIVREUR_ID, status: "in_progress" }) } }
+    { query: { queryKey: getListDeliveriesQueryKey({ delivererId: LIVREUR_ID, status: "in_progress" }), refetchInterval: 8000 } }
   );
+  // Pending = accepted by livreur but not yet picked up at restaurant
+  const { data: pendingDeliveries } = useListDeliveries(
+    { delivererId: LIVREUR_ID, status: "pending" },
+    { query: { queryKey: getListDeliveriesQueryKey({ delivererId: LIVREUR_ID, status: "pending" }), refetchInterval: 8000 } }
+  );
+  const deliveries = [...(pendingDeliveries ?? []), ...(inProgressDeliveries ?? [])];
 
   const { data: profile } = useGetDeliverer(LIVREUR_ID, {
     query: { enabled: !!LIVREUR_ID, queryKey: getGetDelivererQueryKey(LIVREUR_ID) },
