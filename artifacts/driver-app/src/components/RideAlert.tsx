@@ -44,7 +44,6 @@ type AlertState = "idle" | "accepted" | "refused" | "countered";
 
 interface RideAlertProps {
   driverId: number;
-  tripId: number;
 }
 
 const QUICK_OFFERS = [5, 10, 15, 20, 25, 30, 40, 50];

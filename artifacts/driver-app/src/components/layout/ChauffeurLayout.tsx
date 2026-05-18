@@ -249,13 +249,8 @@ export function ChauffeurLayout({ children }: { children: ReactNode }) {
         })}
       </nav>
 
-      {/* Ride dispatch alert — shown to all connected chauffeurs */}
-      {pendingRide && (
-        <RideAlert
-          driverId={driverId}
-          tripId={pendingRide.tripId}
-        />
-      )}
+      {/* Ride dispatch alert — RideAlert polls internally, no condition needed */}
+      {driverId > 0 && <RideAlert driverId={driverId} />}
     </div>
   );
 }
