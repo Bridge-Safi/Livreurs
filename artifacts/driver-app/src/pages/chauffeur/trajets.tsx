@@ -62,10 +62,10 @@ export default function ChauffeurTrajets() {
 
   const getStatusBadge = (status: string) => {
     switch(status) {
-      case "scheduled":   return <Badge variant="outline" className="bg-purple-100 text-purple-700 border-purple-200"><Clock className="mr-1 h-3 w-3" /> {t("trip_scheduled")}</Badge>;
-      case "in_progress": return <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-200"><MapPin className="mr-1 h-3 w-3" /> {t("trip_in_progress_label")}</Badge>;
-      case "completed":   return <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200"><CheckCircle2 className="mr-1 h-3 w-3" /> {t("trip_completed")}</Badge>;
-      case "cancelled":   return <Badge variant="outline" className="bg-red-100 text-red-700 border-red-200"><XCircle className="mr-1 h-3 w-3" /> {t("trip_cancelled")}</Badge>;
+      case "scheduled":   return <Badge variant="outline" style={{ background: "rgba(212,136,12,0.15)", color: GOLD, borderColor: "rgba(212,136,12,0.4)" }}><Clock className="mr-1 h-3 w-3" /> {t("trip_scheduled")}</Badge>;
+      case "in_progress": return <Badge variant="outline" style={{ background: "rgba(59,130,246,0.15)", color: "#60a5fa", borderColor: "rgba(59,130,246,0.4)" }}><MapPin className="mr-1 h-3 w-3" /> {t("trip_in_progress_label")}</Badge>;
+      case "completed":   return <Badge variant="outline" style={{ background: "rgba(42,122,72,0.15)", color: "#4ade80", borderColor: "rgba(42,122,72,0.4)" }}><CheckCircle2 className="mr-1 h-3 w-3" /> {t("trip_completed")}</Badge>;
+      case "cancelled":   return <Badge variant="outline" style={{ background: "rgba(232,92,48,0.15)", color: TC, borderColor: "rgba(232,92,48,0.4)" }}><XCircle className="mr-1 h-3 w-3" /> {t("trip_cancelled")}</Badge>;
       default: return null;
     }
   };
@@ -92,7 +92,7 @@ export default function ChauffeurTrajets() {
         <div className="px-4 -mt-5 relative z-10 space-y-4 pb-6">
 
           {/* Filters */}
-          <div className="flex flex-col md:flex-row gap-3 items-center p-4 rounded-2xl bg-white" style={{ border: `1px solid ${BORDER}`, boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
+          <div className="flex flex-col md:flex-row gap-3 items-center p-4 rounded-2xl" style={{ background: "rgba(255,255,255,0.08)", border: `1px solid ${BORDER}`, boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
             <div className="relative w-full md:w-96">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: BROWN_LIGHT }} />
               <Input
@@ -128,7 +128,7 @@ export default function ChauffeurTrajets() {
               ))
             ) : filteredTrips && filteredTrips.length > 0 ? (
               filteredTrips.map(trip => (
-                <Card key={trip.id} className="overflow-hidden border-0 bg-white" style={{ border: `1px solid ${BORDER}`, boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
+                <Card key={trip.id} className="overflow-hidden border-0" style={{ background: "rgba(255,255,255,0.08)", border: `1px solid ${BORDER}`, boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
                   <CardContent className="p-0">
                     <div className="flex flex-col md:flex-row">
                       <div className="p-5 flex-1 flex flex-col justify-center">
@@ -144,7 +144,7 @@ export default function ChauffeurTrajets() {
 
                         <div className="flex flex-col sm:flex-row sm:items-center text-sm gap-2 sm:gap-3 mt-1" style={{ color: BROWN_MID }}>
                           <div className="flex items-center gap-2">
-                            <div className="h-2 w-2 rounded-full shrink-0" style={{ background: BORDER }} />
+                            <div className="h-2 w-2 rounded-full shrink-0" style={{ background: GOLD }} />
                             <span className="truncate max-w-[200px] md:max-w-xs">{trip.pickupAddress}</span>
                           </div>
                           <ArrowRight className="hidden sm:block h-3 w-3 shrink-0" style={{ color: BROWN_LIGHT }} />
