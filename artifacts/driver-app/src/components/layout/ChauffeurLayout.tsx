@@ -58,7 +58,7 @@ export function ChauffeurLayout({ children }: { children: ReactNode }) {
         {/* Brand header with Moroccan gold */}
         <div className="p-5 border-b flex items-center gap-3" style={{ borderColor: colors.sidebarBorder, background: GOLD, textShadow: "0 2px 4px rgba(0,0,0,0.2)" }}>
           <img src="/bridge-logo.png" alt="Bridge" className="h-9 w-9 object-contain flex-shrink-0" />
-          <span className="font-bold text-white text-base tracking-tight">{t("chauffeur_title")}</span>
+          <span className="font-bold text-white text-base tracking-tight">{chauffeur?.vehicleType === "moto" ? t("moto_title") : t("chauffeur_title")}</span>
         </div>
 
         {/* Zellige stripe */}
@@ -159,7 +159,7 @@ export function ChauffeurLayout({ children }: { children: ReactNode }) {
         >
           <div className="flex items-center gap-2">
             <img src="/bridge-logo.png" alt="Bridge" className="w-7 h-7 object-contain flex-shrink-0" />
-            <span className="font-bold text-sm" style={{ color: colors.text }}>{t("chauffeur_title")}</span>
+            <span className="font-bold text-sm" style={{ color: colors.text }}>{chauffeur?.vehicleType === "moto" ? t("moto_title") : t("chauffeur_title")}</span>
           </div>
 
           <div className="flex items-center gap-2">
