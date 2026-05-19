@@ -2195,6 +2195,90 @@ export const useAcceptDriverOffer = <
 };
 
 /**
+ * @summary Client cancels a trip (only while still scheduled)
+ */
+export const getCancelTripByClientUrl = (id: number) => {
+  return `/api/trips/${id}/cancel`;
+};
+
+export const cancelTripByClient = async (
+  id: number,
+  options?: RequestInit,
+): Promise<Trip> => {
+  return customFetch<Trip>(getCancelTripByClientUrl(id), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getCancelTripByClientMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof cancelTripByClient>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof cancelTripByClient>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["cancelTripByClient"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof cancelTripByClient>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return cancelTripByClient(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CancelTripByClientMutationResult = NonNullable<
+  Awaited<ReturnType<typeof cancelTripByClient>>
+>;
+
+export type CancelTripByClientMutationError = ErrorType<void>;
+
+/**
+ * @summary Client cancels a trip (only while still scheduled)
+ */
+export const useCancelTripByClient = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof cancelTripByClient>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof cancelTripByClient>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getCancelTripByClientMutationOptions(options));
+};
+
+/**
  * @summary Driver confirms passenger is in the car
  */
 export const getPickupPassengerUrl = (id: number) => {

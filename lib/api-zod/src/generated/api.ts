@@ -740,6 +740,40 @@ export const AcceptDriverOfferResponse = zod.object({
 });
 
 /**
+ * @summary Client cancels a trip (only while still scheduled)
+ */
+export const CancelTripByClientParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const CancelTripByClientResponse = zod.object({
+  id: zod.number(),
+  passengerName: zod.string(),
+  passengerPhone: zod.string().optional(),
+  pickupAddress: zod.string(),
+  dropoffAddress: zod.string(),
+  status: zod.enum(["scheduled", "in_progress", "completed", "cancelled"]),
+  fare: zod.number(),
+  distance: zod.number().optional(),
+  duration: zod.number().optional(),
+  driverId: zod.number().optional(),
+  scheduledAt: zod.string().optional(),
+  startedAt: zod.string().optional(),
+  completedAt: zod.string().optional(),
+  dispatchPhase: zod.string().optional(),
+  dispatchedAt: zod.string().optional(),
+  passengerPickedUpAt: zod.string().optional(),
+  createdAt: zod.string(),
+  suggestedFare: zod.number().optional(),
+  passengerOffer: zod.number().optional(),
+  driverOffer: zod.number().optional(),
+  negotiationStatus: zod.enum(["open", "countered", "agreed"]).optional(),
+  pricePerKm: zod.number().optional(),
+  baseFare: zod.number().optional(),
+  vehicleType: zod.enum(["car", "moto"]).optional(),
+});
+
+/**
  * @summary Driver confirms passenger is in the car
  */
 export const PickupPassengerParams = zod.object({

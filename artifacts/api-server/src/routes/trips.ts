@@ -243,6 +243,31 @@ router.post("/trips/:id/refuse", async (req, res): Promise<void> => {
   res.json(GetTripResponse.parse(serializeTrip(trip)));
 });
 
+// ── Client cancels a trip (only while still scheduled) ──────────────────
+router.post("/trips/:id/cancel", async (req, res): Promise<void> => {
+  const params = GetTripParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  const [trip] = await db.select().from(tripsTable).where(eq(tripsTable.id, params.data.id));
+  if (!trip) {
+    res.status(404).json({ error: "Course introuvable" });
+    return;
+  }
+  if (trip.status !== "scheduled") {
+    res.status(409).json({ error: "Cette course a déjà été acceptée et ne peut plus être annulée" });
+    return;
+  }
+  const [updated] = await db
+    .update(tripsTable)
+    .set({ status: "cancelled", dispatchPhase: "none", updatedAt: new Date() })
+    .where(eq(tripsTable.id, params.data.id))
+    .returning();
+  req.log.info({ tripId: params.data.id }, "Trip cancelled by client");
+  res.json(GetTripResponse.parse(serializeTrip(updated)));
+});
+
 // ── Passenger pickup: driver confirms passenger is in the car ─────────────
 router.post("/trips/:id/pickup-passenger", async (req, res): Promise<void> => {
   const params = PickupPassengerParams.safeParse(req.params);

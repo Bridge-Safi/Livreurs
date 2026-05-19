@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { ArrowLeft, Car, Package, ChevronRight, CheckCircle2, Phone, MapPin, User, FileText, Zap } from "lucide-react";
+import { ArrowLeft, Car, Package, ChevronRight, CheckCircle2, Phone, MapPin, User, FileText, Zap, X } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme";
-import { useCreateTrip, useCreateDelivery } from "@workspace/api-client-react";
+import { useCreateTrip, useCreateDelivery, useCancelTripByClient, useGetTrip, getGetTripQueryKey } from "@workspace/api-client-react";
 
 const TC = "#E85C30";
 const GOLD = "#D4880C";
@@ -33,9 +33,21 @@ export default function CommandePage() {
   const [done, setDone] = useState(false);
   const [doneType, setDoneType] = useState<ServiceType>("taxi");
   const [confirmCode, setConfirmCode] = useState<string | null>(null);
+  const [tripId, setTripId] = useState<number | null>(null);
 
   const createTrip = useCreateTrip();
   const createDelivery = useCreateDelivery();
+  const cancelTrip = useCancelTripByClient();
+
+  // Poll trip status every 5s while on the done screen for taxi
+  const { data: tripStatus } = useGetTrip(tripId ?? 0, {
+    query: {
+      enabled: done && doneType === "taxi" && tripId !== null,
+      queryKey: getGetTripQueryKey(tripId ?? 0),
+      refetchInterval: 5000,
+    },
+  });
+  const tripAccepted = tripStatus?.status !== undefined && tripStatus.status !== "scheduled";
 
   // Taxi form state
   const [taxi, setTaxi] = useState({
@@ -71,7 +83,8 @@ export default function CommandePage() {
         },
       },
       {
-        onSuccess: () => {
+        onSuccess: (data) => {
+          setTripId(data.id);
           setDoneType("taxi");
           setDone(true);
         },
@@ -161,12 +174,28 @@ export default function CommandePage() {
               </div>
             )}
 
+            {/* Status badge for taxi — shows if a driver accepted */}
+            {isTaxi && tripStatus && (
+              <div
+                className="rounded-xl px-4 py-2.5 mb-2 flex items-center gap-2 text-sm font-semibold"
+                style={{
+                  background: tripAccepted ? "rgba(42,122,72,0.12)" : "rgba(212,136,12,0.12)",
+                  border: `1px solid ${tripAccepted ? "rgba(42,122,72,0.3)" : "rgba(212,136,12,0.3)"}`,
+                  color: tripAccepted ? "#2A7A48" : GOLD,
+                }}
+              >
+                <span className="inline-block w-2 h-2 rounded-full flex-shrink-0" style={{ background: tripAccepted ? "#2A7A48" : GOLD }} />
+                {tripAccepted ? "✓ Course acceptée par un chauffeur" : "En attente d'un chauffeur…"}
+              </div>
+            )}
+
             <div className="flex flex-col gap-3">
               <button
                 onClick={() => {
                   setDone(false);
                   setService(null);
                   setConfirmCode(null);
+                  setTripId(null);
                   setTaxi({ passengerName: "", passengerPhone: "", pickupAddress: "", dropoffAddress: "", fare: "" });
                   setLivraison({ customerName: "", customerPhone: "", businessId: "", deliveryAddress: "", notes: "", priority: "normal" });
                 }}
@@ -175,6 +204,30 @@ export default function CommandePage() {
               >
                 Nouvelle commande
               </button>
+
+              {/* Cancel button — visible only while trip is still pending (not yet accepted) */}
+              {isTaxi && tripId !== null && !tripAccepted && (
+                <button
+                  onClick={() => {
+                    if (!tripId) return;
+                    cancelTrip.mutate({ id: tripId }, {
+                      onSuccess: () => {
+                        setDone(false);
+                        setService(null);
+                        setTripId(null);
+                        setTaxi({ passengerName: "", passengerPhone: "", pickupAddress: "", dropoffAddress: "", fare: "" });
+                      },
+                    });
+                  }}
+                  disabled={cancelTrip.isPending}
+                  className="w-full py-3 rounded-xl font-semibold border flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                  style={{ borderColor: "#E53E3E", color: "#E53E3E", background: "rgba(229,62,62,0.08)" }}
+                >
+                  <X className="h-4 w-4" />
+                  {cancelTrip.isPending ? "Annulation…" : "Annuler la course"}
+                </button>
+              )}
+
               <Link href="/">
                 <button
                   className="w-full py-3 rounded-xl font-semibold border transition-all"
