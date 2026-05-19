@@ -38,6 +38,14 @@ function LivreurGuard({ component: Component }: { component: React.ComponentType
 function ChauffeurGuard({ component: Component }: { component: React.ComponentType }) {
   const { chauffeur } = useAuth();
   if (!chauffeur) return <Redirect to="/chauffeur/login" />;
+  if (chauffeur.vehicleType === "moto") return <Redirect to="/moto" />;
+  return <Component />;
+}
+
+function MotoGuard({ component: Component }: { component: React.ComponentType }) {
+  const { chauffeur } = useAuth();
+  if (!chauffeur) return <Redirect to="/moto/login" />;
+  if (chauffeur.vehicleType !== "moto") return <Redirect to="/chauffeur" />;
   return <Component />;
 }
 
@@ -55,15 +63,21 @@ function Router() {
       <Route path="/livreur/livraison/:id">{() => <LivreurGuard component={LivreurLivraisonDetail} />}</Route>
       <Route path="/livreur/profil">{() => <LivreurGuard component={LivreurProfil} />}</Route>
 
-      {/* Chauffeur Auth */}
+      {/* Auth pages */}
       <Route path="/chauffeur/login" component={ChauffeurLogin} />
       <Route path="/moto/login" component={MotoLogin} />
 
-      {/* Chauffeur Routes (protected) */}
+      {/* Taxi Confort Routes — car drivers only */}
       <Route path="/chauffeur">{() => <ChauffeurGuard component={ChauffeurDashboard} />}</Route>
       <Route path="/chauffeur/trajets">{() => <ChauffeurGuard component={ChauffeurTrajets} />}</Route>
       <Route path="/chauffeur/trajet/:id">{() => <ChauffeurGuard component={ChauffeurTrajetDetail} />}</Route>
       <Route path="/chauffeur/profil">{() => <ChauffeurGuard component={ChauffeurProfil} />}</Route>
+
+      {/* Moto Taxi Routes — moto drivers only */}
+      <Route path="/moto">{() => <MotoGuard component={ChauffeurDashboard} />}</Route>
+      <Route path="/moto/trajets">{() => <MotoGuard component={ChauffeurTrajets} />}</Route>
+      <Route path="/moto/trajet/:id">{() => <MotoGuard component={ChauffeurTrajetDetail} />}</Route>
+      <Route path="/moto/profil">{() => <MotoGuard component={ChauffeurProfil} />}</Route>
 
       {/* Password reset (public) */}
       <Route path="/forgot-password" component={ForgotPassword} />

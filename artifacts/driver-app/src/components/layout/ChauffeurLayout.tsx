@@ -39,10 +39,11 @@ export function ChauffeurLayout({ children }: { children: ReactNode }) {
     );
   }, [driverId, driverStatus, updateDriver, queryClient]);
 
+  const base = chauffeur?.vehicleType === "moto" ? "/moto" : "/chauffeur";
   const navItems = [
-    { href: "/chauffeur", icon: Home, label: t("nav_dashboard") },
-    { href: "/chauffeur/trajets", icon: MapPin, label: t("nav_trips") },
-    { href: "/chauffeur/profil", icon: User, label: t("nav_profile") },
+    { href: base, icon: Home, label: t("nav_dashboard") },
+    { href: `${base}/trajets`, icon: MapPin, label: t("nav_trips") },
+    { href: `${base}/profil`, icon: User, label: t("nav_profile") },
   ];
 
   const langLabels: Record<string, string> = { fr: "FR", ar: "ع", en: "EN", tzm: "ⵣ" };
@@ -197,8 +198,8 @@ export function ChauffeurLayout({ children }: { children: ReactNode }) {
         </div>
 
         {/* Photo required banner */}
-        {profile && !hasPhoto && location !== "/chauffeur/profil" && (
-          <Link href="/chauffeur/profil">
+        {profile && !hasPhoto && location !== `${base}/profil` && (
+          <Link href={`${base}/profil`}>
             <div
               className="flex items-center gap-3 px-4 py-3 border-b cursor-pointer"
               style={{ background: isDark ? "rgba(42,10,0,0.6)" : "#FFF3CD", borderColor: isDark ? "rgba(212,136,12,0.3)" : "#F5D98A" }}

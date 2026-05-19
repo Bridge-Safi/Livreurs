@@ -34,6 +34,7 @@ export default function ChauffeurTrajets() {
   const { t } = useI18n();
   const { chauffeur } = useAuth();
   const DRIVER_ID = chauffeur?.id ?? 0;
+  const base = chauffeur?.vehicleType === "moto" ? "/moto" : "/chauffeur";
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -196,7 +197,7 @@ export default function ChauffeurTrajets() {
                           </Button>
                         )}
 
-                        <Link href={`/chauffeur/trajet/${trip.id}`} className="w-full">
+                        <Link href={`${base}/trajet/${trip.id}`} className="w-full">
                           <Button variant="outline" className="w-full" style={{ borderColor: BORDER, color: BROWN_MID, background: "rgba(255,255,255,0.08)" }}>
                             {t("details")}
                           </Button>

@@ -20,6 +20,7 @@ export default function ChauffeurDashboard() {
   const { t } = useI18n();
   const { chauffeur } = useAuth();
   const DRIVER_ID = chauffeur?.id ?? 0;
+  const base = chauffeur?.vehicleType === "moto" ? "/moto" : "/chauffeur";
 
   const { data: stats, isLoading: statsLoading } = useGetTripStats({ driverId: DRIVER_ID }, {
     query: { queryKey: getGetTripStatsQueryKey({ driverId: DRIVER_ID }) }
@@ -43,7 +44,7 @@ export default function ChauffeurDashboard() {
   const statCards = [
     { icon: Route,       label: t("nav_trips"),  value: stats?.completedToday || 0,        color: "#F59E0B", bg: "#FFFBEB" },
     { icon: DollarSign,  label: t("earnings"),   value: `${stats?.earningsToday || 0} MAD`, color: "#10B981", bg: "#ECFDF5" },
-    { icon: Navigation,  label: t("distance"),   value: `${stats?.totalKmToday || 0} km`,  color: "#3B82F6", bg: "#EFF6FF" },
+    { icon: Navigation,  label: t("distance"),   value: `${parseFloat(Number(stats?.totalKmToday || 0).toFixed(1))} km`,  color: "#3B82F6", bg: "#EFF6FF" },
     { icon: Activity,    label: t("avg_time"),   value: `${stats?.averageFare || 0} MAD`,  color: "#FF4B4B", bg: "#FFF0F0" },
   ];
 
@@ -88,7 +89,7 @@ export default function ChauffeurDashboard() {
         <div className="space-y-4 px-4 mt-5 pb-6">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold" style={{ color: BROWN }}>{t("trip_active")}</h2>
-            <Link href="/chauffeur/trajets">
+            <Link href={`${base}/trajets`}>
               <span className="text-sm font-semibold flex items-center gap-0.5" style={{ color: GOLD }}>
                 {t("history")} <span className="ml-1">→</span>
               </span>
@@ -144,7 +145,7 @@ export default function ChauffeurDashboard() {
                   </div>
 
                   <div className="px-5 pb-4 flex gap-3">
-                    <Link href={`/chauffeur/trajet/${trip.id}`} className="flex-1">
+                    <Link href={`${base}/trajet/${trip.id}`} className="flex-1">
                       <button
                         className="w-full py-2 rounded-xl border text-sm font-semibold"
                         style={{ borderColor: BORDER, color: BROWN, background: "rgba(255,255,255,0.06)" }}

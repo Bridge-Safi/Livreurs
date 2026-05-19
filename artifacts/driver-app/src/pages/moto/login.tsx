@@ -18,7 +18,7 @@ export default function MotoLogin() {
   const { chauffeur, loginChauffeur } = useAuth();
 
   useEffect(() => {
-    if (chauffeur) navigate("/chauffeur");
+    if (chauffeur) navigate(chauffeur.vehicleType === "moto" ? "/moto" : "/chauffeur");
   }, [chauffeur]);
 
   const [email, setEmail] = useState("");
@@ -47,7 +47,7 @@ export default function MotoLogin() {
         }
         loginChauffeur({ id: data.id, name: data.name, phone: data.phone, role: "chauffeur", vehicleType: "moto" });
         if (isPushSupported()) subscribeToPush({ driverId: data.id }).catch(() => {});
-        navigate("/chauffeur");
+        navigate("/moto");
       } else {
         setError(data.error || "Identifiants incorrects");
       }

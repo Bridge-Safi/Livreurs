@@ -20,7 +20,7 @@ export default function ChauffeurLogin() {
   const { t } = useI18n();
 
   useEffect(() => {
-    if (chauffeur) navigate("/chauffeur");
+    if (chauffeur) navigate(chauffeur.vehicleType === "moto" ? "/moto" : "/chauffeur");
   }, [chauffeur]);
 
   const [email, setEmail] = useState("");
