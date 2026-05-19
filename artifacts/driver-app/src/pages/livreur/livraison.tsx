@@ -519,19 +519,6 @@ export default function LivreurLivraisonDetail() {
                 )}
 
                 {/* Maps button */}
-                {order.mapsUrl && (
-                  <a
-                    href={order.mapsUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2.5 w-full py-3 rounded-xl font-bold text-sm transition-all active:scale-95"
-                    style={{ background: "linear-gradient(135deg, #1A73E8 0%, #0D47A1 100%)", color: "white", boxShadow: "0 4px 12px rgba(26,115,232,0.35)" }}
-                  >
-                    <span className="text-lg">🗺</span>
-                    Ouvrir dans Google Maps
-                    <Navigation className="h-4 w-4" />
-                  </a>
-                )}
               </div>
             </div>
           )}
@@ -576,12 +563,12 @@ export default function LivreurLivraisonDetail() {
 
               {/* ─────── INTERMEDIATE STEP: Pickup confirmation ─────── */}
               {delivery.status === "pending" && (
-                <div className="my-3 -mx-4 px-4 py-3 border-y" style={{ background: "rgba(42,122,72,0.12)", borderColor: "rgba(42,122,72,0.35)" }}>
+                <div className="my-3 -mx-4 px-4 py-3 border-y" style={{ background: "rgba(232,92,48,0.10)", borderColor: "rgba(232,92,48,0.30)" }}>
                   <button
                     onClick={() => setPickupConfirmOpen(true)}
                     disabled={isPending}
                     className="w-full h-16 rounded-2xl font-extrabold text-lg flex items-center justify-center gap-3 transition-all active:scale-95 disabled:opacity-60 shadow-lg"
-                    style={{ background: "linear-gradient(135deg, #2A7A48 0%, #1a5c35 100%)", color: "white" }}
+                    style={{ background: "linear-gradient(135deg, #E85C30 0%, #c04020 100%)", color: "white" }}
                   >
                     <CheckCircle2 className="h-6 w-6" />
                     {t("start_delivery_btn")}
@@ -676,7 +663,7 @@ export default function LivreurLivraisonDetail() {
                   onClick={() => setPickupConfirmOpen(true)}
                   disabled={isPending}
                   className="w-full h-14 rounded-2xl font-extrabold text-base flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 disabled:opacity-60"
-                  style={{ background: "linear-gradient(135deg, #2A7A48 0%, #1a5c35 100%)", color: "white" }}
+                  style={{ background: "linear-gradient(135deg, #E85C30 0%, #c04020 100%)", color: "white" }}
                 >
                   <CheckCircle2 className="h-5 w-5" />
                   {t("start_delivery_btn")}
