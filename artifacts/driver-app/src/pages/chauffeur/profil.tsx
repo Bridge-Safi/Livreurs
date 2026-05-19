@@ -59,7 +59,7 @@ export default function ChauffeurProfil() {
   const [isEditing, setIsEditing] = useState(false);
   const [editStatus, setEditStatus] = useState<DriverStatus>("available");
 
-  const { data: profile, isLoading } = useGetDriver(DRIVER_ID, {
+  const { data: profile, isLoading, isError } = useGetDriver(DRIVER_ID, {
     query: { enabled: !!DRIVER_ID, queryKey: getGetDriverQueryKey(DRIVER_ID) },
   });
 
@@ -68,6 +68,14 @@ export default function ChauffeurProfil() {
   useEffect(() => {
     if (profile) setEditStatus(profile.status as DriverStatus);
   }, [profile]);
+
+  // Session périmée : profil introuvable → déconnexion automatique
+  useEffect(() => {
+    if (!isLoading && (isError || (!profile && DRIVER_ID > 0))) {
+      logoutChauffeur();
+      navigate("/");
+    }
+  }, [isLoading, isError, profile, DRIVER_ID, logoutChauffeur, navigate]);
 
   const handleSave = () => {
     updateDriver.mutate(

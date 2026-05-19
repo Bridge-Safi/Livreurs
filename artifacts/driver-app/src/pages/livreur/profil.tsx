@@ -120,7 +120,7 @@ export default function LivreurProfil() {
   const [isEditing, setIsEditing] = useState(false);
   const [editStatus, setEditStatus] = useState<Status>("available");
 
-  const { data: profile, isLoading } = useGetDeliverer(LIVREUR_ID, {
+  const { data: profile, isLoading, isError } = useGetDeliverer(LIVREUR_ID, {
     query: { enabled: !!LIVREUR_ID, queryKey: getGetDelivererQueryKey(LIVREUR_ID) },
   });
 
@@ -134,6 +134,14 @@ export default function LivreurProfil() {
   useEffect(() => {
     if (profile) setEditStatus(profile.status as Status);
   }, [profile]);
+
+  // Session périmée : profil introuvable → déconnexion automatique
+  useEffect(() => {
+    if (!isLoading && (isError || (!profile && LIVREUR_ID > 0))) {
+      logoutLivreur();
+      navigate("/");
+    }
+  }, [isLoading, isError, profile, LIVREUR_ID, logoutLivreur, navigate]);
 
   const handleSave = () => {
     updateDeliverer.mutate({ id: LIVREUR_ID, data: { status: editStatus } }, {
