@@ -39,24 +39,77 @@ interface ParsedOrder {
   items: string[];
   total: string | null;
   extra: string | null;
+  mapsUrl: string | null;
+  paymentMethod: "cash" | "card" | null;
+  rawText: string | null;
 }
 
 function parseOrderNotes(notes: string | null): ParsedOrder {
-  if (!notes) return { items: [], total: null, extra: null };
-  const parts = notes.split(" | ");
+  if (!notes) return { items: [], total: null, extra: null, mapsUrl: null, paymentMethod: null, rawText: null };
+
+  // Extract Maps URL first (| Maps: URL)
+  let mapsUrl: string | null = null;
+  let cleaned = notes;
+  const mapsMatch = notes.match(/\|\s*Maps:\s*(https?:\/\/\S+)/i);
+  if (mapsMatch) {
+    mapsUrl = mapsMatch[1];
+    cleaned = notes.replace(mapsMatch[0], "").trim();
+  }
+
+  // Payment method detection
+  let paymentMethod: "cash" | "card" | null = null;
+  if (/espèces|cash|نقدا|ⵉⵙⴻⵎ/i.test(cleaned)) paymentMethod = "cash";
+  else if (/carte|card|virement|💳/i.test(cleaned)) paymentMethod = "card";
+
+  // Try structured format: Commande: X | Total: Y
+  const parts = cleaned.split(" | ");
   let items: string[] = [];
   let total: string | null = null;
   let extra: string | null = null;
+  let hasStructured = false;
+
   for (const part of parts) {
     if (part.startsWith("Commande: ")) {
       items = part.slice("Commande: ".length).split(", ").filter(Boolean);
+      hasStructured = true;
     } else if (part.startsWith("Total: ")) {
       total = part.slice("Total: ".length);
+      hasStructured = true;
     } else if (part.trim()) {
       extra = part.trim();
     }
   }
-  return { items, total, extra };
+
+  // Try emoji/free format: "🛒 X 💰 Total client: 33.5 MAD 💳 Espèces..."
+  if (!hasStructured) {
+    // Extract total: "Total client: X MAD" or "Total: X MAD"
+    const totalMatch = cleaned.match(/Total\s+(?:client\s*:?\s*)?([\d.,]+\s*MAD)/i);
+    if (totalMatch) total = totalMatch[1];
+
+    // Remove known meta phrases to get clean item text
+    let itemText = cleaned
+      .replace(/Total\s+(?:client\s*:?\s*)?[\d.,]+\s*MAD/gi, "")
+      .replace(/💰|💳|🛒|🛵|📦|🍔|🥤|🍕/g, " ")
+      .replace(/Espèces\s+à\s+la\s+livraison/gi, "")
+      .replace(/Carte\s+(?:bancaire)?/gi, "")
+      .replace(/\|\s*Maps:[^\|]*/gi, "")
+      .replace(/\s{2,}/g, " ")
+      .trim();
+
+    // Split by comma or newline for items
+    if (itemText) {
+      const rawItems = itemText.split(/,|\n/).map(s => s.trim()).filter(Boolean);
+      // Filter out very short fragments (< 3 chars) and pure numbers
+      items = rawItems.filter(s => s.length >= 3 && !/^\d+(\.\d+)?$/.test(s));
+    }
+
+    if (items.length === 0 && cleaned) {
+      // Fallback: show raw (without Maps URL)
+      return { items: [], total, extra: null, mapsUrl, paymentMethod, rawText: cleaned.replace(/\|\s*Maps:[^\|]*/gi, "").trim() };
+    }
+  }
+
+  return { items, total, extra, mapsUrl, paymentMethod, rawText: null };
 }
 
 function StatusPill({ status }: { status?: string }) {
@@ -406,45 +459,80 @@ export default function LivreurLivraisonDetail() {
           )}
 
           {/* ── Order items ── */}
-          {(order.items.length > 0 || order.total) && (
-            <div
-              className="rounded-2xl border overflow-hidden"
-              style={GLASS_STYLE}
-            >
-              <div className="px-4 py-3 flex items-center gap-2 border-b" style={{ borderColor: BORDER }}>
-                <ShoppingBag className="h-4 w-4" style={{ color: TC }} />
-                <span className="text-sm font-bold" style={{ color: BROWN }}>{t("order_items")}</span>
-              </div>
-              <div className="p-4 space-y-2">
-                {order.items.length > 0 ? (
-                  order.items.map((item, i) => (
-                    <div key={i} className="flex items-center justify-between py-1.5 border-b last:border-0" style={{ borderColor: BORDER }}>
-                      <div className="flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: TC }} />
-                        <span className="text-sm font-medium" style={{ color: BROWN }}>{item}</span>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm italic" style={{ color: BROWN_LIGHT }}>{t("no_instructions")}</p>
-                )}
+          {(order.items.length > 0 || order.total || order.rawText || order.mapsUrl) && (
+            <div className="rounded-2xl border overflow-hidden" style={GLASS_STYLE}>
+              {/* Header */}
+              <div className="px-4 py-3 flex items-center justify-between border-b" style={{ borderColor: BORDER }}>
+                <div className="flex items-center gap-2">
+                  <ShoppingBag className="h-4 w-4" style={{ color: TC }} />
+                  <span className="text-sm font-bold" style={{ color: BROWN }}>{t("order_items")}</span>
+                </div>
                 {order.total && (
-                  <div className="flex items-center justify-between pt-2 mt-1 border-t" style={{ borderColor: BORDER }}>
-                    <span className="text-sm font-semibold" style={{ color: BROWN_MID }}>{t("order_total")}</span>
-                    <span className="text-base font-bold" style={{ color: TC }}>{order.total}</span>
+                  <span
+                    className="px-3 py-1 rounded-full text-sm font-extrabold tabular-nums"
+                    style={{ background: "rgba(232,92,48,0.18)", color: TC, border: `1px solid rgba(232,92,48,0.35)` }}
+                  >
+                    💰 {order.total}
+                  </span>
+                )}
+              </div>
+
+              <div className="p-4 space-y-3">
+                {/* Items list */}
+                {order.items.length > 0 ? (
+                  <div className="space-y-1.5">
+                    {order.items.map((item, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
+                        style={{ background: "rgba(255,255,255,0.06)", border: `1px solid ${BORDER}` }}
+                      >
+                        <span className="text-base flex-shrink-0">🛒</span>
+                        <span className="text-sm font-semibold flex-1" style={{ color: BROWN }}>{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : order.rawText ? (
+                  <p className="text-sm px-1" style={{ color: BROWN }}>{order.rawText}</p>
+                ) : null}
+
+                {/* Payment method badge */}
+                {order.paymentMethod && (
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: order.paymentMethod === "cash" ? "rgba(42,122,72,0.15)" : "rgba(59,130,246,0.15)", border: `1px solid ${order.paymentMethod === "cash" ? "rgba(42,122,72,0.4)" : "rgba(59,130,246,0.4)"}` }}>
+                    <span className="text-lg">{order.paymentMethod === "cash" ? "💵" : "💳"}</span>
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-wide" style={{ color: order.paymentMethod === "cash" ? GREEN : "#60A5FA" }}>
+                        {order.paymentMethod === "cash" ? "Espèces à la livraison" : "Paiement par carte"}
+                      </p>
+                      <p className="text-[11px] mt-0.5" style={{ color: BROWN_MID }}>
+                        {order.paymentMethod === "cash" ? "Préparez la monnaie" : "Terminal requis"}
+                      </p>
+                    </div>
                   </div>
                 )}
+
                 {order.extra && (
-                  <p className="text-xs italic px-1 pt-1" style={{ color: BROWN_LIGHT }}>📝 {order.extra}</p>
+                  <div className="flex items-start gap-2 px-3 py-2 rounded-xl" style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${BORDER}` }}>
+                    <span className="text-base flex-shrink-0">📝</span>
+                    <p className="text-xs italic" style={{ color: BROWN_MID }}>{order.extra}</p>
+                  </div>
+                )}
+
+                {/* Maps button */}
+                {order.mapsUrl && (
+                  <a
+                    href={order.mapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2.5 w-full py-3 rounded-xl font-bold text-sm transition-all active:scale-95"
+                    style={{ background: "linear-gradient(135deg, #1A73E8 0%, #0D47A1 100%)", color: "white", boxShadow: "0 4px 12px rgba(26,115,232,0.35)" }}
+                  >
+                    <span className="text-lg">🗺</span>
+                    Ouvrir dans Google Maps
+                    <Navigation className="h-4 w-4" />
+                  </a>
                 )}
               </div>
-            </div>
-          )}
-
-          {order.items.length === 0 && delivery.notes && !order.total && (
-            <div className="rounded-2xl border p-4" style={GLASS_STYLE}>
-              <p className="text-sm font-semibold mb-1" style={{ color: BROWN_MID }}>{t("delivery_notes")}</p>
-              <p className="text-sm" style={{ color: BROWN }}>{delivery.notes}</p>
             </div>
           )}
 
