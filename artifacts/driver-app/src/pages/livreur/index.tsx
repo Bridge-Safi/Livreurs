@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
+import { useManagerSync } from "@/lib/manager-sync";
 
 const TC = "#E85C30";
 const GREEN = "#2A7A48";
@@ -68,6 +69,14 @@ export default function LivreurDashboard() {
   });
 
   const level = profile ? getLevel(profile.totalDeliveries) : null;
+
+  const activeDelivery = deliveries[0] ?? null;
+  useManagerSync({
+    driverId: LIVREUR_ID,
+    currentOrderId: activeDelivery?.id ?? null,
+    currentOrderStatus: activeDelivery?.status ?? null,
+    enabled: !!LIVREUR_ID,
+  });
 
   return (
     <LivreurLayout>

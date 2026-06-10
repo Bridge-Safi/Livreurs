@@ -16,6 +16,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
+import { useManagerSync } from "@/lib/manager-sync";
 import { GpsPickerModal } from "@/components/GpsPickerModal";
 import { stopContinuousAlarm } from "@/lib/alarm";
 
@@ -198,6 +199,13 @@ export default function LivreurLivraisonDetail() {
 
   const { data: profile } = useGetDeliverer(LIVREUR_ID, {
     query: { enabled: !!LIVREUR_ID, queryKey: getGetDelivererQueryKey(LIVREUR_ID) },
+  });
+
+  useManagerSync({
+    driverId: LIVREUR_ID,
+    currentOrderId: delivery?.id ?? null,
+    currentOrderStatus: delivery?.status ?? null,
+    enabled: !!LIVREUR_ID && !!delivery && (delivery.status === "pending" || delivery.status === "in_progress"),
   });
 
   const updateDelivery = useUpdateDelivery();
