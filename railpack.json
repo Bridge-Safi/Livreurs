@@ -1,0 +1,11 @@
+{
+  "install": {
+    "cmd": "npm install -g pnpm && pnpm install --no-frozen-lockfile --ignore-scripts"
+  },
+  "build": {
+    "cmd": "pnpm --filter api-server build"
+  },
+  "start": {
+    "cmd": "pnpm --filter api-server start"
+  }
+}
