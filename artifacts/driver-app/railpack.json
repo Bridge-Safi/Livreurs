@@ -1,0 +1,11 @@
+{
+  "install": {
+    "cmd": "npm install -g pnpm && pnpm install --no-frozen-lockfile --ignore-scripts"
+  },
+  "build": {
+    "cmd": "pnpm --filter @workspace/driver-app build"
+  },
+  "start": {
+    "cmd": "pnpm --filter @workspace/driver-app dev"
+  }
+}
