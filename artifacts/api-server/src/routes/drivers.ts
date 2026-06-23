@@ -11,6 +11,7 @@ import {
   ListDriversResponse,
 } from "@workspace/api-zod";
 import { serializeDriver } from "../lib/serializers";
+import bcrypt from "bcryptjs";
 
 const router: IRouter = Router();
 
@@ -25,7 +26,11 @@ router.post("/drivers", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const [driver] = await db.insert(driversTable).values(parsed.data).returning();
+  const data = { ...parsed.data };
+  if (data.password) {
+    data.password = await bcrypt.hash(data.password, 10);
+  }
+  const [driver] = await db.insert(driversTable).values(data).returning();
   res.status(201).json(GetDriverResponse.parse(serializeDriver(driver)));
 });
 
@@ -54,9 +59,13 @@ router.patch("/drivers/:id", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
+  const data = { ...parsed.data };
+  if (data.password) {
+    data.password = await bcrypt.hash(data.password, 10);
+  }
   const [driver] = await db
     .update(driversTable)
-    .set(parsed.data)
+    .set(data)
     .where(eq(driversTable.id, params.data.id))
     .returning();
   if (!driver) {
