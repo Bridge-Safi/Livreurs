@@ -1,6 +1,6 @@
 {
-  "name": "Bridge — Safi Logistique",
-  "short_name": "Bridge",
+  "name": "Bridge — Livreurs & Chauffeurs",
+  "short_name": "Livreurs",
   "description": "Plateforme logistique pour Safi, Maroc",
   "start_url": "/",
   "display": "standalone",
@@ -11,19 +11,19 @@
     {
       "src": "/BRIDGE.jpg",
       "sizes": "192x192",
-      "type": "image/png",
+      "type": "image/jpeg",
       "purpose": "any"
     },
     {
-      "src": "/bridge-icon.png",
+      "src": "/BRIDGE.jpg",
       "sizes": "512x512",
-      "type": "image/png",
+      "type": "image/jpeg",
       "purpose": "any"
     },
     {
-      "src": "/bridge-icon.png",
+      "src": "/BRIDGE.jpg",
       "sizes": "512x512",
-      "type": "image/png",
+      "type": "image/jpeg",
       "purpose": "maskable"
     }
   ],
