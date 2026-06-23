@@ -10,7 +10,6 @@ function normalizeEmail(raw: string): string {
   return raw.trim().toLowerCase();
 }
 
-// ── GET all deliverers ────────────────────────────────────────────────────
 router.get("/auth/deliverers", async (req, res): Promise<void> => {
   const deliverers = await db
     .select({ id: deliverersTable.id, name: deliverersTable.name, email: deliverersTable.email })
@@ -18,7 +17,6 @@ router.get("/auth/deliverers", async (req, res): Promise<void> => {
   res.json(deliverers);
 });
 
-// ── GET all drivers ───────────────────────────────────────────────────────
 router.get("/auth/drivers", async (req, res): Promise<void> => {
   const drivers = await db
     .select({ id: driversTable.id, name: driversTable.name, email: driversTable.email })
@@ -26,7 +24,6 @@ router.get("/auth/drivers", async (req, res): Promise<void> => {
   res.json(drivers);
 });
 
-// ── POST /auth/login — Email + password ──────────────────────────────────
 router.post("/auth/login", async (req, res): Promise<void> => {
   const { email, password, role } = req.body as { email?: string; password?: string; role?: string };
   if (!email || !password || !role || !["livreur", "chauffeur"].includes(role)) {
@@ -42,11 +39,12 @@ router.post("/auth/login", async (req, res): Promise<void> => {
       res.status(404).json({ success: false, error: "Email non reconnu. Contactez votre responsable." });
       return;
     }
-    if (!user.password) {
+    const storedHash = (user as any).passwordHash ?? user.password;
+    if (!storedHash) {
       res.status(401).json({ success: false, error: "Aucun mot de passe défini. Contactez votre responsable." });
       return;
     }
-    const ok = await bcrypt.compare(password, user.password);
+    const ok = await bcrypt.compare(password, storedHash);
     if (!ok) {
       res.status(401).json({ success: false, error: "Mot de passe incorrect" });
       return;
@@ -67,11 +65,12 @@ router.post("/auth/login", async (req, res): Promise<void> => {
       res.status(404).json({ success: false, error: "Email non reconnu. Contactez votre responsable." });
       return;
     }
-    if (!user.password) {
+    const storedHash = (user as any).passwordHash ?? user.password;
+    if (!storedHash) {
       res.status(401).json({ success: false, error: "Aucun mot de passe défini. Contactez votre responsable." });
       return;
     }
-    const ok = await bcrypt.compare(password, user.password);
+    const ok = await bcrypt.compare(password, storedHash);
     if (!ok) {
       res.status(401).json({ success: false, error: "Mot de passe incorrect" });
       return;
@@ -91,7 +90,6 @@ router.post("/auth/login", async (req, res): Promise<void> => {
   }
 });
 
-// ── POST /auth/admin-add-user — Insert a new deliverer or driver ──────────
 router.post("/auth/admin-add-user", async (req, res): Promise<void> => {
   const adminToken = req.headers["x-admin-token"];
   if (!adminToken || adminToken !== process.env.SESSION_SECRET) {
@@ -113,7 +111,6 @@ router.post("/auth/admin-add-user", async (req, res): Promise<void> => {
   }
 });
 
-// ── POST /auth/set-password — Admin sets password for a user ──────────────
 router.post("/auth/set-password", async (req, res): Promise<void> => {
   const { userId, role, password } = req.body as { userId?: number; role?: string; password?: string };
   if (!userId || !role || !password || !["livreur", "chauffeur"].includes(role)) {
@@ -133,8 +130,6 @@ router.post("/auth/set-password", async (req, res): Promise<void> => {
   res.json({ success: true });
 });
 
-// ── Email helpers ──────────────────────────────────────────────────────────
-
 function buildResetEmailHtml(opts: {
   name: string;
   role: "livreur" | "chauffeur";
@@ -144,7 +139,6 @@ function buildResetEmailHtml(opts: {
   const accentColor = isLivreur ? "#C14B2A" : "#D4880C";
   const accentLight = isLivreur ? "#FFF0EB" : "#FEF6E4";
   const roleLabel = isLivreur ? "Livreur de Repas" : "Taxi Confort";
-
   const logoSvg = isLivreur
     ? `<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
         <rect width="64" height="64" rx="16" fill="${accentColor}"/>
@@ -178,8 +172,6 @@ function buildResetEmailHtml(opts: {
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#F0EBE3;padding:40px 16px;">
     <tr><td align="center">
       <table width="100%" style="max-width:520px;" cellpadding="0" cellspacing="0">
-
-        <!-- Header -->
         <tr><td align="center" style="padding-bottom:28px;">
           ${logoSvg}
           <div style="margin-top:12px;">
@@ -191,23 +183,14 @@ function buildResetEmailHtml(opts: {
             </div>
           </div>
         </td></tr>
-
-        <!-- Card -->
         <tr><td style="background:white;border-radius:20px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
-
-          <!-- Card top stripe -->
           <div style="height:5px;background:linear-gradient(90deg,#C14B2A,#D4880C,#2A7A48,#D4880C,#C14B2A);"></div>
-
           <div style="padding:36px 32px;">
-
-            <!-- Greeting -->
             <p style="margin:0 0 8px;font-size:24px;font-weight:700;color:#2C1810;">Bonjour, ${opts.name} 👋</p>
             <p style="margin:0 0 28px;font-size:15px;color:#6B4033;line-height:1.6;">
               Tu as demandé à réinitialiser ton mot de passe <strong style="color:#2C1810;">Bridge ${roleLabel}</strong>.<br>
               Clique sur le bouton ci-dessous — ce lien est valable <strong>30&nbsp;minutes</strong>.
             </p>
-
-            <!-- CTA Button -->
             <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:8px 0 32px;">
               <a href="${opts.resetUrl}"
                 style="display:inline-block;background:${accentColor};color:white;text-decoration:none;
@@ -216,11 +199,7 @@ function buildResetEmailHtml(opts: {
                 🔑 &nbsp;Changer mon mot de passe
               </a>
             </td></tr></table>
-
-            <!-- Divider -->
             <div style="border-top:1px solid #F0EBE3;margin-bottom:24px;"></div>
-
-            <!-- Security note -->
             <table cellpadding="0" cellspacing="0"><tr>
               <td style="vertical-align:top;padding-right:12px;">
                 <div style="width:36px;height:36px;background:${accentLight};border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;text-align:center;line-height:36px;">🔒</div>
@@ -232,11 +211,8 @@ function buildResetEmailHtml(opts: {
                 </p>
               </td>
             </tr></table>
-
           </div>
         </td></tr>
-
-        <!-- Footer -->
         <tr><td align="center" style="padding-top:24px;">
           <div style="display:inline-flex;gap:6px;margin-bottom:10px;">
             <span style="width:8px;height:8px;border-radius:50%;background:#C14B2A;display:inline-block;"></span>
@@ -246,7 +222,6 @@ function buildResetEmailHtml(opts: {
           <p style="margin:0;font-size:12px;color:#B0A090;">Bridge Safi — Safi, Maroc 🇲🇦</p>
           <p style="margin:4px 0 0;font-size:11px;color:#C0B0A0;">livreur.safi-bridge.ma</p>
         </td></tr>
-
       </table>
     </td></tr>
   </table>
@@ -266,20 +241,15 @@ async function sendInfobipEmail(opts: {
     opts.log.error("Missing INFOBIP_BASE_URL or INFOBIP_API_KEY");
     return false;
   }
-
   const form = new FormData();
   form.append("from", "Bridge Safi <no-reply@safi-bridge.ma>");
   form.append("to", opts.to);
   form.append("subject", opts.subject);
   form.append("html", opts.html);
-
   try {
     const res = await fetch(`https://${baseUrl}/email/3/send`, {
       method: "POST",
-      headers: {
-        "Authorization": `App ${apiKey}`,
-        "Accept": "application/json",
-      },
+      headers: { "Authorization": `App ${apiKey}`, "Accept": "application/json" },
       body: form,
     });
     const body = await res.text();
@@ -294,47 +264,37 @@ async function sendInfobipEmail(opts: {
   }
 }
 
-// ── POST /auth/forgot-password ─────────────────────────────────────────────
 router.post("/auth/forgot-password", async (req, res): Promise<void> => {
   const { email, role } = req.body as { email?: string; role?: string };
   if (!email || !role || !["livreur", "chauffeur"].includes(role)) {
     res.status(400).json({ success: false, error: "email et role requis" });
     return;
   }
-
   const normalizedEmail = normalizeEmail(email);
   const table = role === "livreur" ? deliverersTable : driversTable;
   const [user] = await db.select({ id: table.id, name: table.name }).from(table).where(eq(table.email, normalizedEmail));
-
-  // Always return success to avoid email enumeration
   if (!user) {
     req.log.warn({ email: normalizedEmail, role }, "Forgot-password: email not found");
     res.json({ success: true });
     return;
   }
-
   const token = crypto.randomBytes(32).toString("hex");
   const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
-
   await db.insert(passwordResetTokensTable).values({ email: normalizedEmail, role, token, expiresAt });
-
   const resetUrl = `https://livreur.safi-bridge.ma/reset-password?token=${token}&role=${role}`;
   const html = buildResetEmailHtml({ name: user.name, role: role as "livreur" | "chauffeur", resetUrl });
   const subject = role === "livreur"
     ? "🚴 Réinitialisation de ton mot de passe — Bridge Livreur"
     : "🚗 Réinitialisation de ton mot de passe — Bridge Taxi";
-
   const ok = await sendInfobipEmail({ to: normalizedEmail, subject, html, log: console });
   if (ok) {
     req.log.info({ email: normalizedEmail, role }, "Password reset email sent");
   } else {
     req.log.error({ email: normalizedEmail, role }, "Password reset email failed");
   }
-
   res.json({ success: true });
 });
 
-// ── POST /auth/reset-password ──────────────────────────────────────────────
 router.post("/auth/reset-password", async (req, res): Promise<void> => {
   const { token, password } = req.body as { token?: string; password?: string };
   if (!token || !password) {
@@ -345,9 +305,7 @@ router.post("/auth/reset-password", async (req, res): Promise<void> => {
     res.status(400).json({ success: false, error: "Mot de passe trop court (6 caractères min)" });
     return;
   }
-
   const [resetToken] = await db.select().from(passwordResetTokensTable).where(eq(passwordResetTokensTable.token, token));
-
   if (!resetToken) {
     res.status(400).json({ success: false, error: "Lien invalide" });
     return;
@@ -360,12 +318,10 @@ router.post("/auth/reset-password", async (req, res): Promise<void> => {
     res.status(400).json({ success: false, error: "Lien expiré — demandez un nouveau lien" });
     return;
   }
-
   const hashed = await bcrypt.hash(password, 10);
   const table = resetToken.role === "livreur" ? deliverersTable : driversTable;
   await db.update(table).set({ password: hashed }).where(eq(table.email, resetToken.email));
   await db.update(passwordResetTokensTable).set({ usedAt: new Date() }).where(eq(passwordResetTokensTable.id, resetToken.id));
-
   req.log.info({ email: resetToken.email, role: resetToken.role }, "Password reset successful");
   res.json({ success: true });
 });
