@@ -12,4 +12,5 @@ const app = express();
 app.use("/api", createProxyMiddleware({ target: API_URL, changeOrigin: true }));
 app.use(express.static(path.join(__dirname, "public")));
 app.get("*", (_req, res) => res.sendFile(path.join(__dirname, "public", "index.html")));
+
 app.listen(PORT, () => console.log(`Driver app on port ${PORT}`));
