@@ -9,7 +9,7 @@ const API_URL = process.env.API_URL || "https://workspaceapi-server-production-a
 
 const app = express();
 
-app.use("/api", createProxyMiddleware({ target: API_URL, changeOrigin: true }));
+app.use(createProxyMiddleware("/api", { target: API_URL, changeOrigin: true }));
 app.use(express.static(path.join(__dirname, "public")));
 app.get("*", (_req, res) => res.sendFile(path.join(__dirname, "public", "index.html")));
 
