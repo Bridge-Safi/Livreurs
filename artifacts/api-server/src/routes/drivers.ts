@@ -39,7 +39,8 @@ router.delete("/drivers/_wipe_all_now", async (req, res): Promise<void> => {
     await db.execute(sql`DELETE FROM drivers`);
     res.json({ success: true, message: "All drivers deleted" });
   } catch (err) {
-    res.status(500).json({ success: false, error: String(err) });
+    const anyErr: any = err;
+    res.status(500).json({ success: false, error: String(err), cause: anyErr?.cause ? { message: anyErr.cause.message, code: anyErr.cause.code, detail: anyErr.cause.detail, table: anyErr.cause.table, constraint: anyErr.cause.constraint } : null });
   }
 });
 
