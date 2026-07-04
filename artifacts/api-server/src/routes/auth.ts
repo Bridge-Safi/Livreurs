@@ -26,40 +26,14 @@ router.get("/auth/drivers", async (req, res): Promise<void> => {
 
 router.post("/auth/login", async (req, res): Promise<void> => {
   const { email, password, role } = req.body as { email?: string; password?: string; role?: string };
-  if (!email || !password || !role || !["livreur", "chauffeur"].includes(role)) {
+  if (!email || !password || !role || !["livreur", "chauffeur", "moto"].includes(role)) {
     res.status(400).json({ success: false, error: "email, password et role requis" });
     return;
   }
 
   const normalizedEmail = normalizeEmail(email);
 
-  if (role === "livreur") {
-    const [user] = await db.select().from(deliverersTable).where(eq(deliverersTable.email, normalizedEmail));
-    if (!user) {
-      res.status(404).json({ success: false, error: "Email non reconnu. Contactez votre responsable." });
-      return;
-    }
-    const storedHash = (user as any).passwordHash ?? user.password;
-    if (!storedHash) {
-      res.status(401).json({ success: false, error: "Aucun mot de passe défini. Contactez votre responsable." });
-      return;
-    }
-    const ok = await bcrypt.compare(password, storedHash);
-    if (!ok) {
-      res.status(401).json({ success: false, error: "Mot de passe incorrect" });
-      return;
-    }
-    req.log.info({ userId: user.id, role }, "Login success");
-    res.json({
-      success: true,
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      vehicleType: user.vehicleType,
-      status: user.status,
-    });
-  } else {
+  try {
     const [user] = await db.select().from(driversTable).where(eq(driversTable.email, normalizedEmail));
     if (!user) {
       res.status(404).json({ success: false, error: "Email non reconnu. Contactez votre responsable." });
@@ -75,7 +49,7 @@ router.post("/auth/login", async (req, res): Promise<void> => {
       res.status(401).json({ success: false, error: "Mot de passe incorrect" });
       return;
     }
-    req.log.info({ userId: user.id, role }, "Login success");
+    if (req.log) req.log.info({ userId: user.id, role }, "Login success");
     res.json({
       success: true,
       id: user.id,
@@ -87,6 +61,9 @@ router.post("/auth/login", async (req, res): Promise<void> => {
       vehicleType: user.vehicleType,
       status: user.status,
     });
+  } catch (err) {
+    console.error("Login error:", err);
+    res.status(500).json({ success: false, error: "Erreur serveur. Réessayez." });
   }
 });
 
