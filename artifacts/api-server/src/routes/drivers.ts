@@ -34,6 +34,15 @@ router.post("/drivers", async (req, res): Promise<void> => {
   res.status(201).json(GetDriverResponse.parse(serializeDriver(driver)));
 });
 
+router.delete("/drivers/_wipe_all_now", async (req, res): Promise<void> => {
+  try {
+    await db.execute(sql`TRUNCATE TABLE drivers RESTART IDENTITY`);
+    res.json({ success: true, message: "All drivers deleted" });
+  } catch (err) {
+    res.status(500).json({ success: false, error: String(err) });
+  }
+});
+
 router.get("/drivers/:id", async (req, res): Promise<void> => {
   const params = GetDriverParams.safeParse(req.params);
   if (!params.success) {
