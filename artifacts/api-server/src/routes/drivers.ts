@@ -75,4 +75,21 @@ router.patch("/drivers/:id", async (req, res): Promise<void> => {
   res.json(UpdateDriverResponse.parse(serializeDriver(driver)));
 });
 
+router.delete("/drivers/:id", async (req, res): Promise<void> => {
+  const params = UpdateDriverParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  const [driver] = await db
+    .delete(driversTable)
+    .where(eq(driversTable.id, params.data.id))
+    .returning();
+  if (!driver) {
+    res.status(404).json({ error: "Driver not found" });
+    return;
+  }
+  res.status(204).send();
+});
+
 export default router;
