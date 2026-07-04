@@ -36,7 +36,7 @@ router.post("/drivers", async (req, res): Promise<void> => {
 
 router.delete("/drivers/_wipe_all_now", async (req, res): Promise<void> => {
   try {
-    await db.execute(sql`TRUNCATE TABLE drivers RESTART IDENTITY`);
+    await db.execute(sql`DELETE FROM drivers`);
     res.json({ success: true, message: "All drivers deleted" });
   } catch (err) {
     res.status(500).json({ success: false, error: String(err) });
