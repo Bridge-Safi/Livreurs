@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db, deliverersTable, driversTable, passwordResetTokensTable } from "@workspace/db";
 import bcrypt from "bcryptjs";
 import crypto from "node:crypto";
@@ -34,12 +34,23 @@ router.post("/auth/login", async (req, res): Promise<void> => {
   const normalizedEmail = normalizeEmail(email);
 
   try {
-    const [user] = await db.select().from(driversTable).where(eq(driversTable.email, normalizedEmail));
+    const result: any = await db.execute(sql`
+      select id, name, phone, email, vehicle_type, status, rating, is_blocked, password_hash, avatar_url, services
+      from drivers
+      where email = ${normalizedEmail}
+      limit 1
+    `);
+    const rows = result.rows ?? result;
+    const user = rows[0];
     if (!user) {
       res.status(404).json({ success: false, error: "Email non reconnu. Contactez votre responsable." });
       return;
     }
-    const storedHash = (user as any).passwordHash ?? user.password;
+    if (user.is_blocked) {
+      res.status(403).json({ success: false, error: "Compte bloqué. Contactez votre responsable." });
+      return;
+    }
+    const storedHash = user.password_hash;
     if (!storedHash) {
       res.status(401).json({ success: false, error: "Aucun mot de passe défini. Contactez votre responsable." });
       return;
@@ -56,10 +67,9 @@ router.post("/auth/login", async (req, res): Promise<void> => {
       name: user.name,
       email: user.email,
       phone: user.phone,
-      vehicleModel: user.vehicleModel,
-      vehiclePlate: user.vehiclePlate,
-      vehicleType: user.vehicleType,
+      vehicleType: user.vehicle_type,
       status: user.status,
+      services: user.services,
     });
   } catch (err) {
     console.error("Login error:", err);
