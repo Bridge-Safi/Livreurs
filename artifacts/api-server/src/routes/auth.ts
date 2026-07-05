@@ -35,7 +35,7 @@ router.post("/auth/login", async (req, res): Promise<void> => {
 
   try {
     const result: any = await db.execute(sql`
-      select id, name, phone, email, vehicle_type, status, rating, is_blocked, password_hash, avatar_url, services
+      select id, name, phone, email, vehicle_type, status, rating, is_blocked, password as password_hash, avatar_url, services
       from drivers
       where email = ${normalizedEmail}
       limit 1
