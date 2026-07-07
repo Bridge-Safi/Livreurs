@@ -245,14 +245,6 @@ router.post("/deliveries/:id/confirm-delivered", async (req, res): Promise<void>
     return;
   }
 
-  // ── Anti-cheat: confirmCode must match if one was generated ──────────────
-  if (delivery.confirmCode) {
-    if (!body.data.confirmCode || body.data.confirmCode.trim() !== delivery.confirmCode.trim()) {
-      res.status(403).json({ error: "Code de confirmation incorrect. Demandez le code au client." });
-      return;
-    }
-  }
-
   // ── Anti-cheat: cannot confirm too soon after pickup ─────────────────────
   if (delivery.pickedUpAt) {
     const elapsed = Date.now() - new Date(delivery.pickedUpAt).getTime();
