@@ -96,7 +96,7 @@ router.post("/deliveries", async (req, res): Promise<void> => {
     .insert(deliveriesTable)
     .values({
       ...parsed.data,
-      confirmCode: genConfirmCode(),
+      confirmCode: null,
       dispatchPhase: "cascade",
       dispatchedAt: new Date(),
     })
