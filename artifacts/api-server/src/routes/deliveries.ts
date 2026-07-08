@@ -51,8 +51,8 @@ router.get("/deliveries/stats", async (req, res): Promise<void> => {
 
   const periodDeliveries = all.filter(d => d.status === "delivered" && new Date(d.createdAt) >= periodStart);
 
-  const earningsToday = completed.length * 7;
-  const earningsWeek = periodDeliveries.length * 7;
+  const earningsToday = completed.length * 6;
+  const earningsWeek = periodDeliveries.length * 6;
 
   const stats = {
     totalToday: todayDeliveries.length,
