@@ -65,15 +65,25 @@ router.get("/deliveries/pending-dispatch", async (req, res): Promise<void> => {
   for (const delivery of allDispatching) {
     const now = Date.now();
     const dispatchedTime = delivery.dispatchedAt ? new Date(delivery.dispatchedAt).getTime() : 0;
-    const elapsed = now - dispatchedTime;
+    let elapsed = now - dispatchedTime;
+    let effectiveDispatchedTime = dispatchedTime;
 
-    // Expired — clean up
+    // ── Réarmement au lieu d'expiration définitive ────────────────────────
+    // Avant : une commande non acceptée après 5 min passait en dispatchPhase
+    // "none" et disparaissait pour toujours — même si AUCUN livreur n'était
+    // en ligne pour l'accepter pendant ces 5 minutes. Un livreur qui se
+    // connectait ensuite (même 1h plus tard) ne la recevait jamais et elle
+    // restait orpheline. Maintenant : tant qu'aucun livreur ne l'a acceptée,
+    // on relance une fenêtre de 5 min fraîche à chaque fois qu'un livreur en
+    // ligne la consulte, au lieu de l'abandonner.
     if (elapsed >= DISPATCH_TIMEOUT_MS) {
-      await db
+      const [reArmed] = await db
         .update(deliveriesTable)
-        .set({ dispatchPhase: "none", updatedAt: new Date() })
-        .where(eq(deliveriesTable.id, delivery.id));
-      continue;
+        .set({ dispatchedAt: new Date(), updatedAt: new Date() })
+        .where(eq(deliveriesTable.id, delivery.id))
+        .returning();
+      effectiveDispatchedTime = reArmed?.dispatchedAt ? new Date(reArmed.dispatchedAt).getTime() : now;
+      elapsed = now - effectiveDispatchedTime;
     }
 
     // ── NO proximity gate: all livreurs see this at the same time ──
@@ -81,7 +91,7 @@ router.get("/deliveries/pending-dispatch", async (req, res): Promise<void> => {
     found = {
       hasPending: true,
       delivery: GetDeliveryResponse.parse(serializeDelivery(delivery)),
-      expiresAt: new Date(dispatchedTime + DISPATCH_TIMEOUT_MS).toISOString(),
+      expiresAt: new Date(effectiveDispatchedTime + DISPATCH_TIMEOUT_MS).toISOString(),
       secondsLeft,
       phase: "cascade",
     };
@@ -354,11 +364,20 @@ router.get("/deliveries/:id/pending-dispatch", async (req, res): Promise<void> =
   const elapsed = now - dispatchedTime;
 
   if (elapsed >= DISPATCH_TIMEOUT_MS) {
-    await db
+    // Réarmement (voir /deliveries/pending-dispatch) au lieu d'expirer pour de bon.
+    const [reArmed] = await db
       .update(deliveriesTable)
-      .set({ dispatchPhase: "none", updatedAt: new Date() })
-      .where(eq(deliveriesTable.id, params.data.id));
-    res.json({ hasPending: false });
+      .set({ dispatchedAt: new Date(), updatedAt: new Date() })
+      .where(eq(deliveriesTable.id, params.data.id))
+      .returning();
+    const newDispatchedTime = reArmed?.dispatchedAt ? new Date(reArmed.dispatchedAt).getTime() : now;
+    res.json({
+      hasPending: true,
+      delivery: GetDeliveryResponse.parse(serializeDelivery(reArmed ?? delivery)),
+      expiresAt: new Date(newDispatchedTime + DISPATCH_TIMEOUT_MS).toISOString(),
+      secondsLeft: Math.floor(DISPATCH_TIMEOUT_MS / 1000),
+      phase: "cascade",
+    });
     return;
   }
 
