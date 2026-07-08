@@ -623,7 +623,7 @@ export default function LivreurLivraisonDetail() {
                   {/* ── Delivery CTA — visible only when in_progress ── */}
                   {delivery.status === "in_progress" && (
                     <button
-                      onClick={() => setDeliveryConfirmOpen(true)}
+                      onClick={() => { setConfirmCodeError(""); setDeliveryConfirmOpen(true); }}
                       disabled={isPending}
                       className="mt-2 w-full h-11 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-60 shadow-sm"
                       style={{ background: GREEN }}
@@ -678,7 +678,7 @@ export default function LivreurLivraisonDetail() {
                 </button>
               ) : (
                 <button
-                  onClick={() => setDeliveryConfirmOpen(true)}
+                  onClick={() => { setConfirmCodeError(""); setDeliveryConfirmOpen(true); }}
                   disabled={isPending}
                   className="w-full h-14 rounded-2xl font-extrabold text-base text-white shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-60"
                   style={{ background: GREEN }}
@@ -774,6 +774,16 @@ export default function LivreurLivraisonDetail() {
                 </div>
                 <h3 className="text-xl font-bold mb-2" style={{ color: BROWN }}>{t("confirm_delivered")}</h3>
                 <p className="text-sm mb-5" style={{ color: BROWN_MID }}>{t("confirm_delivered_btn")}</p>
+
+                {confirmCodeError && (
+                  <div
+                    className="rounded-xl p-3 mb-4 text-left flex items-start gap-2"
+                    style={{ background: "rgba(220,38,38,0.12)", border: "1px solid rgba(220,38,38,0.4)" }}
+                  >
+                    <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" style={{ color: "#DC2626" }} />
+                    <p className="text-sm font-semibold" style={{ color: "#DC2626" }}>{confirmCodeError}</p>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-3">
                   <button
