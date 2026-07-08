@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, and } from "drizzle-orm";
-import { db, deliveriesTable } from "@workspace/db";
+import { db, deliveriesTable, deliverersTable } from "@workspace/db";
 import {
   CreateDeliveryBody,
   UpdateDeliveryBody,
@@ -141,6 +141,32 @@ router.patch("/deliveries/:id/pickup", async (req, res): Promise<void> => {
 
   req.log.info({ deliveryId: params.data.id }, "Delivery picked up from merchant");
   res.json(GetDeliveryResponse.parse(serializeDelivery(updated)));
+
+  // ── Notifie Bridge-safi (client) que le livreur a récupéré la commande ────
+  // Sans ceci, la page de suivi du client ne montre jamais qui est le livreur
+  // (nom, photo, note) tant que la commande n'est pas encore livrée — elle
+  // n'affichait que la carte GPS nue. On pousse ces infos dès le clic sur le
+  // bouton orange "Commande récupérée", fire-and-forget comme le callback de
+  // livraison terminée plus bas dans dispatch.ts.
+  if (updated.trackingNumber && updated.delivererId) {
+    db.select().from(deliverersTable).where(eq(deliverersTable.id, updated.delivererId))
+      .then(([deliverer]) => {
+        if (!deliverer) return;
+        return fetch(`https://www.safi-bridge.ma/api/tracking/${updated.trackingNumber}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            status: "on_the_way",
+            driverName: deliverer.name,
+            driverPhone: deliverer.phone,
+            driverPhoto: deliverer.photoUrl ?? undefined,
+            driverRating: deliverer.rating,
+          }),
+        });
+      })
+      .then((r) => { if (r) req.log.info({ trackingNumber: updated.trackingNumber, ok: r.ok }, "Bridge-safi notified of pickup (driver info)"); })
+      .catch((err) => req.log.warn({ err, trackingNumber: updated.trackingNumber }, "Failed to notify Bridge-safi of pickup"));
+  }
 });
 
 router.get("/deliveries/:id", async (req, res): Promise<void> => {
