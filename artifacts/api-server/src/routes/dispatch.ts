@@ -246,10 +246,14 @@ router.post("/deliveries/:id/confirm-delivered", async (req, res): Promise<void>
   }
 
   // ── Anti-cheat: cannot confirm too soon after pickup ─────────────────────
+  // Fenêtre réduite (60s -> 15s) : Safi est une petite ville, certaines
+  // livraisons sont légitimement très rapides et se faisaient bloquer.
+  const ANTI_CHEAT_WINDOW_MS = 15_000;
   if (delivery.pickedUpAt) {
     const elapsed = Date.now() - new Date(delivery.pickedUpAt).getTime();
-    if (elapsed < 60_000) {
-      res.status(409).json({ error: "Trop tôt — attendez d'être arrivé chez le client." });
+    if (elapsed < ANTI_CHEAT_WINDOW_MS) {
+      const remaining = Math.ceil((ANTI_CHEAT_WINDOW_MS - elapsed) / 1000);
+      res.status(409).json({ error: `Trop tôt — patientez encore ${remaining}s avant de confirmer.` });
       return;
     }
   }
