@@ -178,7 +178,7 @@ export default function LivreurLivraisonDetail() {
   const { livreur } = useAuth();
   const LIVREUR_ID = livreur?.id ?? 0;
 
-  const BASE_PAY = 7;
+  const BASE_PAY = 6;
   const [pickupConfirmOpen, setPickupConfirmOpen] = useState(false);
   const [deliveryConfirmOpen, setDeliveryConfirmOpen] = useState(false);
   const [confirmCodeInput, setConfirmCodeInput] = useState("");
