@@ -775,29 +775,6 @@ export default function LivreurLivraisonDetail() {
                 <h3 className="text-xl font-bold mb-2" style={{ color: BROWN }}>{t("confirm_delivered")}</h3>
                 <p className="text-sm mb-5" style={{ color: BROWN_MID }}>{t("confirm_delivered_btn")}</p>
 
-                {!!delivery.confirmCode && (
-                  <div className="mb-5">
-                    <p className="text-xs font-bold text-left mb-2 uppercase tracking-wide" style={{ color: BROWN_LIGHT }}>
-                      Code de confirmation client
-                    </p>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      maxLength={6}
-                      value={confirmCodeInput}
-                      onChange={(e) => setConfirmCodeInput(e.target.value)}
-                      placeholder="· · · · · ·"
-                      className="w-full h-14 bg-white/5 border border-white/10 rounded-2xl text-center text-2xl font-black tracking-[0.5em] text-white focus:border-[#D4880C] focus:ring-0 transition-all"
-                    />
-                    {confirmCodeError && (
-                      <p className="text-xs mt-2 font-bold" style={{ color: TC }}>{confirmCodeError}</p>
-                    )}
-                    <p className="text-[10px] mt-3 italic" style={{ color: BROWN_LIGHT }}>
-                      Demandez ce code au client pour confirmer la livraison
-                    </p>
-                  </div>
-                )}
-
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={() => setDeliveryConfirmOpen(false)}
@@ -808,7 +785,7 @@ export default function LivreurLivraisonDetail() {
                   </button>
                   <button
                     onClick={handleDelivered}
-                    disabled={isPending || (!!delivery.confirmCode && !confirmCodeInput.trim())}
+                    disabled={isPending}
                     className="h-12 rounded-xl font-bold text-white disabled:opacity-60"
                     style={{ background: GREEN }}
                   >
