@@ -301,6 +301,23 @@ router.post("/deliveries/:id/confirm-delivered", async (req, res): Promise<void>
     }).catch(() => {});
   }
 
+  // ── Notifie Bridge-safi (client) que la livraison est terminée ────────────
+  // Sans ce callback, la page de suivi du client (Bridge Eats / Pharmacie /
+  // Boulangerie / etc.) ne voit jamais le statut "delivered" : elle continue
+  // d'afficher la carte GPS au lieu du message de félicitations.
+  if (delivery.trackingNumber) {
+    fetch("https://www.safi-bridge.ma/api/callbacks/order-status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        orderNumber: delivery.trackingNumber,
+        status: "delivered",
+      }),
+    })
+      .then((r) => req.log.info({ trackingNumber: delivery.trackingNumber, ok: r.ok }, "Bridge-safi notified of delivery completion"))
+      .catch((err) => req.log.warn({ err, trackingNumber: delivery.trackingNumber }, "Failed to notify Bridge-safi of delivery completion"));
+  }
+
   res.json(GetDeliveryResponse.parse(serializeDelivery(updated)));
 });
 
