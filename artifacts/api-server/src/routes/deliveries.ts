@@ -195,6 +195,9 @@ router.patch("/deliveries/:id", async (req, res): Promise<void> => {
     return;
   }
 
+  // Récupère l'ancien statut AVANT update pour savoir si on passe pending -> in_progress
+  const [before] = await db.select().from(deliveriesTable).where(eq(deliveriesTable.id, params.data.id));
+
   const extraFields: Record<string, unknown> = {};
   if (parsed.data.status === "in_progress") {
     extraFields.pickedUpAt = new Date();
@@ -210,6 +213,34 @@ router.patch("/deliveries/:id", async (req, res): Promise<void> => {
     return;
   }
   res.json(UpdateDeliveryResponse.parse(serializeDelivery(delivery)));
+
+  // ── Notifie Bridge-safi (client) que le livreur part vers le client ───────
+  // Root cause du bug "en chemin ne marche pas avec je pars vers le client" :
+  // l'app livreur appelle PATCH /deliveries/:id (route générique) via
+  // useUpdateDelivery, PAS la route dédiée /deliveries/:id/pickup — donc le
+  // callback fire-and-forget vers Bridge-safi (qui pousse driverName/photo/
+  // note + statut "on_the_way" au store de suivi client) ne se déclenchait
+  // JAMAIS. On rejoue exactement la même notif ici, dès que le statut passe
+  // de pending à in_progress.
+  if (before?.status === "pending" && delivery.status === "in_progress" && delivery.trackingNumber && delivery.delivererId) {
+    db.select().from(deliverersTable).where(eq(deliverersTable.id, delivery.delivererId))
+      .then(([deliverer]) => {
+        if (!deliverer) return;
+        return fetch(`https://www.safi-bridge.ma/api/tracking/${delivery.trackingNumber}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            status: "on_the_way",
+            driverName: deliverer.name,
+            driverPhone: deliverer.phone,
+            driverPhoto: deliverer.photoUrl ?? undefined,
+            driverRating: deliverer.rating,
+          }),
+        });
+      })
+      .then((r) => { if (r) req.log.info({ trackingNumber: delivery.trackingNumber, ok: r.ok }, "Bridge-safi notified of pickup via generic PATCH (driver info)"); })
+      .catch((err) => req.log.warn({ err, trackingNumber: delivery.trackingNumber }, "Failed to notify Bridge-safi of pickup via generic PATCH"));
+  }
 });
 
 export default router;
