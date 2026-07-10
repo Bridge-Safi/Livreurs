@@ -321,6 +321,9 @@ export const GetDeliveryResponse = zod.object({
     .optional(),
   confirmCode: zod.string().optional(),
   pickedUpAt: zod.string().optional(),
+  paymentMethod: zod.string().optional(),
+  amountToCollect: zod.number().optional(),
+  cashCollected: zod.boolean().optional(),
   createdAt: zod.string(),
   updatedAt: zod.string().optional(),
 });
