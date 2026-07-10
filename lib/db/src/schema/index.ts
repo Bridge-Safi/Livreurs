@@ -1,4 +1,5 @@
 export * from "./deliverers";
+export * from "./deliverer-reviews";
 export * from "./deliveries";
 export * from "./drivers";
 export * from "./trips";
