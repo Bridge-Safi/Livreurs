@@ -16,12 +16,15 @@ import LivreurLivraisons from "@/pages/livreur/livraisons";
 import LivreurLivraisonDetail from "@/pages/livreur/livraison";
 import LivreurProfil from "@/pages/livreur/profil";
 import LivreurReglages from "@/pages/livreur/reglages";
+import LivreurAide from "@/pages/livreur/aide";
 import ChauffeurLogin from "@/pages/chauffeur/login";
 import MotoLogin from "@/pages/moto/login";
 import ChauffeurDashboard from "@/pages/chauffeur/index";
 import ChauffeurTrajets from "@/pages/chauffeur/trajets";
 import ChauffeurTrajetDetail from "@/pages/chauffeur/trajet";
 import ChauffeurProfil from "@/pages/chauffeur/profil";
+import ChauffeurReglages from "@/pages/chauffeur/reglages";
+import ChauffeurAide from "@/pages/chauffeur/aide";
 import SuiviPage from "@/pages/suivi";
 import CommandePage from "@/pages/commande";
 import ForgotPassword from "@/pages/forgot-password";
@@ -64,6 +67,7 @@ function Router() {
       <Route path="/livreur/livraison/:id">{() => <LivreurGuard component={LivreurLivraisonDetail} />}</Route>
       <Route path="/livreur/profil">{() => <LivreurGuard component={LivreurProfil} />}</Route>
       <Route path="/livreur/reglages">{() => <LivreurGuard component={LivreurReglages} />}</Route>
+      <Route path="/livreur/aide">{() => <LivreurGuard component={LivreurAide} />}</Route>
 
       {/* Auth pages */}
       <Route path="/chauffeur/login" component={ChauffeurLogin} />
@@ -74,12 +78,16 @@ function Router() {
       <Route path="/chauffeur/trajets">{() => <ChauffeurGuard component={ChauffeurTrajets} />}</Route>
       <Route path="/chauffeur/trajet/:id">{() => <ChauffeurGuard component={ChauffeurTrajetDetail} />}</Route>
       <Route path="/chauffeur/profil">{() => <ChauffeurGuard component={ChauffeurProfil} />}</Route>
+      <Route path="/chauffeur/reglages">{() => <ChauffeurGuard component={ChauffeurReglages} />}</Route>
+      <Route path="/chauffeur/aide">{() => <ChauffeurGuard component={ChauffeurAide} />}</Route>
 
       {/* Moto Taxi Routes — moto drivers only */}
       <Route path="/moto">{() => <MotoGuard component={ChauffeurDashboard} />}</Route>
       <Route path="/moto/trajets">{() => <MotoGuard component={ChauffeurTrajets} />}</Route>
       <Route path="/moto/trajet/:id">{() => <MotoGuard component={ChauffeurTrajetDetail} />}</Route>
       <Route path="/moto/profil">{() => <MotoGuard component={ChauffeurProfil} />}</Route>
+      <Route path="/moto/reglages">{() => <MotoGuard component={ChauffeurReglages} />}</Route>
+      <Route path="/moto/aide">{() => <MotoGuard component={ChauffeurAide} />}</Route>
 
       {/* Password reset (public) */}
       <Route path="/forgot-password" component={ForgotPassword} />
