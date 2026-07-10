@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 import { db, deliverersTable, delivererReviewsTable } from "@workspace/db";
 import {
   CreateDelivererBody,
@@ -11,8 +11,30 @@ import {
   ListDeliverersResponse,
 } from "@workspace/api-zod";
 import { serializeDeliverer } from "../lib/serializers";
+import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
+
+// Colonnes documents/paiement/verrouillage ajoutees de facon idempotente
+// (pas d'acces console DB direct) - demande zabi 2026-07-10 "la page ou le
+// livreur peut poser et voir ses documents" (#90/#96). On etend directement
+// la table deliverers plutot que d'ajouter une table a part, car ce sont des
+// attributs 1-1 du livreur.
+async function ensureDelivererDocumentColumns() {
+  try {
+    await db.execute(sql`ALTER TABLE deliverers ADD COLUMN IF NOT EXISTS cin_photo_url TEXT`);
+    await db.execute(sql`ALTER TABLE deliverers ADD COLUMN IF NOT EXISTS cin_photo_back_url TEXT`);
+    await db.execute(sql`ALTER TABLE deliverers ADD COLUMN IF NOT EXISTS permis_photo_url TEXT`);
+    await db.execute(sql`ALTER TABLE deliverers ADD COLUMN IF NOT EXISTS carte_grise_photo_url TEXT`);
+    await db.execute(sql`ALTER TABLE deliverers ADD COLUMN IF NOT EXISTS rib TEXT`);
+    await db.execute(sql`ALTER TABLE deliverers ADD COLUMN IF NOT EXISTS payment_method TEXT NOT NULL DEFAULT 'cash'`);
+    await db.execute(sql`ALTER TABLE deliverers ADD COLUMN IF NOT EXISTS profile_locked BOOLEAN NOT NULL DEFAULT false`);
+    logger.info("deliverers document/payment columns verified");
+  } catch (err) {
+    logger.error({ err }, "Failed to ensure deliverer document columns");
+  }
+}
+ensureDelivererDocumentColumns();
 
 router.get("/deliverers", async (_req, res): Promise<void> => {
   res.set("Cache-Control", "no-store");
@@ -115,6 +137,92 @@ router.get("/deliverers/:id/reviews", async (req, res): Promise<void> => {
     ...r,
     createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : String(r.createdAt),
   })));
+});
+
+// ── Documents + moyen de paiement livreur (#90/#96) ──────────────────────
+// Champs hors schema genere (api-zod), donc routes "maison" en SQL brut,
+// meme logique que /reviews plus haut. Le nom + la photo de profil sont
+// verrouilles (plus modifiables) des qu'ils ont ete enregistres une premiere
+// fois avec succes ici - demande explicite zabi. Les documents et le RIB
+// restent modifiables ensuite (un livreur doit pouvoir mettre a jour un
+// document expire).
+router.get("/deliverers/:id/documents", async (req, res): Promise<void> => {
+  res.set("Cache-Control", "no-store");
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "id invalide" });
+    return;
+  }
+  const rows = await db.execute(sql`
+    SELECT name, phone, photo_url AS "photoUrl", vehicle_type AS "vehicleType",
+           cin_photo_url AS "cinPhotoUrl", cin_photo_back_url AS "cinPhotoBackUrl",
+           permis_photo_url AS "permisPhotoUrl", carte_grise_photo_url AS "carteGrisePhotoUrl",
+           rib, payment_method AS "paymentMethod", profile_locked AS "profileLocked"
+    FROM deliverers WHERE id = ${id} LIMIT 1
+  `);
+  const row = (rows as unknown as { rows: Record<string, unknown>[] }).rows?.[0];
+  if (!row) {
+    res.status(404).json({ error: "Livreur introuvable" });
+    return;
+  }
+  res.json(row);
+});
+
+router.put("/deliverers/:id/documents", async (req, res): Promise<void> => {
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "id invalide" });
+    return;
+  }
+  const body = req.body as {
+    name?: string; photoUrl?: string;
+    cinPhotoUrl?: string; cinPhotoBackUrl?: string;
+    permisPhotoUrl?: string; carteGrisePhotoUrl?: string;
+    rib?: string; paymentMethod?: "cash" | "rib";
+  };
+
+  const lockedRows = await db.execute(sql`SELECT profile_locked AS "profileLocked" FROM deliverers WHERE id = ${id} LIMIT 1`);
+  const lockedRow = (lockedRows as unknown as { rows: { profileLocked: boolean }[] }).rows?.[0];
+  if (!lockedRow) {
+    res.status(404).json({ error: "Livreur introuvable" });
+    return;
+  }
+  const wasLocked = !!lockedRow.profileLocked;
+
+  // Nom + photo : ignores silencieusement si deja verrouilles (au lieu de
+  // renvoyer une erreur qui casserait la sauvegarde des autres champs).
+  const nextName = !wasLocked && typeof body.name === "string" && body.name.trim() ? body.name.trim() : undefined;
+  const nextPhoto = !wasLocked && typeof body.photoUrl === "string" && body.photoUrl ? body.photoUrl : undefined;
+
+  await db.execute(sql`
+    UPDATE deliverers SET
+      name = COALESCE(${nextName ?? null}, name),
+      photo_url = COALESCE(${nextPhoto ?? null}, photo_url),
+      cin_photo_url = COALESCE(${body.cinPhotoUrl ?? null}, cin_photo_url),
+      cin_photo_back_url = COALESCE(${body.cinPhotoBackUrl ?? null}, cin_photo_back_url),
+      permis_photo_url = COALESCE(${body.permisPhotoUrl ?? null}, permis_photo_url),
+      carte_grise_photo_url = COALESCE(${body.carteGrisePhotoUrl ?? null}, carte_grise_photo_url),
+      rib = COALESCE(${body.rib ?? null}, rib),
+      payment_method = COALESCE(${body.paymentMethod ?? null}, payment_method)
+    WHERE id = ${id}
+  `);
+
+  // Verrouillage : des que nom + photo sont tous les deux renseignes (a
+  // l'instant T, apres cette sauvegarde), on verrouille pour la suite.
+  const afterRows = await db.execute(sql`SELECT name, photo_url AS "photoUrl", profile_locked AS "profileLocked" FROM deliverers WHERE id = ${id} LIMIT 1`);
+  const after = (afterRows as unknown as { rows: { name: string; photoUrl: string | null; profileLocked: boolean }[] }).rows?.[0];
+  if (after && !after.profileLocked && after.name && after.photoUrl) {
+    await db.execute(sql`UPDATE deliverers SET profile_locked = true WHERE id = ${id}`);
+  }
+
+  const finalRows = await db.execute(sql`
+    SELECT name, phone, photo_url AS "photoUrl", vehicle_type AS "vehicleType",
+           cin_photo_url AS "cinPhotoUrl", cin_photo_back_url AS "cinPhotoBackUrl",
+           permis_photo_url AS "permisPhotoUrl", carte_grise_photo_url AS "carteGrisePhotoUrl",
+           rib, payment_method AS "paymentMethod", profile_locked AS "profileLocked"
+    FROM deliverers WHERE id = ${id} LIMIT 1
+  `);
+  res.json((finalRows as unknown as { rows: Record<string, unknown>[] }).rows?.[0]);
 });
 
 export default router;
