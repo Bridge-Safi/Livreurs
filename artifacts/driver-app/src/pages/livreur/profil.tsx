@@ -7,10 +7,10 @@ import { PhotoUpload } from "@/components/PhotoUpload";
 import {
   Star, Bike, CheckCircle2, Trophy, TrendingUp,
   Package, Settings, LogOut, MapPin, Coins, Gift, CalendarDays, Banknote, History,
-  ChevronRight,
+  ChevronRight, MessageSquare,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n";
@@ -128,6 +128,19 @@ export default function LivreurProfil() {
     { delivererId: LIVREUR_ID },
     { query: { enabled: !!LIVREUR_ID, queryKey: getGetDeliveryStatsQueryKey({ delivererId: LIVREUR_ID }), refetchInterval: 8000 } }
   );
+
+  // Avis clients (note + commentaire) laissés après livraison — voir tracking.ts
+  // côté serveur (POST /tracking/:trackingNumber/review) pour la provenance.
+  const { data: reviews } = useQuery<{ id: number; stars: number; comment: string | null; orderRef: string | null; createdAt: string }[]>({
+    queryKey: ["deliverer-reviews", LIVREUR_ID],
+    queryFn: async () => {
+      const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+      const res = await fetch(`${BASE}/api/deliverers/${LIVREUR_ID}/reviews?limit=10`);
+      if (!res.ok) throw new Error("Failed to load reviews");
+      return res.json();
+    },
+    enabled: !!LIVREUR_ID,
+  });
 
   const updateDeliverer = useUpdateDeliverer();
 
@@ -333,6 +346,33 @@ export default function LivreurProfil() {
                   <div className="text-2xl font-bold" style={{ color: "#10B981" }}>98%</div>
                   <div className="text-xs mt-1" style={{ color: BROWN_MID }}>{t("success_rate")}</div>
                 </div>
+              </div>
+
+              {/* ── Avis clients (note + commentaire) ── */}
+              <div className="rounded-2xl border p-4" style={GLASS_STYLE}>
+                <div className="flex items-center gap-2 mb-3">
+                  <MessageSquare className="h-4 w-4" style={{ color: GOLD }} />
+                  <p className="text-sm font-bold" style={{ color: BROWN }}>Avis clients</p>
+                </div>
+                {!reviews || reviews.length === 0 ? (
+                  <p className="text-xs" style={{ color: BROWN_LIGHT }}>Aucun avis pour le moment.</p>
+                ) : (
+                  <div className="flex flex-col gap-3">
+                    {reviews.map((r) => (
+                      <div key={r.id} className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${BORDER}` }}>
+                        <div className="flex items-center justify-between mb-1">
+                          <StarRating value={r.stars} />
+                          <span className="text-[10px]" style={{ color: BROWN_LIGHT }}>
+                            {new Date(r.createdAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}
+                          </span>
+                        </div>
+                        {r.comment && (
+                          <p className="text-xs" style={{ color: BROWN_MID }}>{r.comment}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* ── Bonus card ── */}
