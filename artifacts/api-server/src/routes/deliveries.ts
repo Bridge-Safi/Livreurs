@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and } from "drizzle-orm";
+import { eq, and, or, count } from "drizzle-orm";
 import { db, deliveriesTable, deliverersTable } from "@workspace/db";
 import {
   CreateDeliveryBody,
@@ -212,6 +212,36 @@ router.patch("/deliveries/:id", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Delivery not found" });
     return;
   }
+
+  // Si la livraison vient de passer a "delivered" ou "cancelled", on remet
+  // le livreur "available" (sauf s'il a encore une autre livraison pending/
+  // in_progress). Bug trouve 2026-07-10 (signalement zabi : "le livreur ne
+  // peut plus passer hors-ligne") : ce reset n'existait QUE dans la route
+  // dediee /dispatch confirm-delivered, jamais ici -- alors que l'app
+  // livreur appelle en realite CETTE route generique (voir commentaire plus
+  // bas sur le meme bug pour le statut "on_the_way"). Le livreur restait
+  // donc bloque "busy" pour toujours des qu'il terminait une commande.
+  if (
+    (delivery.status === "delivered" || delivery.status === "cancelled") &&
+    before?.status !== delivery.status &&
+    delivery.delivererId
+  ) {
+    const [{ remainingCount }] = await db
+      .select({ remainingCount: count() })
+      .from(deliveriesTable)
+      .where(and(
+        eq(deliveriesTable.delivererId, delivery.delivererId),
+        or(
+          eq(deliveriesTable.status, "pending"),
+          eq(deliveriesTable.status, "in_progress")
+        )
+      ));
+    await db
+      .update(deliverersTable)
+      .set({ status: remainingCount > 0 ? "busy" : "available" })
+      .where(eq(deliverersTable.id, delivery.delivererId));
+  }
+
   res.json(UpdateDeliveryResponse.parse(serializeDelivery(delivery)));
 
   // ── Notifie Bridge-safi (client) que le livreur part vers le client ───────

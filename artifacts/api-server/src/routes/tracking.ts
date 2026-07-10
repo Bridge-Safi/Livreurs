@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and, or, count } from "drizzle-orm";
 import { db, deliveriesTable, deliverersTable, delivererReviewsTable } from "@workspace/db";
 import { sendPushToDeliverer } from "./push";
 import { logger } from "../lib/logger";
@@ -22,6 +22,40 @@ async function ensureDelivererReviewsTable() {
   }
 }
 ensureDelivererReviewsTable();
+
+// Reparation ponctuelle au demarrage (2026-07-10) : a cause d'un bug ou le
+// reset "busy" -> "available" ne se faisait jamais apres une livraison
+// terminee/annulee (voir PATCH generique deliveries.ts + cancel ci-dessous),
+// des livreurs sont restes bloques "busy" indefiniment -> bouton en/hors-
+// ligne mort ("le livreur ne peut plus passer hors ligne"). On debloque ici
+// une fois tous les livreurs "busy" sans aucune commande active reelle.
+async function repairStuckBusyDeliverers() {
+  try {
+    const stuck = await db
+      .select({ id: deliverersTable.id })
+      .from(deliverersTable)
+      .where(eq(deliverersTable.status, "busy"));
+    for (const d of stuck) {
+      const [{ activeCount }] = await db
+        .select({ activeCount: count() })
+        .from(deliveriesTable)
+        .where(and(
+          eq(deliveriesTable.delivererId, d.id),
+          or(
+            eq(deliveriesTable.status, "pending"),
+            eq(deliveriesTable.status, "in_progress")
+          )
+        ));
+      if (activeCount === 0) {
+        await db.update(deliverersTable).set({ status: "available" }).where(eq(deliverersTable.id, d.id));
+        logger.info({ delivererId: d.id }, "Deliverer debloque de busy -> available (reparation demarrage)");
+      }
+    }
+  } catch (err) {
+    logger.error({ err }, "Failed to repair stuck busy deliverers");
+  }
+}
+repairStuckBusyDeliverers();
 
 const router: IRouter = Router();
 
@@ -116,6 +150,26 @@ router.post("/tracking/:trackingNumber/cancel", async (req, res): Promise<void> 
     .update(deliveriesTable)
     .set({ status: "cancelled", updatedAt: new Date() })
     .where(eq(deliveriesTable.id, delivery.id));
+
+  // Meme bug/fix que dans deliveries.ts PATCH generique : si le livreur
+  // assigne n'a plus d'autre commande active, on le remet "available"
+  // sinon il reste bloque "busy" (bouton en/hors-ligne mort). 2026-07-10.
+  if (delivery.delivererId) {
+    const [{ remainingCount }] = await db
+      .select({ remainingCount: count() })
+      .from(deliveriesTable)
+      .where(and(
+        eq(deliveriesTable.delivererId, delivery.delivererId),
+        or(
+          eq(deliveriesTable.status, "pending"),
+          eq(deliveriesTable.status, "in_progress")
+        )
+      ));
+    await db
+      .update(deliverersTable)
+      .set({ status: remainingCount > 0 ? "busy" : "available" })
+      .where(eq(deliverersTable.id, delivery.delivererId));
+  }
 
   res.json({ ok: true });
 
