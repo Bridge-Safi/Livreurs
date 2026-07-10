@@ -7,7 +7,7 @@ import { PhotoUpload } from "@/components/PhotoUpload";
 import {
   Star, Bike, CheckCircle2, Trophy, TrendingUp,
   Package, Settings, LogOut, MapPin, Coins, Gift, CalendarDays, Banknote, History,
-  ChevronRight, MessageSquare,
+  ChevronRight, MessageSquare, FileText, Lock,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
@@ -489,6 +489,25 @@ export default function LivreurProfil() {
                   ))}
                 </div>
               </div>
+
+              {/* ── Documents & réglages (#90/#96, demande zabi 2026-07-10) ── */}
+              <button
+                onClick={() => navigate("/livreur/reglages")}
+                className="w-full rounded-2xl border p-4 flex items-center gap-3 text-left"
+                style={GLASS_STYLE}
+              >
+                <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "rgba(232,92,48,0.12)" }}>
+                  <FileText className="h-5 w-5" style={{ color: TC }} />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-bold flex items-center gap-1.5" style={{ color: BROWN }}>
+                    Documents & réglages
+                    {(profile as any).profileLocked && <Lock className="h-3 w-3" style={{ color: BROWN_LIGHT }} />}
+                  </p>
+                  <p className="text-xs" style={{ color: BROWN_LIGHT }}>CIN, permis, carte grise, moyen de paiement</p>
+                </div>
+                <ChevronRight className="h-5 w-5" style={{ color: BROWN_LIGHT }} />
+              </button>
 
               {/* ── Help ── */}
               <div
