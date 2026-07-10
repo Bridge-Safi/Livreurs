@@ -17,6 +17,7 @@ import LivreurLivraisonDetail from "@/pages/livreur/livraison";
 import LivreurProfil from "@/pages/livreur/profil";
 import LivreurReglages from "@/pages/livreur/reglages";
 import LivreurAide from "@/pages/livreur/aide";
+import LivreurAvis from "@/pages/livreur/avis";
 import ChauffeurLogin from "@/pages/chauffeur/login";
 import MotoLogin from "@/pages/moto/login";
 import ChauffeurDashboard from "@/pages/chauffeur/index";
@@ -68,6 +69,7 @@ function Router() {
       <Route path="/livreur/profil">{() => <LivreurGuard component={LivreurProfil} />}</Route>
       <Route path="/livreur/reglages">{() => <LivreurGuard component={LivreurReglages} />}</Route>
       <Route path="/livreur/aide">{() => <LivreurGuard component={LivreurAide} />}</Route>
+      <Route path="/livreur/avis">{() => <LivreurGuard component={LivreurAvis} />}</Route>
 
       {/* Auth pages */}
       <Route path="/chauffeur/login" component={ChauffeurLogin} />
