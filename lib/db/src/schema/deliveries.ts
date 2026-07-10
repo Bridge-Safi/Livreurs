@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer, real } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, real, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -21,6 +21,11 @@ export const deliveriesTable = pgTable("deliveries", {
   pickupLng: real("pickup_lng"),
   serviceType: text("service_type").default("eats"), // eats | tabac | pharmacie | fleurs | autre | click_collect
   confirmCode: text("confirm_code"),
+  // Paiement — permet au livreur de savoir s'il doit encaisser du cash à la
+  // livraison, combien, et de confirmer qu'il l'a bien fait.
+  paymentMethod: text("payment_method"), // cash | card | online | qr
+  amountToCollect: real("amount_to_collect"),
+  cashCollected: boolean("cash_collected").notNull().default(false),
   pickedUpAt: timestamp("picked_up_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
