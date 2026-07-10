@@ -14,6 +14,7 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useI18n } from "@/lib/i18n";
+import { useTheme } from "@/lib/theme";
 import { useAuth } from "@/lib/auth";
 import { useLocation } from "wouter";
 
@@ -38,7 +39,7 @@ type Status = "available" | "busy" | "offline";
 const STATUS_CONFIG: Record<Status, { label: string; color: string; bg: string; dot: string }> = {
   available: { label: "", color: "#2AE86C",   bg: "rgba(42,232,108,0.15)", dot: "#2AE86C" },
   busy:      { label: "", color: GOLD,    bg: "rgba(212,136,12,0.15)", dot: GOLD },
-  offline:   { label: "", color: BROWN_LIGHT, bg: "rgba(255,255,255,0.05)", dot: BROWN_LIGHT },
+  offline:   { label: "", color: "#9CA3AF", bg: "rgba(156,163,175,0.15)", dot: "#9CA3AF" },
 };
 
 const BONUS_THRESHOLD = 400;
@@ -117,6 +118,17 @@ export default function LivreurProfil() {
   const [, navigate] = useLocation();
   const LIVREUR_ID = livreur?.id ?? 0;
 
+  // Les constantes BROWN/BROWN_MID/BROWN_LIGHT/BORDER/GLASS_STYLE plus haut
+  // sont pensees pour un fond toujours sombre (texte quasi-blanc). En mode
+  // clair, ce texte devient invisible sur le fond clair — on les remplace
+  // ici par les couleurs reelles du theme actif du livreur.
+  const { colors, isDark } = useTheme();
+  const BROWN = colors.text;
+  const BROWN_MID = colors.textMid;
+  const BROWN_LIGHT = colors.textLight;
+  const BORDER = colors.border;
+  const GLASS_STYLE = { background: colors.bgCard, border: `1px solid ${colors.border}`, boxShadow: isDark ? "0 8px 32px rgba(0,0,0,0.4)" : "0 4px 16px rgba(0,0,0,0.08)" };
+
   const [isEditing, setIsEditing] = useState(false);
   const [editStatus, setEditStatus] = useState<Status>("available");
 
@@ -135,7 +147,7 @@ export default function LivreurProfil() {
     queryKey: ["deliverer-reviews", LIVREUR_ID],
     queryFn: async () => {
       const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
-      const res = await fetch(`${BASE}/api/deliverers/${LIVREUR_ID}/reviews?limit=10`);
+      const res = await fetch(`${BASE}/api/deliverers/${LIVREUR_ID}/reviews?limit=30`);
       if (!res.ok) throw new Error("Failed to load reviews");
       return res.json();
     },
@@ -270,7 +282,7 @@ export default function LivreurProfil() {
 
                   {/* Rating */}
                   <div className="mt-3 mb-4">
-                    <StarRating value={profile.rating} />
+                    <StarRating value={profile.rating} textColor={BROWN} lightColor={BROWN_LIGHT} borderColor={BORDER} />
                   </div>
 
                   {/* Status */}
@@ -359,9 +371,9 @@ export default function LivreurProfil() {
                 ) : (
                   <div className="flex flex-col gap-3">
                     {reviews.map((r) => (
-                      <div key={r.id} className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.05)", border: `1px solid ${BORDER}` }}>
+                      <div key={r.id} className="rounded-xl p-3" style={{ background: colors.bgCardHover, border: `1px solid ${BORDER}` }}>
                         <div className="flex items-center justify-between mb-1">
-                          <StarRating value={r.stars} />
+                          <StarRating value={r.stars} textColor={BROWN} lightColor={BROWN_LIGHT} borderColor={BORDER} />
                           <span className="text-[10px]" style={{ color: BROWN_LIGHT }}>
                             {new Date(r.createdAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}
                           </span>
@@ -382,7 +394,7 @@ export default function LivreurProfil() {
                   ...GLASS_STYLE,
                   background: profile.totalDeliveries >= BONUS_THRESHOLD
                     ? "linear-gradient(135deg, #2A7A48 0%, #1a5c35 100%)"
-                    : "rgba(255,255,255,0.08)",
+                    : colors.bgCardHover,
                   borderColor: profile.totalDeliveries >= BONUS_THRESHOLD ? "#2A7A48" : BORDER,
                 }}
               >
