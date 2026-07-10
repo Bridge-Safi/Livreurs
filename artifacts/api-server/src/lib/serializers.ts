@@ -27,6 +27,9 @@ export function serializeDelivery(d: Delivery) {
     estimatedDeliveryTime: d.estimatedDeliveryTime ?? undefined,
     confirmCode: d.confirmCode ?? undefined,
     pickedUpAt: d.pickedUpAt ? d.pickedUpAt.toISOString() : undefined,
+    paymentMethod: d.paymentMethod ?? undefined,
+    amountToCollect: d.amountToCollect ?? undefined,
+    cashCollected: d.cashCollected ?? undefined,
     createdAt: requiredDate(d.createdAt),
     updatedAt: serializeDate(d.updatedAt),
   };
