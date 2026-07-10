@@ -118,23 +118,12 @@ export default function LivreurDashboard() {
             </div>
           </div>
 
-          {/* Status dot */}
-          {profile && (
-            <div className="relative z-10 flex items-center gap-2 mt-3">
-              <span
-                className="w-2 h-2 rounded-full"
-                style={{ background: profile.status === "available" ? "#4ADE80" : profile.status === "busy" ? GOLD : "#94A3B8" }}
-              />
-              <span className="text-white/70 text-xs">
-                {profile.status === "available" ? t("status_available") : profile.status === "busy" ? t("status_busy") : t("status_offline")}
-              </span>
-              {profile.zone && (
-                <>
-                  <span className="text-white/30">·</span>
-                  <MapPin className="h-3 w-3 text-white/50" />
-                  <span className="text-white/70 text-xs">{profile.zone}</span>
-                </>
-              )}
+          {/* Zone — le statut (disponible/occupé/hors-ligne) est déjà affiché
+              par le bouton en haut de l'écran, pas besoin de le dupliquer ici */}
+          {profile?.zone && (
+            <div className="relative z-10 flex items-center gap-1.5 mt-3">
+              <MapPin className="h-3 w-3 text-white/50" />
+              <span className="text-white/70 text-xs">{profile.zone}</span>
             </div>
           )}
         </div>
