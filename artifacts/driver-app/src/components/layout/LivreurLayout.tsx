@@ -105,17 +105,33 @@ export function LivreurLayout({ children }: { children: ReactNode }) {
           <button
             onClick={toggleAvailability}
             disabled={updateDeliverer.isPending || livreurStatus === "busy"}
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all text-sm font-bold border disabled:opacity-60"
+            title={
+              livreurStatus === "busy"
+                ? "Terminez votre livraison en cours pour vous déconnecter"
+                : isOnline
+                ? "Appuyer pour passer hors-ligne"
+                : "Appuyer pour passer en ligne"
+            }
+            className="w-full flex flex-col items-start gap-0.5 px-4 py-2.5 rounded-xl transition-all border disabled:opacity-60"
             style={
               isOnline
                 ? { background: "rgba(42,122,72,0.2)", color: "#2AE86C", border: "1px solid rgba(42,122,72,0.5)", boxShadow: "0 0 12px rgba(42,234,108,0.25)" }
                 : { background: colors.bgCard, color: colors.textLight, borderColor: colors.border }
             }
           >
-            {isOnline
-              ? <><Wifi className="h-4 w-4" /><span>{livreurStatus === "busy" ? "En livraison" : "En ligne"}</span></>
-              : <><WifiOff className="h-4 w-4" /><span>Hors-ligne — Appuyer pour activer</span></>
-            }
+            <span className="flex items-center gap-3 text-sm font-bold">
+              {isOnline
+                ? <><Wifi className="h-4 w-4" /><span>{livreurStatus === "busy" ? "En livraison" : "En ligne"}</span></>
+                : <><WifiOff className="h-4 w-4" /><span>Hors-ligne</span></>
+              }
+            </span>
+            <span className="text-[10px] font-normal opacity-75 ps-7">
+              {livreurStatus === "busy"
+                ? "Terminez la livraison pour vous déconnecter"
+                : isOnline
+                ? "Appuyer pour passer hors-ligne"
+                : "Appuyer pour activer"}
+            </span>
           </button>
 
           <div>
@@ -173,7 +189,14 @@ export function LivreurLayout({ children }: { children: ReactNode }) {
             <button
               onClick={toggleAvailability}
               disabled={updateDeliverer.isPending || livreurStatus === "busy"}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-bold border transition-all disabled:opacity-60"
+              title={
+                livreurStatus === "busy"
+                  ? "Terminez votre livraison en cours pour vous déconnecter"
+                  : isOnline
+                  ? "Appuyer pour passer hors-ligne"
+                  : "Appuyer pour passer en ligne"
+              }
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-bold border transition-all disabled:opacity-60 active:scale-95"
               style={
                 isOnline
                   ? { background: "rgba(42,122,72,0.2)", color: "#2AE86C", border: "1px solid rgba(42,122,72,0.5)", boxShadow: "0 0 12px rgba(42,234,108,0.25)" }
