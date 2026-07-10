@@ -212,6 +212,22 @@ export default function LivreurLivraisonDetail() {
   const confirmDelivered = useConfirmDelivered();
   const isPending = updateDelivery.isPending || confirmDelivered.isPending;
 
+  // Pouvoir livreur : marquer le cash comme encaissé chez le client (commande
+  // payée à la livraison). Pointage comptable, indépendant de la livraison.
+  const [markingCash, setMarkingCash] = useState(false);
+  const handleMarkCashCollected = async () => {
+    if (!delivery) return;
+    setMarkingCash(true);
+    try {
+      const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+      const res = await fetch(`${BASE}/api/deliveries/${delivery.id}/cash-collected`, { method: "PATCH" });
+      if (res.ok) {
+        queryClient.invalidateQueries({ queryKey: getGetDeliveryQueryKey(id) });
+      }
+    } catch {}
+    setMarkingCash(false);
+  };
+
   const handlePickupConfirm = () => {
     updateDelivery.mutate({ id, data: { status: "in_progress" } }, {
       onSuccess: () => {
@@ -421,6 +437,37 @@ export default function LivreurLivraisonDetail() {
                 <p className="text-sm font-bold" style={{ color: BROWN }}>{t("delivering_heading")}</p>
                 <p className="text-xs mt-0.5" style={{ color: BROWN_MID }}>{delivery.deliveryAddress}</p>
               </div>
+            </div>
+          )}
+
+          {/* ── Paiement à encaisser (cash à la livraison) ── */}
+          {delivery.paymentMethod === "cash" && typeof delivery.amountToCollect === "number" && delivery.amountToCollect > 0 && delivery.status !== "cancelled" && (
+            <div
+              className="rounded-2xl border p-4 flex items-center gap-3"
+              style={{
+                background: delivery.cashCollected ? "rgba(42,122,72,0.12)" : "rgba(212,136,12,0.12)",
+                borderColor: delivery.cashCollected ? "rgba(42,122,72,0.35)" : "rgba(212,136,12,0.35)",
+              }}
+            >
+              <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: delivery.cashCollected ? "rgba(42,122,72,0.2)" : "rgba(212,136,12,0.2)" }}>
+                <Coins className="h-5 w-5" style={{ color: delivery.cashCollected ? "#2A7A48" : GOLD }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold" style={{ color: BROWN }}>
+                  {delivery.cashCollected ? "Cash encaissé ✅" : "Cash à encaisser à la livraison"}
+                </p>
+                <p className="text-xs mt-0.5" style={{ color: BROWN_MID }}>{delivery.amountToCollect} DH</p>
+              </div>
+              {!delivery.cashCollected && (
+                <button
+                  onClick={handleMarkCashCollected}
+                  disabled={markingCash}
+                  className="px-3 py-2 rounded-xl text-xs font-bold flex-shrink-0"
+                  style={{ background: GOLD, color: "#fff", border: "none", cursor: markingCash ? "not-allowed" : "pointer", opacity: markingCash ? 0.6 : 1 }}
+                >
+                  {markingCash ? "…" : "J'ai encaissé"}
+                </button>
+              )}
             </div>
           )}
 
