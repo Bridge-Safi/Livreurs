@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
-import { db, deliverersTable } from "@workspace/db";
+import { eq, desc } from "drizzle-orm";
+import { db, deliverersTable, delivererReviewsTable } from "@workspace/db";
 import {
   CreateDelivererBody,
   UpdateDelivererBody,
@@ -90,6 +90,31 @@ router.patch("/deliverers/:id/location", async (req, res): Promise<void> => {
     return;
   }
   res.json({ ok: true });
+});
+
+// Liste des avis (note + commentaire) laissés par les clients pour ce
+// livreur — affiché sur sa page Profil. Ordre du plus récent au plus ancien.
+router.get("/deliverers/:id/reviews", async (req, res): Promise<void> => {
+  res.set("Cache-Control", "no-store");
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "id invalide" });
+    return;
+  }
+  const limitRaw = parseInt(req.query.limit as string, 10);
+  const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(limitRaw, 1), 100) : 20;
+
+  const rows = await db
+    .select()
+    .from(delivererReviewsTable)
+    .where(eq(delivererReviewsTable.delivererId, id))
+    .orderBy(desc(delivererReviewsTable.createdAt))
+    .limit(limit);
+
+  res.json(rows.map((r) => ({
+    ...r,
+    createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : String(r.createdAt),
+  })));
 });
 
 export default router;
