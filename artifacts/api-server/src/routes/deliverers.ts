@@ -175,7 +175,7 @@ router.put("/deliverers/:id/documents", async (req, res): Promise<void> => {
     return;
   }
   const body = req.body as {
-    name?: string; photoUrl?: string;
+    name?: string; photoUrl?: string; phone?: string;
     cinPhotoUrl?: string; cinPhotoBackUrl?: string;
     permisPhotoUrl?: string; carteGrisePhotoUrl?: string;
     rib?: string; paymentMethod?: "cash" | "rib";
@@ -194,10 +194,13 @@ router.put("/deliverers/:id/documents", async (req, res): Promise<void> => {
   const nextName = !wasLocked && typeof body.name === "string" && body.name.trim() ? body.name.trim() : undefined;
   const nextPhoto = !wasLocked && typeof body.photoUrl === "string" && body.photoUrl ? body.photoUrl : undefined;
 
+  const nextPhone = typeof body.phone === "string" && body.phone.trim() ? body.phone.trim() : undefined;
+
   await db.execute(sql`
     UPDATE deliverers SET
       name = COALESCE(${nextName ?? null}, name),
       photo_url = COALESCE(${nextPhoto ?? null}, photo_url),
+      phone = COALESCE(${nextPhone ?? null}, phone),
       cin_photo_url = COALESCE(${body.cinPhotoUrl ?? null}, cin_photo_url),
       cin_photo_back_url = COALESCE(${body.cinPhotoBackUrl ?? null}, cin_photo_back_url),
       permis_photo_url = COALESCE(${body.permisPhotoUrl ?? null}, permis_photo_url),
