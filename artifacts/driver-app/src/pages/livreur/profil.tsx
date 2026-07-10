@@ -129,8 +129,6 @@ export default function LivreurProfil() {
   const BORDER = colors.border;
   const GLASS_STYLE = { background: colors.bgCard, border: `1px solid ${colors.border}`, boxShadow: isDark ? "0 8px 32px rgba(0,0,0,0.4)" : "0 4px 16px rgba(0,0,0,0.08)" };
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [editStatus, setEditStatus] = useState<Status>("available");
 
   const { data: profile, isLoading, isError } = useGetDeliverer(LIVREUR_ID, {
     query: { enabled: !!LIVREUR_ID, queryKey: getGetDelivererQueryKey(LIVREUR_ID) },
@@ -156,10 +154,6 @@ export default function LivreurProfil() {
 
   const updateDeliverer = useUpdateDeliverer();
 
-  useEffect(() => {
-    if (profile) setEditStatus(profile.status as Status);
-  }, [profile]);
-
   // Session périmée : profil introuvable → déconnexion automatique
   useEffect(() => {
     if (!isLoading && (isError || (!profile && LIVREUR_ID > 0))) {
@@ -168,22 +162,10 @@ export default function LivreurProfil() {
     }
   }, [isLoading, isError, profile, LIVREUR_ID, logoutLivreur, navigate]);
 
-  const handleSave = () => {
-    updateDeliverer.mutate({ id: LIVREUR_ID, data: { status: editStatus } }, {
-      onSuccess: () => {
-        setIsEditing(false);
-        queryClient.invalidateQueries({ queryKey: getGetDelivererQueryKey(LIVREUR_ID) });
-        toast({ title: t("profile_updated_title"), description: t("profile_updated_desc") });
-      },
-    });
-  };
-
   const handleLogout = () => {
     logoutLivreur();
     navigate("/");
   };
-
-  const statusCfg = (s: string) => STATUS_CONFIG[s as Status] ?? STATUS_CONFIG.offline;
 
   return (
     <LivreurLayout>
@@ -212,14 +194,6 @@ export default function LivreurProfil() {
                   <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.10, backgroundImage:`url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 0l2 18 18 2-18 2-2 18-2-18-18-2 18-2z' fill='%23ffffff' fill-rule='evenodd'/%3E%3C/svg%3E")`, backgroundSize:"40px 40px" }} />
                   {/* Settings & Logout */}
                   <div className="absolute top-3 right-3 flex gap-2">
-                    <button
-                      onClick={() => isEditing ? handleSave() : setIsEditing(true)}
-                      disabled={updateDeliverer.isPending}
-                      className="w-8 h-8 rounded-full flex items-center justify-center"
-                      style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(4px)" }}
-                    >
-                      <Settings className="h-4 w-4 text-white" />
-                    </button>
                     <button
                       onClick={handleLogout}
                       className="w-8 h-8 rounded-full flex items-center justify-center"
@@ -285,60 +259,14 @@ export default function LivreurProfil() {
                     <StarRating value={profile.rating} textColor={BROWN} lightColor={BROWN_LIGHT} borderColor={BORDER} />
                   </div>
 
-                  {/* Status */}
-                  {isEditing ? (
-                    <div className="mb-3">
-                      <p className="text-xs font-semibold mb-2" style={{ color: BROWN_LIGHT }}>{t("settings")}</p>
-                      <div className="flex gap-2 flex-wrap">
-                        {(["available", "busy", "offline"] as Status[]).map(s => {
-                          const cfg = STATUS_CONFIG[s];
-                          cfg.label = s === "available" ? t("status_available") : s === "busy" ? t("status_busy") : t("status_offline");
-                          const active = editStatus === s;
-                          return (
-                            <button
-                              key={s}
-                              onClick={() => setEditStatus(s)}
-                              className="px-3 py-1.5 rounded-xl text-sm font-semibold border transition-all"
-                              style={{
-                                background: active ? cfg.bg : "rgba(255,255,255,0.05)",
-                                color: active ? cfg.color : BROWN_LIGHT,
-                                borderColor: active ? cfg.color : BORDER,
-                              }}
-                            >
-                              <span
-                                className="inline-block w-2 h-2 rounded-full mr-1.5"
-                                style={{ background: cfg.dot }}
-                              />
-                              {cfg.label}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      <button
-                        onClick={handleSave}
-                        disabled={updateDeliverer.isPending}
-                        className="mt-3 w-full py-2 rounded-xl font-bold text-sm text-[#1A0A06] disabled:opacity-60"
-                        style={{ background: GOLD_GRADIENT }}
-                      >
-                        {updateDeliverer.isPending ? "…" : t("save")}
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="inline-block w-2.5 h-2.5 rounded-full"
-                        style={{ background: statusCfg(profile.status).dot }}
-                      />
-                      <span className="text-sm font-medium" style={{ color: statusCfg(profile.status).color }}>
-                        {profile.status === "available" ? t("status_available") : profile.status === "busy" ? t("status_busy") : t("status_offline")}
-                      </span>
-                      {profile.zone && (
-                        <>
-                          <span style={{ color: BORDER }}>·</span>
-                          <MapPin className="h-3.5 w-3.5" style={{ color: BROWN_LIGHT }} />
-                          <span className="text-sm" style={{ color: BROWN_LIGHT }}>{profile.zone}</span>
-                        </>
-                      )}
+                  {/* Zone — le statut disponible/occupe/hors-ligne est deja affiche par
+                      le bouton en haut de LivreurLayout, pas besoin de le dupliquer ici
+                      (et le selecteur manuel ici pouvait entrer en conflit avec le "busy"
+                      auto pendant une livraison). Demande zabi 2026-07-10. */}
+                  {profile.zone && (
+                    <div className="flex items-center gap-1.5">
+                      <MapPin className="h-3.5 w-3.5" style={{ color: BROWN_LIGHT }} />
+                      <span className="text-sm" style={{ color: BROWN_LIGHT }}>{profile.zone}</span>
                     </div>
                   )}
                 </div>
