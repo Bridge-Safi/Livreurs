@@ -48,6 +48,12 @@ interface ParsedOrder {
 function parseOrderNotes(notes: string | null): ParsedOrder {
   if (!notes) return { items: [], total: null, extra: null, mapsUrl: null, paymentMethod: null, rawText: null };
 
+  // Certains flux (ex: checkout Boulangerie/Supermarché) envoient parfois des
+  // retours a la ligne echappes litteralement (le texte "\n" a 2 caracteres)
+  // au lieu d'un vrai saut de ligne -> ca s'affichait tel quel cote livreur
+  // ("...DH\nLivraison..."). On normalise d'abord. Fix zabi 2026-07-10.
+  notes = notes.replace(/\\r\\n|\\n|\\r/g, "\n");
+
   // Extract Maps URL first (| Maps: URL)
   let mapsUrl: string | null = null;
   let cleaned = notes;
@@ -80,21 +86,30 @@ function parseOrderNotes(notes: string | null): ParsedOrder {
       extra = part.trim();
     }
   }
+  // Si le format "Commande: / Total:" n'a pas matché, "extra" contient tout
+  // le texte brut -> on le vide ici pour eviter un doublon avec les items
+  // extraits juste apres par le parseur emoji/recap (2 encarts identiques).
+  if (!hasStructured) extra = null;
 
   // Try emoji/free format: "🛒 X 💰 Total client: 33.5 MAD 💳 Espèces..."
+  // + format recap (Boulangerie/Supermarché etc): "Sous-total: X DH\nLivraison:
+  // Y DH\nService: Z DH\nTotal: W DH\n QR Code\n 👤 nom — tel"
   if (!hasStructured) {
-    // Extract total: "Total client: X MAD" or "Total: X MAD"
-    const totalMatch = cleaned.match(/Total\s+(?:client\s*:?\s*)?([\d.,]+\s*MAD)/i);
-    if (totalMatch) total = totalMatch[1];
+    // Extract total: "Total client: X MAD/DH" ou "Total: X MAD/DH"
+    const totalMatch = cleaned.match(/Total\s*:?\s*(?:client\s*:?\s*)?([\d.,]+\s*(?:MAD|DH))/i);
+    if (totalMatch) total = totalMatch[1].toUpperCase();
 
     // Remove known meta phrases to get clean item text
     let itemText = cleaned
-      .replace(/Total\s+(?:client\s*:?\s*)?[\d.,]+\s*MAD/gi, "")
+      .replace(/(?:Sous-total|Livraison|Service|Total)\s*:?\s*(?:client\s*:?\s*)?[\d.,]+\s*(?:MAD|DH)/gi, "")
+      .replace(/QR Code/gi, "")
+      .replace(/👤[^\n]*/g, "")
+      .replace(/^\s*—\s*$/gm, "")
       .replace(/💰|💳|🛒|🛵|📦|🍔|🥤|🍕/g, " ")
       .replace(/Espèces\s+à\s+la\s+livraison/gi, "")
       .replace(/Carte\s+(?:bancaire)?/gi, "")
       .replace(/\|\s*Maps:[^\|]*/gi, "")
-      .replace(/\s{2,}/g, " ")
+      .replace(/[ \t]{2,}/g, " ")
       .trim();
 
     // Split by comma or newline for items
@@ -548,7 +563,10 @@ export default function LivreurLivraisonDetail() {
                     ))}
                   </div>
                 ) : order.rawText ? (
-                  <p className="text-sm px-1" style={{ color: BROWN }}>{order.rawText}</p>
+                  <p
+                    className="text-sm px-3 py-2.5 rounded-xl"
+                    style={{ color: BROWN, whiteSpace: "pre-line", background: "rgba(255,255,255,0.06)", border: `1px solid ${BORDER}` }}
+                  >{order.rawText}</p>
                 ) : null}
 
                 {/* Payment method badge */}
