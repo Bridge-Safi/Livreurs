@@ -1,6 +1,6 @@
 import { ChauffeurLayout } from "@/components/layout/ChauffeurLayout";
 import { useGetDriver, getGetDriverQueryKey, useUpdateDriver } from "@workspace/api-client-react";
-import { Car, Star, Navigation, Settings, CheckCircle2, LogOut, MapPin, ChevronRight, Coins } from "lucide-react";
+import { Car, Star, Navigation, Settings, CheckCircle2, LogOut, MapPin, ChevronRight, Coins, FileText, Lock } from "lucide-react";
 import { PhotoUpload } from "@/components/PhotoUpload";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQueryClient } from "@tanstack/react-query";
@@ -94,6 +94,8 @@ export default function ChauffeurProfil() {
     logoutChauffeur();
     navigate("/");
   };
+
+  const base = chauffeur?.vehicleType === "moto" ? "/moto" : "/chauffeur";
 
   const STATUS_DISPLAY: Record<DriverStatus, { label: string; color: string; bg: string; dot: string }> = {
     available: { label: t("status_online"),     color: "#10B981", bg: "#ECFDF5", dot: "#10B981" },
@@ -303,9 +305,29 @@ export default function ChauffeurProfil() {
               </div>
             </div>
 
-            {/* ── Help ── */}
-            <div
-              className="rounded-2xl border p-4 flex items-center gap-3"
+            {/* ── Documents & reglages (demande zabi 2026-07-10, ajoute cote livreur puis etendu aux chauffeurs) ── */}
+            <button
+              onClick={() => navigate(`${base}/reglages`)}
+              className="w-full rounded-2xl border p-4 flex items-center gap-3 text-left"
+              style={GLASS_STYLE}
+            >
+              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "rgba(232,92,48,0.12)" }}>
+                <FileText className="h-5 w-5" style={{ color: TC }} />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-bold flex items-center gap-1.5" style={{ color: BROWN }}>
+                  Documents & réglages
+                  {(profile as any).profileLocked && <Lock className="h-3 w-3" style={{ color: BROWN_LIGHT }} />}
+                </p>
+                <p className="text-xs" style={{ color: BROWN_LIGHT }}>CIN, permis, carte grise, moyen de paiement</p>
+              </div>
+              <ChevronRight className="h-5 w-5" style={{ color: BROWN_LIGHT }} />
+            </button>
+
+            {/* ── Help — cliquable maintenant (etait decoratif) ── */}
+            <button
+              onClick={() => navigate(`${base}/aide`)}
+              className="w-full rounded-2xl border p-4 flex items-center gap-3 text-left"
               style={GLASS_STYLE}
             >
               <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/5">
@@ -316,7 +338,7 @@ export default function ChauffeurProfil() {
                 <p className="text-xs" style={{ color: BROWN_LIGHT }}>Contacter le support ou voir la FAQ</p>
               </div>
               <ChevronRight className="h-5 w-5" style={{ color: BROWN_LIGHT }} />
-            </div>
+            </button>
 
           </div>
         )}
