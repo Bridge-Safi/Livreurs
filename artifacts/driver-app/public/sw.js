@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bridge-v3';
+const CACHE_NAME = 'bridge-v4';
 
 self.addEventListener('install', () => {
   self.skipWaiting();
