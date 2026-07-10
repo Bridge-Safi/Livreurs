@@ -173,13 +173,23 @@ export default function LivreurReglages() {
               <button
                 onClick={() => save({ name, photoUrl: doc.photoUrl ?? undefined }, "Identité enregistrée ✓")}
                 disabled={saving || !name.trim()}
-                className="w-full py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full mb-3 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50"
                 style={{ background: TC, color: "white" }}
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
                 Enregistrer mon identité
               </button>
             )}
+
+            <PhoneField
+              initial={doc.phone ?? ""}
+              saving={saving}
+              colors={colors}
+              border={BORDER}
+              text={BROWN}
+              textLight={BROWN_LIGHT}
+              onSave={(phone) => save({ phone }, "Téléphone mis à jour ✓")}
+            />
           </div>
 
           {/* ── Documents ── */}
@@ -271,6 +281,40 @@ export default function LivreurReglages() {
         </div>
       </div>
     </LivreurLayout>
+  );
+}
+
+function PhoneField({ initial, saving, colors, border, text, textLight, onSave }: {
+  initial: string; saving: boolean;
+  colors: { bgCardHover: string }; border: string; text: string; textLight: string;
+  onSave: (phone: string) => void;
+}) {
+  const [phone, setPhone] = useState(initial);
+  useEffect(() => setPhone(initial), [initial]);
+  const changed = phone.trim() !== initial.trim();
+
+  return (
+    <div>
+      <label className="text-xs font-semibold block mb-1" style={{ color: textLight }}>Numéro de téléphone</label>
+      <div className="flex gap-2">
+        <input
+          type="tel"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          placeholder="06 12 34 56 78"
+          className="flex-1 px-3 py-2.5 rounded-xl text-sm font-mono outline-none"
+          style={{ background: colors.bgCardHover, border: `1.5px solid ${border}`, color: text }}
+        />
+        <button
+          onClick={() => onSave(phone.trim())}
+          disabled={saving || !changed || !phone.trim()}
+          className="px-4 rounded-xl text-xs font-bold disabled:opacity-40"
+          style={{ background: TC, color: "white" }}
+        >
+          OK
+        </button>
+      </div>
+    </div>
   );
 }
 

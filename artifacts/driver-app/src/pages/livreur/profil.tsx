@@ -288,32 +288,63 @@ export default function LivreurProfil() {
                 </div>
               </div>
 
-              {/* ── Avis clients (note + commentaire) ── */}
-              <div className="rounded-2xl border p-4" style={GLASS_STYLE}>
+              {/* ── Avis clients : demande zabi 2026-07-10 -> uniquement le DERNIER
+                  avis recu ici (apercu), le detail complet (tous les avis +
+                  notes) est sur une page dediee /livreur/avis. ── */}
+              <button
+                onClick={() => navigate("/livreur/avis")}
+                className="w-full rounded-2xl border p-4 text-left"
+                style={GLASS_STYLE}
+              >
                 <div className="flex items-center gap-2 mb-3">
                   <MessageSquare className="h-4 w-4" style={{ color: GOLD }} />
-                  <p className="text-sm font-bold" style={{ color: BROWN }}>Avis clients</p>
+                  <p className="text-sm font-bold flex-1" style={{ color: BROWN }}>Avis clients</p>
+                  {reviews && reviews.length > 0 && (
+                    <span className="text-[10px] font-bold" style={{ color: BROWN_LIGHT }}>Voir tout</span>
+                  )}
+                  <ChevronRight className="h-4 w-4" style={{ color: BROWN_LIGHT }} />
                 </div>
                 {!reviews || reviews.length === 0 ? (
                   <p className="text-xs" style={{ color: BROWN_LIGHT }}>Aucun avis pour le moment.</p>
                 ) : (
-                  <div className="flex flex-col gap-3">
-                    {reviews.map((r) => (
-                      <div key={r.id} className="rounded-xl p-3" style={{ background: colors.bgCardHover, border: `1px solid ${BORDER}` }}>
-                        <div className="flex items-center justify-between mb-1">
-                          <StarRating value={r.stars} textColor={BROWN} lightColor={BROWN_LIGHT} borderColor={BORDER} />
-                          <span className="text-[10px]" style={{ color: BROWN_LIGHT }}>
-                            {new Date(r.createdAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}
-                          </span>
-                        </div>
-                        {r.comment && (
-                          <p className="text-xs" style={{ color: BROWN_MID }}>{r.comment}</p>
-                        )}
-                      </div>
-                    ))}
+                  <div className="rounded-xl p-3" style={{ background: colors.bgCardHover, border: `1px solid ${BORDER}` }}>
+                    <div className="flex items-center justify-between mb-1">
+                      <StarRating value={reviews[0].stars} textColor={BROWN} lightColor={BROWN_LIGHT} borderColor={BORDER} />
+                      <span className="text-[10px]" style={{ color: BROWN_LIGHT }}>
+                        {new Date(reviews[0].createdAt).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}
+                      </span>
+                    </div>
+                    {reviews[0].comment && (
+                      <p className="text-xs" style={{ color: BROWN_MID }}>{reviews[0].comment}</p>
+                    )}
+                    {reviews.length > 1 && (
+                      <p className="text-[10px] mt-1.5 font-semibold" style={{ color: GOLD }}>
+                        + {reviews.length - 1} autre{reviews.length > 2 ? "s" : ""} avis
+                      </p>
+                    )}
                   </div>
                 )}
-              </div>
+              </button>
+
+              {/* ── Documents & réglages (#90/#96, demande zabi 2026-07-10) — deplace
+                  juste sous Avis clients (demande zabi) ── */}
+              <button
+                onClick={() => navigate("/livreur/reglages")}
+                className="w-full rounded-2xl border p-4 flex items-center gap-3 text-left"
+                style={GLASS_STYLE}
+              >
+                <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "rgba(232,92,48,0.12)" }}>
+                  <FileText className="h-5 w-5" style={{ color: TC }} />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-bold flex items-center gap-1.5" style={{ color: BROWN }}>
+                    Documents & réglages
+                    {(profile as any).profileLocked && <Lock className="h-3 w-3" style={{ color: BROWN_LIGHT }} />}
+                  </p>
+                  <p className="text-xs" style={{ color: BROWN_LIGHT }}>CIN, permis, carte grise, moyen de paiement</p>
+                </div>
+                <ChevronRight className="h-5 w-5" style={{ color: BROWN_LIGHT }} />
+              </button>
 
               {/* ── Bonus card ── */}
               <div
@@ -490,28 +521,10 @@ export default function LivreurProfil() {
                 </div>
               </div>
 
-              {/* ── Documents & réglages (#90/#96, demande zabi 2026-07-10) ── */}
+              {/* ── Help — cliquable maintenant (etait decoratif), demande zabi 2026-07-10 ── */}
               <button
-                onClick={() => navigate("/livreur/reglages")}
+                onClick={() => navigate("/livreur/aide")}
                 className="w-full rounded-2xl border p-4 flex items-center gap-3 text-left"
-                style={GLASS_STYLE}
-              >
-                <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "rgba(232,92,48,0.12)" }}>
-                  <FileText className="h-5 w-5" style={{ color: TC }} />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-bold flex items-center gap-1.5" style={{ color: BROWN }}>
-                    Documents & réglages
-                    {(profile as any).profileLocked && <Lock className="h-3 w-3" style={{ color: BROWN_LIGHT }} />}
-                  </p>
-                  <p className="text-xs" style={{ color: BROWN_LIGHT }}>CIN, permis, carte grise, moyen de paiement</p>
-                </div>
-                <ChevronRight className="h-5 w-5" style={{ color: BROWN_LIGHT }} />
-              </button>
-
-              {/* ── Help ── */}
-              <div
-                className="rounded-2xl border p-4 flex items-center gap-3"
                 style={GLASS_STYLE}
               >
                 <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/5">
@@ -522,7 +535,7 @@ export default function LivreurProfil() {
                   <p className="text-xs" style={{ color: BROWN_LIGHT }}>Contacter le support ou voir la FAQ</p>
                 </div>
                 <ChevronRight className="h-5 w-5" style={{ color: BROWN_LIGHT }} />
-              </div>
+              </button>
 
             </div>
           );
