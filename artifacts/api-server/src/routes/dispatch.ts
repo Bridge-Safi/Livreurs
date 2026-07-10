@@ -392,4 +392,30 @@ router.get("/deliveries/:id/pending-dispatch", async (req, res): Promise<void> =
   });
 });
 
+// Le livreur confirme qu'il a bien encaissé le cash auprès du client (commande
+// payée à la livraison). Action indépendante de "confirm-delivered" — ne
+// bloque jamais la livraison si le livreur oublie de l'utiliser, c'est un
+// pointage comptable, pas une condition de la course.
+router.patch("/deliveries/:id/cash-collected", async (req, res): Promise<void> => {
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "id invalide" });
+    return;
+  }
+
+  const [delivery] = await db.select().from(deliveriesTable).where(eq(deliveriesTable.id, id));
+  if (!delivery) {
+    res.status(404).json({ error: "Livraison introuvable" });
+    return;
+  }
+
+  const [updated] = await db
+    .update(deliveriesTable)
+    .set({ cashCollected: true, updatedAt: new Date() })
+    .where(eq(deliveriesTable.id, id))
+    .returning();
+
+  res.json({ ok: true, delivery: serializeDelivery(updated) });
+});
+
 export default router;

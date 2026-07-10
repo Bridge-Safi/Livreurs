@@ -1,9 +1,23 @@
 import { Router, type IRouter } from "express";
+import { sql } from "drizzle-orm";
 import { db, deliveriesTable, deliverersTable } from "@workspace/db";
 import { sendPushToAllDeliverers } from "./push";
 import { signAssignToken } from "./assign";
 
 const router: IRouter = Router();
+
+// Colonnes paiement (cash à encaisser par le livreur) — migration idempotente
+// car la table "deliveries" existait avant l'ajout de cette fonctionnalité.
+async function ensurePaymentColumns() {
+  try {
+    await db.execute(sql`ALTER TABLE deliveries ADD COLUMN IF NOT EXISTS payment_method TEXT`);
+    await db.execute(sql`ALTER TABLE deliveries ADD COLUMN IF NOT EXISTS amount_to_collect REAL`);
+    await db.execute(sql`ALTER TABLE deliveries ADD COLUMN IF NOT EXISTS cash_collected BOOLEAN NOT NULL DEFAULT false`);
+  } catch (err) {
+    console.error("Failed to ensure payment columns on deliveries", err);
+  }
+}
+ensurePaymentColumns();
 
 const WEBHOOK_SECRET = process.env["BRIDGE_WEBHOOK_SECRET"] || "";
 
@@ -67,6 +81,7 @@ router.post("/orders/inbound", async (req, res): Promise<void> => {
     pickupAddress,
     items,
     total,
+    paymentMethod,
     notes,
     source,
     serviceType,
@@ -119,6 +134,8 @@ router.post("/orders/inbound", async (req, res): Promise<void> => {
       notes: orderNotes || null,
       priority: "urgent",
       serviceType: validatedServiceType,
+      paymentMethod: paymentMethod ? String(paymentMethod) : "cash",
+      amountToCollect: typeof total === "number" ? total : (total ? Number(total) : null),
     })
     .returning();
 
