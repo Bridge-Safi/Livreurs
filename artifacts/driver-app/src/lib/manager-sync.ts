@@ -6,8 +6,17 @@ const SYNC_INTERVAL_MS = 20_000;
 
 export interface ManagerSyncOptions {
   driverId: number;
+  // Le tel du livreur est la seule cle fiable partagee avec la base de
+  // Manager (bases Postgres separees, deux numerotations d'id differentes).
+  // Sans ca, Manager ne peut pas retrouver la bonne ligne "drivers" et la
+  // position GPS / l'assignation de commande n'apparaissent jamais.
+  phone?: string | null;
   currentOrderId?: number | null;
   currentOrderStatus?: string | null;
+  // Numero de suivi (trackingNumber / ref) de la commande en cours, identique
+  // cote Bridge-safi / Livreurs / Manager. Permet a Manager de retrouver la
+  // bonne commande sans dependre de son id interne (qui differe entre bases).
+  currentOrderTrackingNumber?: string | null;
   enabled?: boolean;
 }
 
@@ -27,11 +36,13 @@ function getOrderSyncStatus(orderStatus?: string | null): string | undefined {
 
 async function syncToManager(payload: {
   driverId: number;
+  phone?: string | null;
   lat: number;
   lng: number;
   status: string;
   currentOrderId?: number;
   currentOrderStatus?: string;
+  currentOrderTrackingNumber?: string | null;
 }): Promise<void> {
   const body: Record<string, unknown> = {
     driverId: payload.driverId,
@@ -39,8 +50,10 @@ async function syncToManager(payload: {
     lng: payload.lng,
     status: payload.status,
   };
+  if (payload.phone) body.phone = payload.phone;
   if (payload.currentOrderId != null) body.currentOrderId = payload.currentOrderId;
   if (payload.currentOrderStatus != null) body.currentOrderStatus = payload.currentOrderStatus;
+  if (payload.currentOrderTrackingNumber) body.currentOrderTrackingNumber = payload.currentOrderTrackingNumber;
 
   await fetch(MANAGER_API_URL, {
     method: "POST",
@@ -54,8 +67,10 @@ async function syncToManager(payload: {
 
 export function useManagerSync({
   driverId,
+  phone,
   currentOrderId,
   currentOrderStatus,
+  currentOrderTrackingNumber,
   enabled = true,
 }: ManagerSyncOptions) {
   const latRef = useRef<number | null>(null);
@@ -69,13 +84,15 @@ export function useManagerSync({
     const orderSyncStatus = getOrderSyncStatus(currentOrderStatus);
     syncToManager({
       driverId,
+      phone,
       lat: latRef.current,
       lng: lngRef.current,
       status,
       currentOrderId: currentOrderId ?? undefined,
       currentOrderStatus: orderSyncStatus,
+      currentOrderTrackingNumber: currentOrderTrackingNumber ?? undefined,
     }).catch(() => {});
-  }, [driverId, currentOrderId, currentOrderStatus]);
+  }, [driverId, phone, currentOrderId, currentOrderStatus, currentOrderTrackingNumber]);
 
   useEffect(() => {
     if (!enabled || !driverId || !navigator.geolocation) return;
