@@ -73,8 +73,10 @@ export default function LivreurDashboard() {
   const activeDelivery = deliveries[0] ?? null;
   useManagerSync({
     driverId: LIVREUR_ID,
+    phone: livreur?.phone ?? null,
     currentOrderId: activeDelivery?.id ?? null,
     currentOrderStatus: activeDelivery?.status ?? null,
+    currentOrderTrackingNumber: activeDelivery?.trackingNumber ?? null,
     enabled: !!LIVREUR_ID,
   });
 

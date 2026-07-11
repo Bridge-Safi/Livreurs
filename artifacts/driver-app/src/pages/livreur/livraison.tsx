@@ -218,8 +218,10 @@ export default function LivreurLivraisonDetail() {
 
   useManagerSync({
     driverId: LIVREUR_ID,
+    phone: livreur?.phone ?? null,
     currentOrderId: delivery?.id ?? null,
     currentOrderStatus: delivery?.status ?? null,
+    currentOrderTrackingNumber: delivery?.trackingNumber ?? null,
     enabled: !!LIVREUR_ID && !!delivery && (delivery.status === "pending" || delivery.status === "in_progress"),
   });
 
