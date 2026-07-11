@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
-import { sql } from "drizzle-orm";
+import { sql, eq } from "drizzle-orm";
 import { db, deliveriesTable, deliverersTable } from "@workspace/db";
-import { sendPushToAllDeliverers } from "./push";
+import { sendPushToAllDeliverers, sendPushToDeliverer } from "./push";
 import { signAssignToken } from "./assign";
 
 const router: IRouter = Router();
@@ -176,6 +176,73 @@ router.post("/orders/inbound", async (req, res): Promise<void> => {
     orderSource,
     req.log,
   );
+});
+
+// ── Statut resto -> livreur assigne (delai de preparation + "commande prete") ──
+// POST /api/deliveries/restaurant-status
+// Appele par Bridge-safi (orders.ts::notifyLivreursRestaurantStatus) quand le
+// restaurateur choisit son delai de preparation (10/15/20min) puis quand il
+// marque la commande prete. zabi: "le livreur doit recevoir le delai sur quoi
+// le restaurant a appuye" + "une notification pour le livreur que la commande
+// est prete meme s'il a recu le delai". Best-effort : la livraison peut
+// encore n'avoir aucun livreur assigne (delivererId null) si personne n'a
+// encore accepte la course cote Livreurs -> dans ce cas on ne pousse rien
+// (rien a notifier), mais on repond quand meme 200 pour ne pas faire echouer
+// Bridge-safi.
+router.post("/deliveries/restaurant-status", async (req, res): Promise<void> => {
+  const secret = req.headers["x-bridge-secret"] || req.body?.secret;
+  if (WEBHOOK_SECRET && secret !== WEBHOOK_SECRET) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+
+  const { trackingNumber, status, estimatedPrepTime } = req.body as {
+    trackingNumber?: string;
+    status?: "preparing" | "ready";
+    estimatedPrepTime?: number | null;
+  };
+
+  if (!trackingNumber || (status !== "preparing" && status !== "ready")) {
+    res.status(400).json({ error: "trackingNumber et status ('preparing'|'ready') requis" });
+    return;
+  }
+
+  const [delivery] = await db.select().from(deliveriesTable).where(eq(deliveriesTable.trackingNumber, trackingNumber));
+  if (!delivery) {
+    req.log.info({ trackingNumber }, "restaurant-status: livraison introuvable (pas encore creee cote Livreurs ?)");
+    res.json({ ok: true, notified: false });
+    return;
+  }
+
+  if (!delivery.delivererId) {
+    req.log.info({ trackingNumber, status }, "restaurant-status: aucun livreur assigne pour l'instant, rien a pousser");
+    res.json({ ok: true, notified: false });
+    return;
+  }
+
+  const payload = status === "preparing"
+    ? {
+        title: "👨‍🍳 En préparation",
+        body: estimatedPrepTime
+          ? `Le commerçant prépare la commande — prête dans ~${estimatedPrepTime} min`
+          : "Le commerçant prépare la commande",
+        url: "/livreur",
+      }
+    : {
+        title: "✅ Commande prête !",
+        body: "Allez récupérer la commande chez le commerçant",
+        url: "/livreur",
+        urgent: true,
+      };
+
+  try {
+    await sendPushToDeliverer(delivery.delivererId, payload);
+    req.log.info({ trackingNumber, status, delivererId: delivery.delivererId }, "restaurant-status: push envoye au livreur");
+  } catch (err) {
+    req.log.error({ err, trackingNumber, status }, "restaurant-status: push echoue");
+  }
+
+  res.json({ ok: true, notified: true });
 });
 
 export default router;
