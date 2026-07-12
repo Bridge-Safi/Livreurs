@@ -56,6 +56,8 @@ export interface Delivery {
   serviceType?: DeliveryServiceType;
   confirmCode?: string;
   pickedUpAt?: string;
+  restaurantStatus?: string;
+  estimatedPrepTime?: number;
   createdAt: string;
   updatedAt?: string;
 }
