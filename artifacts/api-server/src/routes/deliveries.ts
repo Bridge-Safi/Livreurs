@@ -133,6 +133,13 @@ router.patch("/deliveries/:id/pickup", async (req, res): Promise<void> => {
     return;
   }
 
+  // Le resto prepare encore : impossible de marquer "recuperee" tant qu'il
+  // n'a pas appuye sur "Marquer comme prete" sur son dashboard.
+  if (delivery.restaurantStatus === "preparing") {
+    res.status(409).json({ error: "Le restaurant n'a pas encore marqué la commande prête" });
+    return;
+  }
+
   const [updated] = await db
     .update(deliveriesTable)
     .set({ status: "in_progress", pickedUpAt: new Date(), updatedAt: new Date() })
@@ -148,6 +155,16 @@ router.patch("/deliveries/:id/pickup", async (req, res): Promise<void> => {
   // n'affichait que la carte GPS nue. On pousse ces infos dès le clic sur le
   // bouton orange "Commande récupérée", fire-and-forget comme le callback de
   // livraison terminée plus bas dans dispatch.ts.
+  // Previent Bridge-safi (DB + coche verte cote dashboard resto) que la
+  // commande est recuperee et en route.
+  if (updated.trackingNumber) {
+    fetch("https://www.safi-bridge.ma/api/callbacks/order-status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderNumber: updated.trackingNumber, status: "on_the_way" }),
+    }).catch(() => {});
+  }
+
   if (updated.trackingNumber && updated.delivererId) {
     db.select().from(deliverersTable).where(eq(deliverersTable.id, updated.delivererId))
       .then(([deliverer]) => {
@@ -198,6 +215,18 @@ router.patch("/deliveries/:id", async (req, res): Promise<void> => {
   // Récupère l'ancien statut AVANT update pour savoir si on passe pending -> in_progress
   const [before] = await db.select().from(deliveriesTable).where(eq(deliveriesTable.id, params.data.id));
 
+  // Meme garde que /deliveries/:id/pickup : l'app livreur passe par CETTE
+  // route generique pour "Commande recuperee". Resto encore en preparation
+  // (restaurantStatus=preparing) => refus tant qu'il n'a pas marque "prete".
+  if (
+    before?.status === "pending" &&
+    parsed.data.status === "in_progress" &&
+    before?.restaurantStatus === "preparing"
+  ) {
+    res.status(409).json({ error: "Le restaurant n'a pas encore marqué la commande prête" });
+    return;
+  }
+
   const extraFields: Record<string, unknown> = {};
   if (parsed.data.status === "in_progress") {
     extraFields.pickedUpAt = new Date();
@@ -240,6 +269,29 @@ router.patch("/deliveries/:id", async (req, res): Promise<void> => {
       .update(deliverersTable)
       .set({ status: remainingCount > 0 ? "busy" : "available" })
       .where(eq(deliverersTable.id, delivery.delivererId));
+
+    // Marque aussi la commande "delivered" cote Manager (sinon revenu du jour = 0)
+    if (delivery.status === "delivered" && delivery.trackingNumber) {
+      db.select().from(deliverersTable).where(eq(deliverersTable.id, delivery.delivererId))
+        .then(([dlv]) => {
+          if (!dlv) return;
+          return fetch("https://manager.safi-bridge.ma/api/livreur/sync", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-api-key": process.env.MANAGER_API_KEY ?? "lgk_e0da08841fe010f1c615a6e30d0e160a4caab8efc6339c956f0f53a4e9843f32",
+            },
+            body: JSON.stringify({
+              driverId: delivery.delivererId,
+              phone: dlv.phone,
+              status: remainingCount > 0 ? "busy" : "available",
+              currentOrderStatus: "delivered",
+              currentOrderTrackingNumber: delivery.trackingNumber,
+            }),
+          });
+        })
+        .catch(() => {});
+    }
   }
 
   res.json(UpdateDeliveryResponse.parse(serializeDelivery(delivery)));
@@ -252,6 +304,14 @@ router.patch("/deliveries/:id", async (req, res): Promise<void> => {
   // note + statut "on_the_way" au store de suivi client) ne se déclenchait
   // JAMAIS. On rejoue exactement la même notif ici, dès que le statut passe
   // de pending à in_progress.
+  if (before?.status === "pending" && delivery.status === "in_progress" && delivery.trackingNumber) {
+    fetch("https://www.safi-bridge.ma/api/callbacks/order-status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderNumber: delivery.trackingNumber, status: "on_the_way" }),
+    }).catch(() => {});
+  }
+
   if (before?.status === "pending" && delivery.status === "in_progress" && delivery.trackingNumber && delivery.delivererId) {
     db.select().from(deliverersTable).where(eq(deliverersTable.id, delivery.delivererId))
       .then(([deliverer]) => {

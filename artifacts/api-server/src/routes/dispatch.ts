@@ -349,6 +349,27 @@ router.post("/deliveries/:id/confirm-delivered", async (req, res): Promise<void>
   // Sans ce callback, la page de suivi du client (Bridge Eats / Pharmacie /
   // Boulangerie / etc.) ne voit jamais le statut "delivered" : elle continue
   // d'afficher la carte GPS au lieu du message de félicitations.
+  // ── Notifie Manager que la commande est livrée ────────────────────────────
+  // Sans ceci, la commande ne passait JAMAIS "delivered" côté Manager (le sync
+  // de l'app livreur n'envoie pas ce statut) -> le revenu du jour restait à 0
+  // puisque le dashboard ne compte que les commandes "delivered".
+  if (delivery.trackingNumber && deliverer) {
+    fetch("https://manager.safi-bridge.ma/api/livreur/sync", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": process.env.MANAGER_API_KEY ?? "lgk_e0da08841fe010f1c615a6e30d0e160a4caab8efc6339c956f0f53a4e9843f32",
+      },
+      body: JSON.stringify({
+        driverId: delivererId,
+        phone: deliverer.phone,
+        status: remainingCount > 0 ? "busy" : "available",
+        currentOrderStatus: "delivered",
+        currentOrderTrackingNumber: delivery.trackingNumber,
+      }),
+    }).catch(() => {});
+  }
+
   if (delivery.trackingNumber) {
     fetch("https://www.safi-bridge.ma/api/callbacks/order-status", {
       method: "POST",

@@ -13,6 +13,8 @@ async function ensurePaymentColumns() {
     await db.execute(sql`ALTER TABLE deliveries ADD COLUMN IF NOT EXISTS payment_method TEXT`);
     await db.execute(sql`ALTER TABLE deliveries ADD COLUMN IF NOT EXISTS amount_to_collect REAL`);
     await db.execute(sql`ALTER TABLE deliveries ADD COLUMN IF NOT EXISTS cash_collected BOOLEAN NOT NULL DEFAULT false`);
+    await db.execute(sql`ALTER TABLE deliveries ADD COLUMN IF NOT EXISTS restaurant_status TEXT`);
+    await db.execute(sql`ALTER TABLE deliveries ADD COLUMN IF NOT EXISTS estimated_prep_time INTEGER`);
   } catch (err) {
     console.error("Failed to ensure payment columns on deliveries", err);
   }
@@ -213,6 +215,17 @@ router.post("/deliveries/restaurant-status", async (req, res): Promise<void> => 
     res.json({ ok: true, notified: false });
     return;
   }
+
+  // Persiste le statut resto sur la livraison : c'est ce qui debloque le
+  // bouton "Commande recuperee" du livreur (bloque tant que status=preparing).
+  await db
+    .update(deliveriesTable)
+    .set({
+      restaurantStatus: status,
+      ...(estimatedPrepTime != null ? { estimatedPrepTime } : {}),
+      updatedAt: new Date(),
+    })
+    .where(eq(deliveriesTable.id, delivery.id));
 
   if (!delivery.delivererId) {
     req.log.info({ trackingNumber, status }, "restaurant-status: aucun livreur assigne pour l'instant, rien a pousser");
