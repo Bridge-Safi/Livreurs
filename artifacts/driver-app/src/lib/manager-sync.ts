@@ -23,13 +23,16 @@ export interface ManagerSyncOptions {
 function getBridgeStatus(orderStatus?: string | null): string {
   if (!orderStatus) return "available";
   if (orderStatus === "in_progress") return "delivering";
-  if (orderStatus === "pending") return "delivering";
+  // pending = acceptée mais pas encore récupérée au resto -> occupé, pas "en livraison"
+  if (orderStatus === "pending") return "busy";
   return "available";
 }
 
 function getOrderSyncStatus(orderStatus?: string | null): string | undefined {
   if (!orderStatus) return undefined;
-  if (orderStatus === "pending") return "picked_up";
+  // pending = acceptée, pas encore récupérée : "assigned" côté Manager
+  // (avant : "picked_up", ce qui affichait la commande comme déjà récupérée)
+  if (orderStatus === "pending") return "assigned";
   if (orderStatus === "in_progress") return "picked_up";
   return undefined;
 }
