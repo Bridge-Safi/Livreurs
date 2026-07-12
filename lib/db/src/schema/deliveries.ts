@@ -26,6 +26,11 @@ export const deliveriesTable = pgTable("deliveries", {
   paymentMethod: text("payment_method"), // cash | card | online | qr
   amountToCollect: real("amount_to_collect"),
   cashCollected: boolean("cash_collected").notNull().default(false),
+  // Statut cote restaurateur (dashboard resto) : null (aucun signal) |
+  // "preparing" | "ready". Tant que c'est "preparing", le livreur ne peut
+  // pas appuyer sur "Commande recuperee".
+  restaurantStatus: text("restaurant_status"),
+  estimatedPrepTime: integer("estimated_prep_time"),
   pickedUpAt: timestamp("picked_up_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
