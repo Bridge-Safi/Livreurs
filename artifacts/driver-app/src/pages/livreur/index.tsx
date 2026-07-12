@@ -13,6 +13,7 @@ import { Link } from "wouter";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { useManagerSync } from "@/lib/manager-sync";
+import { useClientGpsSync } from "@/lib/client-tracking";
 
 const TC = "#E85C30";
 const GREEN = "#2A7A48";
@@ -71,6 +72,12 @@ export default function LivreurDashboard() {
   const level = profile ? getLevel(profile.totalDeliveries) : null;
 
   const activeDelivery = deliveries[0] ?? null;
+
+  // GPS live vers la carte du client pour la course "en chemin" (meme si le
+  // livreur reste sur le tableau de bord sans ouvrir le detail de la course)
+  const inProgressDelivery = (inProgressDeliveries ?? [])[0] ?? null;
+  useClientGpsSync(inProgressDelivery?.trackingNumber, !!inProgressDelivery);
+
   useManagerSync({
     driverId: LIVREUR_ID,
     phone: livreur?.phone ?? null,

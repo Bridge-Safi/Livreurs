@@ -17,6 +17,7 @@ import { useState, useEffect } from "react";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { useManagerSync } from "@/lib/manager-sync";
+import { useClientGpsSync } from "@/lib/client-tracking";
 import { GpsPickerModal } from "@/components/GpsPickerModal";
 import { stopContinuousAlarm } from "@/lib/alarm";
 
@@ -225,6 +226,9 @@ export default function LivreurLivraisonDetail() {
     enabled: !!LIVREUR_ID && !!delivery && (delivery.status === "pending" || delivery.status === "in_progress"),
   });
 
+  // GPS live sur la carte du client des que la commande est "en chemin"
+  useClientGpsSync(delivery?.trackingNumber, !!delivery && delivery.status === "in_progress");
+
   const updateDelivery = useUpdateDelivery();
   const confirmDelivered = useConfirmDelivered();
   const isPending = updateDelivery.isPending || confirmDelivered.isPending;
@@ -245,13 +249,22 @@ export default function LivreurLivraisonDetail() {
     setMarkingCash(false);
   };
 
+  const [pickupError, setPickupError] = useState("");
   const handlePickupConfirm = () => {
+    setPickupError("");
     updateDelivery.mutate({ id, data: { status: "in_progress" } }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getGetDeliveryQueryKey(id) });
         queryClient.invalidateQueries({ queryKey: getListDeliveriesQueryKey({ delivererId: LIVREUR_ID }) });
         setPickupConfirmOpen(false);
         setShowGpsAfterPickup(true);
+      },
+      onError: (err: unknown) => {
+        // Affiche le refus backend (ex: resto n'a pas encore marque "prete")
+        const anyErr = err as { response?: { data?: { error?: string } }; message?: string };
+        setPickupError(anyErr?.response?.data?.error ?? anyErr?.message ?? "Impossible pour le moment");
+        setPickupConfirmOpen(false);
+        queryClient.invalidateQueries({ queryKey: getGetDeliveryQueryKey(id) });
       },
     });
   };
@@ -637,7 +650,22 @@ export default function LivreurLivraisonDetail() {
               </div>
 
               {/* ─────── INTERMEDIATE STEP: Pickup confirmation ─────── */}
-              {delivery.status === "pending" && (
+              {delivery.status === "pending" && delivery.restaurantStatus === "preparing" && (
+                <div className="my-3 -mx-4 px-4 py-3 border-y" style={{ background: "rgba(212,136,12,0.10)", borderColor: "rgba(212,136,12,0.30)" }}>
+                  <div
+                    className="w-full min-h-16 rounded-2xl font-extrabold text-base flex items-center justify-center gap-3 px-4 py-3 text-center"
+                    style={{ background: "rgba(212,136,12,0.15)", color: GOLD, border: "1px dashed rgba(212,136,12,0.5)" }}
+                  >
+                    👨‍🍳 En préparation chez le commerçant
+                  </div>
+                  <p className="text-[11px] mt-2 text-center font-medium" style={{ color: BROWN_MID }}>
+                    {delivery.estimatedPrepTime
+                      ? `Prête dans ~${delivery.estimatedPrepTime} min — le bouton s'activera dès que le restaurant la marque prête.`
+                      : "Le bouton s'activera dès que le restaurant marque la commande prête."}
+                  </p>
+                </div>
+              )}
+              {delivery.status === "pending" && delivery.restaurantStatus !== "preparing" && (
                 <div className="my-3 -mx-4 px-4 py-3 border-y" style={{ background: "rgba(232,92,48,0.10)", borderColor: "rgba(232,92,48,0.30)" }}>
                   <button
                     onClick={() => setPickupConfirmOpen(true)}
@@ -648,6 +676,11 @@ export default function LivreurLivraisonDetail() {
                     <CheckCircle2 className="h-6 w-6" />
                     {t("start_delivery_btn")}
                   </button>
+                  {pickupError && (
+                    <p className="text-[12px] mt-2 text-center font-bold" style={{ color: "#ff6b6b" }}>
+                      ⚠️ {pickupError}
+                    </p>
+                  )}
                   <p className="text-[11px] mt-2 text-center font-medium" style={{ color: BROWN_MID }}>
                     Appuyez une fois la commande récupérée au restaurant.
                   </p>
