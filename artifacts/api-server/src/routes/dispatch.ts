@@ -204,6 +204,36 @@ router.post("/deliveries/:id/accept", async (req, res): Promise<void> => {
     .set({ status: "busy" })
     .where(eq(deliverersTable.id, body.data.delivererId));
 
+  // ── Association immédiate côté Manager ───────────────────────────────────────────────
+  // Avant : seule l'app livreur (useManagerSync, toutes les 20 s, et uniquement
+  // si le GPS avait déjà donné une position) informait Manager qu'un livreur
+  // avait pris la commande. App en arrière-plan ou GPS refusé => la commande
+  // restait « non assignée » sur le dashboard et il fallait assigner à la main.
+  // Maintenant : le backend notifie Manager dès l'acceptation, via téléphone +
+  // trackingNumber (les seules clés communes entre les deux bases Postgres).
+  try {
+    const [accepter] = await db
+      .select()
+      .from(deliverersTable)
+      .where(eq(deliverersTable.id, body.data.delivererId));
+    fetch("https://manager.safi-bridge.ma/api/livreur/sync", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": process.env.MANAGER_API_KEY ?? "lgk_e0da08841fe010f1c615a6e30d0e160a4caab8efc6339c956f0f53a4e9843f32",
+      },
+      body: JSON.stringify({
+        driverId: body.data.delivererId,
+        phone: accepter?.phone ?? undefined,
+        status: "busy",
+        currentOrderStatus: "assigned",
+        currentOrderTrackingNumber: updated.trackingNumber ?? undefined,
+      }),
+    }).catch(() => {});
+  } catch {
+    // fire-and-forget : l'acceptation locale ne doit jamais échouer à cause de Manager
+  }
+
   req.log.info({ deliveryId: params.data.id, delivererId: body.data.delivererId, activeCount: activeCount + 1 }, "Delivery accepted");
 
   res.json(GetDeliveryResponse.parse(serializeDelivery(updated)));
