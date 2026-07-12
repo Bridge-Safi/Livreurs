@@ -30,6 +30,8 @@ export function serializeDelivery(d: Delivery) {
     paymentMethod: d.paymentMethod ?? undefined,
     amountToCollect: d.amountToCollect ?? undefined,
     cashCollected: d.cashCollected ?? undefined,
+    restaurantStatus: d.restaurantStatus ?? undefined,
+    estimatedPrepTime: d.estimatedPrepTime ?? undefined,
     createdAt: requiredDate(d.createdAt),
     updatedAt: serializeDate(d.updatedAt),
   };
