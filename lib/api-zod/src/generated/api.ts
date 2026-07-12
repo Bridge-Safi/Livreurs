@@ -43,6 +43,8 @@ export const ListDeliveriesResponseItem = zod.object({
     .optional(),
   confirmCode: zod.string().optional(),
   pickedUpAt: zod.string().optional(),
+  restaurantStatus: zod.string().optional(),
+  estimatedPrepTime: zod.number().optional(),
   createdAt: zod.string(),
   updatedAt: zod.string().optional(),
 });
@@ -102,6 +104,8 @@ export const GetMyPendingDispatchResponse = zod.object({
         .optional(),
       confirmCode: zod.string().optional(),
       pickedUpAt: zod.string().optional(),
+  restaurantStatus: zod.string().optional(),
+  estimatedPrepTime: zod.number().optional(),
       createdAt: zod.string(),
       updatedAt: zod.string().optional(),
     })
@@ -138,6 +142,8 @@ export const DispatchDeliveryResponse = zod.object({
       .optional(),
     confirmCode: zod.string().optional(),
     pickedUpAt: zod.string().optional(),
+  restaurantStatus: zod.string().optional(),
+  estimatedPrepTime: zod.number().optional(),
     createdAt: zod.string(),
     updatedAt: zod.string().optional(),
   }),
@@ -176,6 +182,8 @@ export const AcceptDeliveryResponse = zod.object({
     .optional(),
   confirmCode: zod.string().optional(),
   pickedUpAt: zod.string().optional(),
+  restaurantStatus: zod.string().optional(),
+  estimatedPrepTime: zod.number().optional(),
   createdAt: zod.string(),
   updatedAt: zod.string().optional(),
 });
@@ -209,6 +217,8 @@ export const RefuseDeliveryResponse = zod.object({
     .optional(),
   confirmCode: zod.string().optional(),
   pickedUpAt: zod.string().optional(),
+  restaurantStatus: zod.string().optional(),
+  estimatedPrepTime: zod.number().optional(),
   createdAt: zod.string(),
   updatedAt: zod.string().optional(),
 });
@@ -244,6 +254,8 @@ export const ConfirmDeliveredResponse = zod.object({
     .optional(),
   confirmCode: zod.string().optional(),
   pickedUpAt: zod.string().optional(),
+  restaurantStatus: zod.string().optional(),
+  estimatedPrepTime: zod.number().optional(),
   createdAt: zod.string(),
   updatedAt: zod.string().optional(),
 });
@@ -287,6 +299,8 @@ export const GetPendingDispatchResponse = zod.object({
         .optional(),
       confirmCode: zod.string().optional(),
       pickedUpAt: zod.string().optional(),
+  restaurantStatus: zod.string().optional(),
+  estimatedPrepTime: zod.number().optional(),
       createdAt: zod.string(),
       updatedAt: zod.string().optional(),
     })
@@ -321,6 +335,8 @@ export const GetDeliveryResponse = zod.object({
     .optional(),
   confirmCode: zod.string().optional(),
   pickedUpAt: zod.string().optional(),
+  restaurantStatus: zod.string().optional(),
+  estimatedPrepTime: zod.number().optional(),
   paymentMethod: zod.string().optional(),
   amountToCollect: zod.number().optional(),
   cashCollected: zod.boolean().optional(),
@@ -361,6 +377,8 @@ export const UpdateDeliveryResponse = zod.object({
     .optional(),
   confirmCode: zod.string().optional(),
   pickedUpAt: zod.string().optional(),
+  restaurantStatus: zod.string().optional(),
+  estimatedPrepTime: zod.number().optional(),
   createdAt: zod.string(),
   updatedAt: zod.string().optional(),
 });
